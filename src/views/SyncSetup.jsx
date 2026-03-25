@@ -26,7 +26,7 @@ export function SyncSetup({onDone}){
         ["myRole",         JSON.stringify(role)],
       ];
       for (const [k, v] of pairs) {
-        await window.storage.set(k, v);
+        localStorage.setItem(k, v);
       }
       onDone(hid, role);
     } catch(e) {
@@ -40,10 +40,10 @@ export function SyncSetup({onDone}){
     if (hid.length !== 6) { setErr("6자리 코드를 입력해주세요."); return; }
     setBusy(true); setErr("");
     try {
-      const r = await window.storage.get(`${hid}_tx`);
+      const r = localStorage.getItem(`${hid}_tx`);
       if (!r) { setErr("코드를 찾을 수 없어요. 같은 기기에서 만든 코드인지 확인해주세요."); setBusy(false); return; }
-      await window.storage.set("householdId", JSON.stringify(hid));
-      await window.storage.set("myRole",      JSON.stringify(role));
+      localStorage.setItem("householdId", JSON.stringify(hid));
+      localStorage.setItem("myRole",      JSON.stringify(role));
       onDone(hid, role);
     } catch(e) {
       setErr(`연결 오류: ${e?.message||"알 수 없는 오류"}`); setBusy(false);

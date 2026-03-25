@@ -43,8 +43,8 @@ export default function App() {
   const [showWidget, setShowWidget] = useState(false);
 
   // 로컬/비공개 데이터 저장소
-  const savePrivate = useCallback(async (key, value) => {
-    try { await window.storage.set(key, JSON.stringify(value)); }
+  const savePrivate = useCallback((key, value) => {
+    try { localStorage.setItem(key, JSON.stringify(value)); }
     catch (e) { console.error("private save error:", e); }
   }, []);
 
@@ -90,16 +90,15 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const safeGet = async (key) => {
-          try { const r = await window.storage.get(key); return r ? JSON.parse(r.value) : null; }
+        const safeGet = (key) => {
+          try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; }
           catch { return null; }
         };
-        const [savedHid, savedRole, savedSlider, savedTheme] = await Promise.all([
-          safeGet("householdId"),
-          safeGet("myRole"),
-          safeGet("sliderCfg"),
-          safeGet("theme"),
-        ]);
+        const savedHid    = safeGet("householdId");
+        const savedRole   = safeGet("myRole");
+        const savedSlider = safeGet("sliderCfg");
+        const savedTheme  = safeGet("theme");
+
         if (savedSlider) setSliderCfgRaw(savedSlider);
         if (savedTheme) setThemeRaw(savedTheme);
         if (savedHid) {
