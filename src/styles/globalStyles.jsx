@@ -92,4 +92,4 @@ input[type=range]::-moz-range-track{height:6px;border-radius:99px;background:var
 .u3{animation:up .35s .14s ease both}
 .u4{animation:up .35s .21s ease both}
 .u5{animation:up .35s .28s ease both}
-\`;
+`;

@@ -1,0 +1,25 @@
+
+> family-budget-app@2.0.0 build
+> vite build
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+vite v5.4.21 building for production...
+transforming...
+✓ 14 modules transformed.
+x Build failed in 57ms
+error during build:
+[vite:build-import-analysis] [plugin vite:build-import-analysis] src/views/HomeView.js (37:153): Failed to parse source for import analysis because the content contains invalid JS syntax. If you are using JSX, make sure to name the file with the .jsx or .tsx extension.
+file: /Users/dongpayuk/wjin_forwork/어플개발_우진지연 budget/budget-v2/src/views/HomeView.js:37:153
+
+35:       <div className="u1" style={{padding:"22px 0 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+36:         <div>
+37:           <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:3}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
+                                                                                                                                                             ^
+38:           <div className="serif" style={{fontSize:21}}>가정 경영현황</div>
+39:         </div>
+
+    at getRollupError (file:///Users/dongpayuk/wjin_forwork/%E1%84%8B%E1%85%A5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%80%E1%85%A2%E1%84%87%E1%85%A1%E1%86%AF_%E1%84%8B%E1%85%AE%E1%84%8C%E1%85%B5%E1%86%AB%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%A7%E1%86%AB%20budget/budget-v2/node_modules/rollup/dist/es/shared/parseAst.js:406:41)
+    at error (file:///Users/dongpayuk/wjin_forwork/%E1%84%8B%E1%85%A5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%80%E1%85%A2%E1%84%87%E1%85%A1%E1%86%AF_%E1%84%8B%E1%85%AE%E1%84%8C%E1%85%B5%E1%86%AB%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%A7%E1%86%AB%20budget/budget-v2/node_modules/rollup/dist/es/shared/parseAst.js:402:42)
+    at Object.error (file:///Users/dongpayuk/wjin_forwork/%E1%84%8B%E1%85%A5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%80%E1%85%A2%E1%84%87%E1%85%A1%E1%86%AF_%E1%84%8B%E1%85%AE%E1%84%8C%E1%85%B5%E1%86%AB%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%A7%E1%86%AB%20budget/budget-v2/node_modules/rollup/dist/es/shared/node-entry.js:22304:20)
+    at Object.error (file:///Users/dongpayuk/wjin_forwork/%E1%84%8B%E1%85%A5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%80%E1%85%A2%E1%84%87%E1%85%A1%E1%86%AF_%E1%84%8B%E1%85%AE%E1%84%8C%E1%85%B5%E1%86%AB%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%A7%E1%86%AB%20budget/budget-v2/node_modules/rollup/dist/es/shared/node-entry.js:21345:42)
+    at Object.transform (file:///Users/dongpayuk/wjin_forwork/%E1%84%8B%E1%85%A5%E1%84%91%E1%85%B3%E1%86%AF%E1%84%80%E1%85%A2%E1%84%87%E1%85%A1%E1%86%AF_%E1%84%8B%E1%85%AE%E1%84%8C%E1%85%B5%E1%86%AB%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%A7%E1%86%AB%20budget/budget-v2/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64913:14)

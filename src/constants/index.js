@@ -43,3 +43,14 @@ export const CARD_PRESETS_COLOR = ["#1c2340","#2d1a3a","#1a3020","#3a1a1a","#2a2
 export const CARD_ICONS_LIST    = ["💳","🏦","💰","🪙","🎴","⭐","🔵","🔴"];
 export const MONTH_NAMES = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 export const DNAMES = ["일","월","화","수","목","금","토"];
+
+export const PAY_METHODS = [
+  {id:"credit", label:"신용카드"},
+  {id:"debit",  label:"체크카드"},
+  {id:"cash",   label:"현금/기타"}
+];
+
+export const DEFAULT_TAX_CONFIG = {
+  husbandIncome: 50000000,
+  wifeIncome: 50000000
+};
