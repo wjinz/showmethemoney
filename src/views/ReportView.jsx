@@ -110,7 +110,7 @@ function ReportContent({tx,budgets,fixed,install,names}){
   );
 }
 
-export function ReportView({tx, budgets, fixed, install, names, cards, plan, setPlan, taxConfig, setTaxConfig}) {
+export function ReportView({tx, budgets, fixed, install, names, cards, plan, setPlan, taxConfig, setTaxConfig, onEdit, onDelete}) {
   const [tab, setTab] = useState("report");
   return (
     <div style={{height:"100%",display:"flex",flexDirection:"column"}}>
@@ -134,7 +134,7 @@ export function ReportView({tx, budgets, fixed, install, names, cards, plan, set
       </div>
       <div style={{flex:1,overflow:"hidden"}}>
         {tab==="report"   && <ReportContent tx={tx} budgets={budgets} fixed={fixed} install={install} names={names}/>}
-        {tab==="calendar" && <CalendarView  tx={tx} cards={cards} names={names} budgets={budgets}/>}
+        {tab==="calendar" && <CalendarView  tx={tx} cards={cards} names={names} budgets={budgets} onEdit={onEdit} onDelete={onDelete}/>}
         {tab==="plan"     && <PlanView      plan={plan} setPlan={setPlan} tx={tx} budgets={budgets}/>}
         {tab==="tax"      && <TaxOptimizerView tx={tx} names={names} taxConfig={taxConfig} setTaxConfig={setTaxConfig}/>}
         {tab==="pred"     && <PredictionView tx={tx} fixed={fixed}/>}

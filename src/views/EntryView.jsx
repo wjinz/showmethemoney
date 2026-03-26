@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card, Chip } from "../components/UI";
+import { TxEditModal } from "../components/TxEditModal";
 import { CAT, CATS } from "../constants";
 import { fmtS, toDateStr } from "../utils/helpers";
 import { runOCR } from "../utils/ocr";
@@ -7,18 +8,20 @@ import { runOCR } from "../utils/ocr";
 const nowStr = () => toDateStr(new Date());
 
 export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
-  const [who, setWho] = useState("husband");
-  const [amount, setAmount] = useState("");
-  const [cat, setCat] = useState("");
-  const [memo, setMemo] = useState("");
-  const [cardId, setCardId] = useState("");
+  const [who,       setWho]       = useState("husband");
+  const [amount,    setAmount]    = useState("");
+  const [cat,       setCat]       = useState("");
+  const [memo,      setMemo]      = useState("");
+  const [cardId,    setCardId]    = useState("");
   const [payMethod, setPayMethod] = useState("credit");
-  const [date, setDate] = useState(nowStr());
-  const [saved, setSaved] = useState(false);
-  const [isOCR, setIsOCR] = useState(false);
-  const [ocrStatus, setOcrStatus] = useState(null);  // null | "success" | "error"
-  const [ocrMsg, setOcrMsg] = useState("");
-  const [editingId, setEditingId] = useState(null);  // null = 신규, id = 수정 중
+  const [date,      setDate]      = useState(nowStr());
+  const [saved,     setSaved]     = useState(false);
+  const [isOCR,     setIsOCR]     = useState(false);
+  const [ocrStatus, setOcrStatus] = useState(null);
+  const [ocrMsg,    setOcrMsg]    = useState("");
+
+  // 수정 모달: null 이면 닫힘, tx 객체면 해당 항목 편집 중
+  const [editingTx, setEditingTx] = useState(null);
 
   const press = (v) => {
     if (v === "C") setAmount("");
@@ -26,39 +29,15 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
     else if (amount.length < 9) setAmount(amount + v);
   };
 
-  const resetForm = (keepDate = false) => {
-    setAmount(""); setCat(""); setMemo(""); setCardId(""); setPayMethod("credit");
-    if (!keepDate) setDate(nowStr());
-    setEditingId(null);
-  };
-
   const save = () => {
     if (!amount || !cat) return;
-    const payload = { who, amount: parseInt(amount), cat, memo, cardId, payMethod, date };
-    if (editingId) {
-      onEdit(editingId, payload);
-    } else {
-      onSave(payload);
-    }
+    onSave({ who, amount: parseInt(amount), cat, memo, cardId, payMethod, date });
     setSaved(true);
-    setTimeout(() => { setSaved(false); resetForm(); }, 900);
+    setTimeout(() => {
+      setSaved(false);
+      setAmount(""); setCat(""); setMemo(""); setCardId(""); setPayMethod("credit");
+    }, 900);
   };
-
-  // 수정 모드 시작: 기존 항목 데이터로 폼 채우기
-  const startEdit = (t) => {
-    setWho(t.who);
-    setAmount(String(t.amount));
-    setCat(t.cat);
-    setMemo(t.memo || "");
-    setCardId(t.cardId || "");
-    setPayMethod(t.payMethod || "credit");
-    setDate(t.date);
-    setEditingId(t.id);
-    // 폼 상단으로 스크롤
-    document.querySelector(".entry-scroll-top")?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const cancelEdit = () => resetForm();
 
   const handleOCR = async (e) => {
     const file = e.target.files[0];
@@ -70,8 +49,8 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
       if (res.amount && res.amount > 0) { setAmount(String(res.amount)); filled++; }
       if (res.cat && CAT[res.cat])      { setCat(res.cat);              filled++; }
       if (res.memo)                     { setMemo(res.memo);            filled++; }
-      if (filled > 0) { setOcrStatus("success"); setOcrMsg(`${filled}개 항목 자동 입력`); }
-      else            { setOcrStatus("error");   setOcrMsg("인식 실패"); }
+      setOcrStatus(filled > 0 ? "success" : "error");
+      setOcrMsg(filled > 0 ? `${filled}개 항목 자동 입력` : "인식 실패");
     } catch (err) {
       setOcrStatus("error"); setOcrMsg(err.message ?? "OCR 오류");
     } finally {
@@ -80,20 +59,17 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
     }
   };
 
-  // 선택한 날짜의 내역 목록
+  // 선택한 날짜의 내역
   const dateTx = tx.filter(t => t.date === date).sort((a, b) => b.id - a.id);
 
   return (
     <div style={{ padding: "0 16px 96px", overflowY: "auto", height: "100%" }}>
 
-      {/* 헤더 */}
-      <div className="entry-scroll-top u1" style={{ padding: "22px 0 14px", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <div className="serif" style={{ fontSize: 21 }}>{editingId ? "내역 수정" : "지출 기록"}</div>
-        {/* 날짜 피커 */}
+      {/* 헤더 + 날짜 피커 */}
+      <div style={{ padding: "22px 0 14px", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <div className="serif" style={{ fontSize: 21 }}>지출 기록</div>
         <input
-          type="date"
-          value={date}
-          onChange={e => { setDate(e.target.value); if (editingId) cancelEdit(); }}
+          type="date" value={date} onChange={e => setDate(e.target.value)}
           style={{
             background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 9,
             color: "var(--text)", fontSize: 12, padding: "5px 10px", outline: "none",
@@ -102,22 +78,7 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
         />
       </div>
 
-      {/* 수정 모드 배너 */}
-      {editingId && (
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          background: "var(--goldD)", border: "1px solid var(--gold)",
-          borderRadius: 10, padding: "9px 14px", marginBottom: 10, fontSize: 12, color: "var(--gold)",
-        }}>
-          <span>✏️ 내역 수정 중</span>
-          <button onClick={cancelEdit} style={{
-            background: "none", border: "1px solid var(--gold)", borderRadius: 7,
-            color: "var(--gold)", cursor: "pointer", fontSize: 11, padding: "2px 9px",
-          }}>취소</button>
-        </div>
-      )}
-
-      {/* 누가 쓴 건지 */}
+      {/* 누가 */}
       <div className="u2" style={{ display: "flex", gap: 4, marginBottom: 12 }}>
         {["husband", "wife"].map(r => (
           <button key={r} onClick={() => setWho(r)} style={{
@@ -140,7 +101,7 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "⌫"].map(v => (
+          {[1,2,3,4,5,6,7,8,9,"C",0,"⌫"].map(v => (
             <button key={v} onClick={() => press(v)} style={{
               height: 48, borderRadius: 10, border: "1px solid var(--border)",
               background: "var(--bg3)", fontSize: 18, fontWeight: 700, cursor: "pointer",
@@ -168,9 +129,8 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
 
       {/* 메모 + 카드 */}
       <Card className="u4" style={{ padding: 12, marginBottom: 12 }}>
-        <input value={memo} onChange={e => setMemo(e.target.value)}
-          placeholder="어디에 쓰셨나요? (선택)"
-          style={{ width: "100%", background: "none", border: "none", color: "var(--text)", fontSize: 14, outline: "none", marginBottom: 10, padding: "4px" }} />
+        <input value={memo} onChange={e => setMemo(e.target.value)} placeholder="어디에 쓰셨나요? (선택)"
+          style={{ width: "100%", background: "none", border: "none", color: "var(--text)", fontSize: 14, outline: "none", padding: "4px" }} />
         {cards.length > 0 && (
           <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingTop: 10, borderTop: "1px solid var(--border2)", marginTop: 10 }}>
             {cards.map(c => (
@@ -205,10 +165,9 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
       {/* OCR 피드백 */}
       {ocrStatus && (
         <div style={{
-          display: "flex", alignItems: "center", gap: 8,
+          display: "flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 14px", marginBottom: 10, fontSize: 12,
           background: ocrStatus === "success" ? "#1a3a1a" : "#3a1a1a",
           border: `1px solid ${ocrStatus === "success" ? "#4dab87" : "#d97f7f"}`,
-          borderRadius: 10, padding: "8px 14px", marginBottom: 10, fontSize: 12,
         }}>
           <span>{ocrStatus === "success" ? "✓" : "!"}</span>
           <span>{ocrMsg}</span>
@@ -226,82 +185,76 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
         </label>
         <button onClick={save} disabled={!amount || !cat} style={{
           flex: 1, padding: "15px",
-          background: saved ? "var(--greenD)" : (!amount || !cat) ? "var(--bg3)" : editingId ? "var(--blueD,#1a2a4a)" : "var(--gold)",
-          border: `1px solid ${saved ? "var(--green)" : (!amount || !cat) ? "var(--border)" : editingId ? "var(--blue,#5c8de8)" : "transparent"}`,
+          background: saved ? "var(--greenD)" : (!amount || !cat) ? "var(--bg3)" : "var(--gold)",
+          border: `1px solid ${saved ? "var(--green)" : (!amount || !cat) ? "var(--border)" : "transparent"}`,
           borderRadius: 13,
-          color: saved ? "var(--green)" : (!amount || !cat) ? "var(--text3)" : editingId ? "var(--blue,#5c8de8)" : "#fff",
+          color: saved ? "var(--green)" : (!amount || !cat) ? "var(--text3)" : "#fff",
           fontWeight: 700, fontSize: 15, cursor: (!amount || !cat) ? "default" : "pointer",
-          boxShadow: (!amount || !cat) || saved ? "none" : editingId ? "0 4px 20px rgba(92,141,232,.3)" : "0 4px 24px rgba(200,168,75,.3)",
+          boxShadow: (!amount || !cat) || saved ? "none" : "0 4px 24px rgba(200,168,75,.3)",
           transition: "all .2s",
         }}>
-          {saved
-            ? (editingId ? "✓ 수정됨" : "✓ 저장됨")
-            : (!amount || !cat)
-              ? "금액과 카테고리 선택"
-              : editingId
-                ? `수정 완료 · ${parseInt(amount).toLocaleString()}원`
-                : `저장 · ${parseInt(amount).toLocaleString()}원`}
+          {saved ? "✓ 저장됨" : (!amount || !cat) ? "금액과 카테고리 선택" : `저장 · ${parseInt(amount).toLocaleString()}원`}
         </button>
       </div>
 
-      {/* 해당 날짜 내역 */}
+      {/* 해당 날짜 내역 목록 */}
       <Card className="u5" style={{ overflow: "hidden" }}>
         <div style={{ padding: "12px 14px 8px", display: "flex", justifyContent: "space-between" }}>
           <span style={{ fontSize: 12, fontWeight: 700 }}>
-            {date === nowStr() ? "오늘 내역" : `${date} 내역`}
+            {date === nowStr() ? "오늘 내역" : `${date.replace(/-/g, ".")} 내역`}
           </span>
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--gold)" }}>
             {fmtS(dateTx.reduce((s, t) => s + t.amount, 0))}원
           </span>
         </div>
+
         {dateTx.length === 0 ? (
           <div style={{ padding: "24px 14px", textAlign: "center", color: "var(--text3)", fontSize: 12 }}>
             {date === nowStr() ? "오늘 입력된 내역이 없어요" : "해당 날짜에 내역이 없어요"}
           </div>
         ) : dateTx.map(t => {
           const c = CAT[t.cat] || CATS[8];
-          const isEditing = editingId === t.id;
           return (
-            <div key={t.id} style={{
-              padding: "9px 14px", borderTop: "1px solid var(--border)",
-              display: "flex", alignItems: "center", gap: 10,
-              background: isEditing ? "var(--goldD)" : "transparent",
-              transition: "background .2s",
-            }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: c.color + "1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>
+            <div
+              key={t.id}
+              onClick={() => setEditingTx(t)}
+              style={{
+                padding: "11px 14px", borderTop: "1px solid var(--border)",
+                display: "flex", alignItems: "center", gap: 10,
+                cursor: "pointer", transition: "background .15s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "var(--bg3)"}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+            >
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: c.color + "1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>
                 {c.icon}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 1 }}>
-                  <span style={{ fontSize: 12, fontWeight: 500 }}>{c.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{c.label}</span>
                   <Chip who={t.who} names={names} />
                 </div>
                 <div style={{ fontSize: 10, color: "var(--text2)" }}>{t.memo || "—"}</div>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", flexShrink: 0 }}>
-                -{fmtS(t.amount)}원
-              </span>
-              {/* 수정 버튼 */}
-              <button
-                onClick={() => isEditing ? cancelEdit() : startEdit(t)}
-                style={{
-                  width: 26, height: 26, borderRadius: 7, border: "none", cursor: "pointer",
-                  background: isEditing ? "var(--gold)" : "var(--goldD)",
-                  color: isEditing ? "#fff" : "var(--gold)",
-                  fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}
-                title={isEditing ? "수정 취소" : "수정"}
-              >✎</button>
-              {/* 삭제 버튼 */}
-              <button onClick={() => { if (isEditing) cancelEdit(); onDelete(t.id); }} style={{
-                width: 26, height: 26, borderRadius: 7, border: "none", cursor: "pointer",
-                background: "var(--redD)", color: "var(--red)", fontSize: 13,
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              }}>✕</button>
+              <span style={{ fontSize: 13, fontWeight: 700, flexShrink: 0 }}>-{fmtS(t.amount)}원</span>
+              {/* 수정 힌트 아이콘 */}
+              <span style={{ fontSize: 13, color: "var(--text3)", flexShrink: 0 }}>✎</span>
             </div>
           );
         })}
       </Card>
+
+      {/* 수정 모달 */}
+      {editingTx && (
+        <TxEditModal
+          tx={editingTx}
+          names={names}
+          cards={cards}
+          onClose={() => setEditingTx(null)}
+          onEdit={(id, updates) => { onEdit(id, updates); setEditingTx(null); }}
+          onDelete={(id) => { onDelete(id); setEditingTx(null); }}
+        />
+      )}
     </div>
   );
 }

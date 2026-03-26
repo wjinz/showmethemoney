@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Card, Chip } from "../components/UI";
+import { TxEditModal } from "../components/TxEditModal";
 import { CAT, CATS, DNAMES, MONTH, YEAR } from "../constants";
 import { fmt, fmtMonthDay, fmtPeriodLabel, fmtS, getBillingPeriod, today_str, toDateStr } from "../utils/helpers";
 
-export function CalendarView({tx, cards, names, budgets}) {
+export function CalendarView({tx, cards, names, budgets, onEdit, onDelete}) {
   const [selDate, setSelDate] = useState(today_str());
   const [selCard, setSelCard] = useState(null);
+  const [editingTx, setEditingTx] = useState(null);
 
   const [viewYear,  setViewYear]  = useState(YEAR);
   const [viewMonth, setViewMonth] = useState(MONTH);
@@ -236,12 +238,21 @@ export function CalendarView({tx, cards, names, budgets}) {
           </div>
         ):selTx.map(t=>{
           const c = CAT[t.cat]||CATS[8];
-          const cardName = t.cardId ? cards.find(c=>c.id===t.cardId)?.name : null;
+          const cardName = t.cardId ? cards.find(cd=>cd.id===t.cardId)?.name : null;
+          const canEdit = onEdit && onDelete;
           return(
-            <div key={t.id} style={{
-              padding:"10px 15px",borderBottom:"1px solid var(--border)",
-              display:"flex",alignItems:"center",gap:10
-            }}>
+            <div
+              key={t.id}
+              onClick={() => canEdit && setEditingTx(t)}
+              style={{
+                padding:"10px 15px", borderBottom:"1px solid var(--border)",
+                display:"flex", alignItems:"center", gap:10,
+                cursor: canEdit ? "pointer" : "default",
+                transition: "background .15s",
+              }}
+              onMouseEnter={e => { if(canEdit) e.currentTarget.style.background="var(--bg3)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background="transparent"; }}
+            >
               <div style={{
                 width:34,height:34,borderRadius:9,flexShrink:0,
                 background:c.color+"1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15
@@ -259,10 +270,23 @@ export function CalendarView({tx, cards, names, budgets}) {
                 {t.memo && <div style={{fontSize:10,color:"var(--text2)"}}>{t.memo}</div>}
               </div>
               <span style={{fontSize:13,fontWeight:700,flexShrink:0}}>-{fmtS(t.amount)}원</span>
+              {canEdit && <span style={{fontSize:12,color:"var(--text3)",flexShrink:0}}>✎</span>}
             </div>
           );
         })}
       </Card>
+
+      {/* 수정 모달 */}
+      {editingTx && onEdit && onDelete && (
+        <TxEditModal
+          tx={editingTx}
+          names={names}
+          cards={cards}
+          onClose={() => setEditingTx(null)}
+          onEdit={(id, updates) => { onEdit(id, updates); setEditingTx(null); }}
+          onDelete={(id) => { onDelete(id); setEditingTx(null); }}
+        />
+      )}
     </div>
   );
 }
