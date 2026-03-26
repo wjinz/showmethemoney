@@ -6,6 +6,7 @@ import { CalendarView } from "./CalendarView";
 import { PlanView } from "./PlanView";
 import { TaxOptimizerView } from "./TaxOptimizerView";
 import { PredictionView } from "./PredictionView";
+import { DataImportView } from "./DataImportView";
 
 function StackedBar({data,total,height=24,showLegend=false}){
   return(
@@ -110,7 +111,7 @@ function ReportContent({tx,budgets,fixed,install,names}){
   );
 }
 
-export function ReportView({tx, budgets, fixed, install, names, cards, plan, setPlan, taxConfig, setTaxConfig, onEdit, onDelete}) {
+export function ReportView({tx, budgets, setBudgets, fixed, install, names, cards, plan, setPlan, taxConfig, setTaxConfig, onEdit, onDelete}) {
   const [tab, setTab] = useState("report");
   return (
     <div style={{height:"100%",display:"flex",flexDirection:"column"}}>
@@ -118,6 +119,7 @@ export function ReportView({tx, budgets, fixed, install, names, cards, plan, set
         {[
           {id:"report",l:"📊 리포트"},
           {id:"calendar",l:"📅 캘린더"},
+          {id:"import",l:"📁 데이터"},
           {id:"plan",l:"🎯 계획"},
           {id:"tax",l:"💸 연말정산"},
           {id:"pred",l:"🔮 예측"}
@@ -135,7 +137,8 @@ export function ReportView({tx, budgets, fixed, install, names, cards, plan, set
       <div style={{flex:1,overflow:"hidden"}}>
         {tab==="report"   && <ReportContent tx={tx} budgets={budgets} fixed={fixed} install={install} names={names}/>}
         {tab==="calendar" && <CalendarView  tx={tx} cards={cards} names={names} budgets={budgets} onEdit={onEdit} onDelete={onDelete}/>}
-        {tab==="plan"     && <PlanView      plan={plan} setPlan={setPlan} tx={tx} budgets={budgets}/>}
+        {tab==="import"   && <DataImportView plan={plan} setPlan={setPlan} onGoToPlan={()=>setTab("plan")}/>}
+        {tab==="plan"     && <PlanView      plan={plan} setPlan={setPlan} tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} onGoToImport={()=>setTab("import")}/>}
         {tab==="tax"      && <TaxOptimizerView tx={tx} names={names} taxConfig={taxConfig} setTaxConfig={setTaxConfig}/>}
         {tab==="pred"     && <PredictionView tx={tx} fixed={fixed}/>}
       </div>
