@@ -30,6 +30,13 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
   const paceStatus  = pacePct<=90?"양호 ✓":pacePct<=110?"보통":"주의";
   const fillColor   = projOver ? "var(--red)" : "var(--green)";
 
+  // 현재 페이스 기반 월말 예측
+  const currentPaceDaily         = DAY > 0 ? Math.round(totalSpent / DAY) : 0;
+  const projectedAtPace          = totalSpent + currentPaceDaily * daysLeft;
+  const remainingAtPace          = totalBudget - projectedAtPace;
+  const isOnTrack                = remainingAtPace >= 0;
+  const paceProgressPct          = totalBudget > 0 ? Math.min(Math.round(projectedAtPace / totalBudget * 100), 130) : 0;
+
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>
       <div className="u1" style={{padding:"22px 0 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
@@ -60,14 +67,53 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
           </div>
         </div>
 
+        {/* ── 이 속도면 월말에? ── */}
+        <div style={{
+          background: isOnTrack ? "rgba(60,180,100,.1)" : "rgba(200,50,50,.1)",
+          border: `1px solid ${isOnTrack ? "rgba(60,180,100,.25)" : "rgba(200,50,50,.25)"}`,
+          borderRadius: 14, padding: "14px 16px", marginBottom: 10
+        }}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div>
+              <div style={{fontSize:10,color:"var(--text2)",marginBottom:4,letterSpacing:".04em"}}>이 속도면 월말에</div>
+              <div style={{fontSize:28,fontWeight:700,lineHeight:1,color:isOnTrack?"var(--green)":"var(--red)",letterSpacing:"-.02em"}}>
+                {isOnTrack ? "+" : "-"}{fmtS(Math.abs(remainingAtPace))}<span style={{fontSize:14,marginLeft:3}}>원</span>
+              </div>
+              <div style={{fontSize:11,color:isOnTrack?"var(--green)":"var(--red)",marginTop:5}}>
+                {isOnTrack ? `예산 ${fmtS(Math.abs(remainingAtPace))}원 남아요 ✓` : `예산 ${fmtS(Math.abs(remainingAtPace))}원 초과 ⚠`}
+              </div>
+            </div>
+            <div style={{textAlign:"right",flexShrink:0}}>
+              <div style={{fontSize:10,color:"var(--text2)",marginBottom:3}}>일평균 지출</div>
+              <div style={{fontSize:18,fontWeight:700,color:"var(--text)"}}>{fmtS(currentPaceDaily)}<span style={{fontSize:10,color:"var(--text2)",marginLeft:2}}>원/일</span></div>
+              <div style={{fontSize:10,color:"var(--text2)",marginTop:2}}>잔여 {daysLeft}일</div>
+            </div>
+          </div>
+          {/* 진행 게이지 */}
+          <div style={{marginTop:12,background:"var(--bg3)",borderRadius:99,height:5,overflow:"hidden"}}>
+            <div style={{
+              height:"100%", borderRadius:99, transition:"width .5s ease",
+              width:`${Math.min(paceProgressPct, 100)}%`,
+              background: isOnTrack
+                ? "linear-gradient(90deg,var(--green),#5cba84)"
+                : "linear-gradient(90deg,var(--gold),var(--red))"
+            }}/>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:9,color:"var(--text3)"}}>
+            <span>현재 {fmtS(totalSpent)}원</span>
+            <span>월말 예상 {paceProgressPct}% 집행</span>
+            <span>예산 {fmtS(totalBudget)}원</span>
+          </div>
+        </div>
+
         <div style={{background:"var(--bg4)",borderRadius:14,padding:"16px",border:"1px solid var(--border2)"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
             <div>
-              <div style={{fontSize:12,fontWeight:700,color:"var(--gold)"}}>📊 남은 {daysLeft}일 시나리오</div>
+              <div style={{fontSize:12,fontWeight:700,color:"var(--gold)"}}>🎛 시나리오 조정</div>
               <div style={{fontSize:10,color:"var(--text2)",marginTop:3}}>슬라이더로 일 지출 조정 → 월말 예상 변화</div>
             </div>
             <div style={{textAlign:"right",flexShrink:0}}>
-              <div style={{fontSize:10,color:"var(--text2)"}}>월말 예상</div>
+              <div style={{fontSize:10,color:"var(--text2)"}}>조정 시 월말</div>
               <div style={{fontSize:16,fontWeight:700,color:projOver?"var(--red)":"var(--green)"}}>{fmtS(projected)}원</div>
               <div style={{fontSize:10,color:projOver?"var(--red)":"var(--green)",marginTop:1}}>{projOver?"▲ 예산 초과":"✓ 예산 내"}</div>
             </div>
@@ -87,7 +133,7 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
           />
 
           <div style={{display:"flex",gap:8}}>
-            {[{label:"현재 페이스",val:Math.round(totalSpent/DAY),c:"var(--text2)"},{label:"조정 후",val:paceDaily,c:fillColor}].map(b=>(
+            {[{label:"지금 페이스",val:currentPaceDaily,c:"var(--text2)"},{label:"조정 후",val:paceDaily,c:fillColor}].map(b=>(
               <div key={b.label} style={{flex:1,background:"var(--bg3)",borderRadius:10,padding:"9px 12px"}}>
                 <div style={{fontSize:10,color:"var(--text2)",marginBottom:3}}>{b.label}</div>
                 <div style={{fontSize:14,fontWeight:700,color:b.c}}>{fmtS(b.val)}<span style={{fontSize:10,color:"var(--text2)",marginLeft:2}}>원/일</span></div>
