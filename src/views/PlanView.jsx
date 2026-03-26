@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card, Bar } from "../components/UI";
-import { CAT, CATS, MONTH, YEAR, MONTH_NAMES } from "../constants";
+import { CAT, CATS, DAY, MONTH, YEAR, MONTH_NAMES } from "../constants";
 import { fmtS } from "../utils/helpers";
 
 export function PlanView({plan, setPlan, tx, budgets}) {

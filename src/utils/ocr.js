@@ -1,48 +1,45 @@
+// OCR 유틸 — /api/ocr 서버리스 함수를 통해 Anthropic API 호출
+// API 키는 서버 사이드(Vercel 환경 변수 ANTHROPIC_API_KEY)에서만 사용됨
+
+/**
+ * 영수증 이미지 파일을 분석해 지출 정보를 반환합니다.
+ * @param {File} imageFile - input[type=file]에서 받은 이미지 파일
+ * @returns {Promise<{amount: number|null, cat: string|null, memo: string|null}>}
+ */
 export async function runOCR(imageFile) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+
     reader.onload = async (e) => {
       try {
-        const base64Image = e.target.result.split(',')[1];
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        // base64 데이터 (data:image/...;base64, 접두사 제거)
+        const dataUrl = e.target.result;
+        const base64Image = dataUrl.split(',')[1];
+        const mediaType = dataUrl.match(/data:(image\/[^;]+);/)?.[1] ?? 'image/jpeg';
+
+        const response = await fetch('/api/ocr', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || 'YOUR_ANTHROPIC_API_KEY', // USER should provide this or it should be in env
-            'anthropic-version': '2023-06-01'
-          },
-          body: JSON.stringify({
-            model: "claude-3-5-sonnet-20240620",
-            max_tokens: 1024,
-            messages: [{
-              role: "user",
-              content: [
-                {
-                  type: "image",
-                  source: {
-                    type: "base64",
-                    media_type: "image/jpeg",
-                    data: base64Image
-                  }
-                },
-                {
-                  type: "text",
-                  text: "Extract 'amount' (number), 'category' (one of: food, housing, education, transport, medical, culture, clothing, sub, etc), and 'memo' (store name) from this receipt. Return ONLY JSON: {amount, cat, memo}."
-                }
-              ]
-            }]
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64Image, mediaType }),
         });
 
         const data = await response.json();
-        const text = data.content[0].text;
-        const json = JSON.parse(text.match(/\{.*\}/s)[0]);
-        resolve(json);
+
+        if (!response.ok) {
+          throw new Error(data.error ?? `서버 오류 (${response.status})`);
+        }
+
+        resolve({
+          amount: data.amount ?? null,
+          cat: data.cat ?? null,
+          memo: data.memo ?? null,
+        });
       } catch (err) {
         reject(err);
       }
     };
-    reader.onerror = reject;
+
+    reader.onerror = () => reject(new Error('이미지 파일을 읽을 수 없습니다.'));
     reader.readAsDataURL(imageFile);
   });
 }

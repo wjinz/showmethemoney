@@ -149,6 +149,7 @@ export default function App() {
 
   const addTx = useCallback(t => setTx(ts => [...ts, { ...t, id: Date.now() }]), [setTx]);
   const deleteTx = useCallback(id => setTx(ts => ts.filter(t => t.id !== id)), [setTx]);
+  const editTx = useCallback((id, updates) => setTx(ts => ts.map(t => t.id === id ? { ...t, ...updates } : t)), [setTx]);
 
   const resetAll = useCallback(async () => {
     const promises = [
@@ -235,7 +236,7 @@ export default function App() {
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
           {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} />}
-          {view === "entry" && <EntryView names={names} onSave={addTx} onDelete={deleteTx} tx={tx} cards={cards} />}
+          {view === "entry" && <EntryView names={names} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
           {view === "report" && <ReportView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} />}
           {view === "asset" && <AssetView assets={assets} setAssets={setAssets} />}
           {view === "fixed" && <FixedView fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} tx={tx} names={names} sliderCfg={sliderCfg} />}
