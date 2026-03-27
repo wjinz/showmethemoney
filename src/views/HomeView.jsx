@@ -30,21 +30,26 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
   const paceStatus  = pacePct<=90?"양호 ✓":pacePct<=110?"보통":"주의";
   const fillColor   = projOver ? "var(--red)" : "var(--green)";
 
+  // 현재 페이스 기반 월말 예측 (급여 계산보다 먼저 정의)
+  const currentPaceDaily  = DAY > 0 ? Math.round(totalSpent / DAY) : 0;
+  const projectedAtPace   = totalSpent + currentPaceDaily * daysLeft;
+  const remainingAtPace   = totalBudget - projectedAtPace;
+  const isOnTrack         = remainingAtPace >= 0;
+  const paceProgressPct   = totalBudget > 0 ? Math.min(Math.round(projectedAtPace / totalBudget * 100), 130) : 0;
+
   // ── 급여 & 카드 한도 ──
   const salary = plan?.salary || { husband: 0, wife: 0, savingsTarget: 0 };
   const totalSalary    = (salary.husband || 0) + (salary.wife || 0);
   const savingsTarget  = salary.savingsTarget || 0;
-  const committed      = fixedTotal + installTotal;           // 고정비+할부 (매달 자동 나가는 돈)
-  const cardLimit      = Math.max(totalSalary - committed - savingsTarget, 0); // 이번달 카드 사용 가능액
+  const committed      = fixedTotal + installTotal;
+  const cardLimit      = Math.max(totalSalary - committed - savingsTarget, 0);
   const cardUsedPct    = cardLimit > 0 ? Math.min(Math.round(totalSpent / cardLimit * 100), 100) : 0;
-  const cardLeft       = cardLimit - totalSpent;              // 남은 카드 한도
+  const cardLeft       = cardLimit - totalSpent;
   const cardLimitOk    = cardLeft >= 0;
-  // 저축률: 이달 지출 페이스 기반 추정
-  const estimatedSavings  = totalSalary - committed - projectedAtPace; // 월말 예상 저축액
-  const savingsRate        = totalSalary > 0 ? Math.round(estimatedSavings / totalSalary * 100) : 0;
-  const savingsRateColor   = savingsRate >= 20 ? "var(--green)" : savingsRate >= 10 ? "var(--gold)" : "var(--red)";
-  const savingsRateLabel   = savingsRate >= 20 ? "우수 ✓" : savingsRate >= 10 ? "양호" : savingsRate >= 0 ? "주의 ⚠" : "적자 ⚠";
-  // 이번달 카드 결제액 (다음달 청구 예정)
+  const estimatedSavings = totalSalary - committed - projectedAtPace;
+  const savingsRate      = totalSalary > 0 ? Math.round(estimatedSavings / totalSalary * 100) : 0;
+  const savingsRateColor = savingsRate >= 20 ? "var(--green)" : savingsRate >= 10 ? "var(--gold)" : "var(--red)";
+  const savingsRateLabel = savingsRate >= 20 ? "우수 ✓" : savingsRate >= 10 ? "양호" : savingsRate >= 0 ? "주의 ⚠" : "적자 ⚠";
   const thisMonthCardSpend = tx
     .filter(t => { const d = new Date(t.date); return d.getFullYear()===YEAR && d.getMonth()+1===MONTH && t.payMethod==="card"; })
     .reduce((s,t) => s+t.amount, 0);
@@ -62,13 +67,6 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
     setPlan(p => ({...p, salary: s}));
     setShowSalaryEdit(false);
   };
-
-  // 현재 페이스 기반 월말 예측
-  const currentPaceDaily         = DAY > 0 ? Math.round(totalSpent / DAY) : 0;
-  const projectedAtPace          = totalSpent + currentPaceDaily * daysLeft;
-  const remainingAtPace          = totalBudget - projectedAtPace;
-  const isOnTrack                = remainingAtPace >= 0;
-  const paceProgressPct          = totalBudget > 0 ? Math.min(Math.round(projectedAtPace / totalBudget * 100), 130) : 0;
 
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>
