@@ -30,22 +30,35 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
   const paceStatus  = pacePct<=90?"양호 ✓":pacePct<=110?"보통":"주의";
   const fillColor   = projOver ? "var(--red)" : "var(--green)";
 
-  // ── 급여 & 현금흐름 ──
-  const salary = plan?.salary || { husband: 0, wife: 0 };
-  const totalSalary = (salary.husband || 0) + (salary.wife || 0);
-  // 지난달 카드 지출 (payMethod === 'card' 이면서 지난달 날짜)
-  const now = new Date();
-  const lm = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
-  const ly = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
-  const lastMonthCardBill = tx
-    .filter(t => { const d = new Date(t.date); return d.getFullYear()===ly && d.getMonth()===lm && t.payMethod==="card"; })
+  // ── 급여 & 카드 한도 ──
+  const salary = plan?.salary || { husband: 0, wife: 0, savingsTarget: 0 };
+  const totalSalary    = (salary.husband || 0) + (salary.wife || 0);
+  const savingsTarget  = salary.savingsTarget || 0;
+  const committed      = fixedTotal + installTotal;           // 고정비+할부 (매달 자동 나가는 돈)
+  const cardLimit      = Math.max(totalSalary - committed - savingsTarget, 0); // 이번달 카드 사용 가능액
+  const cardUsedPct    = cardLimit > 0 ? Math.min(Math.round(totalSpent / cardLimit * 100), 100) : 0;
+  const cardLeft       = cardLimit - totalSpent;              // 남은 카드 한도
+  const cardLimitOk    = cardLeft >= 0;
+  // 저축률: 이달 지출 페이스 기반 추정
+  const estimatedSavings  = totalSalary - committed - projectedAtPace; // 월말 예상 저축액
+  const savingsRate        = totalSalary > 0 ? Math.round(estimatedSavings / totalSalary * 100) : 0;
+  const savingsRateColor   = savingsRate >= 20 ? "var(--green)" : savingsRate >= 10 ? "var(--gold)" : "var(--red)";
+  const savingsRateLabel   = savingsRate >= 20 ? "우수 ✓" : savingsRate >= 10 ? "양호" : savingsRate >= 0 ? "주의 ⚠" : "적자 ⚠";
+  // 이번달 카드 결제액 (다음달 청구 예정)
+  const thisMonthCardSpend = tx
+    .filter(t => { const d = new Date(t.date); return d.getFullYear()===YEAR && d.getMonth()+1===MONTH && t.payMethod==="card"; })
     .reduce((s,t) => s+t.amount, 0);
-  const netCash = totalSalary - lastMonthCardBill - fixedTotal - installTotal;
-  const [showSalaryEdit, setShowSalaryEdit] = useState(false);
-  const [editH, setEditH] = useState(String(salary.husband||""));
-  const [editW, setEditW] = useState(String(salary.wife||""));
+
+  const [showSalaryEdit, setShowSalaryEdit] = useState(!totalSalary);
+  const [editH, setEditH] = useState(String(salary.husband || ""));
+  const [editW, setEditW] = useState(String(salary.wife || ""));
+  const [editS, setEditS] = useState(String(salary.savingsTarget || ""));
   const saveSalary = () => {
-    const s = { husband: Number(editH.replace(/,/g,""))||0, wife: Number(editW.replace(/,/g,""))||0 };
+    const s = {
+      husband:       Number(String(editH).replace(/,/g,"")) || 0,
+      wife:          Number(String(editW).replace(/,/g,"")) || 0,
+      savingsTarget: Number(String(editS).replace(/,/g,"")) || 0,
+    };
     setPlan(p => ({...p, salary: s}));
     setShowSalaryEdit(false);
   };
@@ -163,73 +176,115 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
         </div>
       </Card>
 
-      {/* ── 급여 & 현금흐름 카드 ── */}
+      {/* ── 카드 한도 & 저축률 카드 ── */}
       <Card className="u3" style={{padding:0,marginBottom:10,overflow:"hidden"}}>
-        {/* 헤더 */}
-        <button onClick={()=>setShowSalaryEdit(v=>!v)} style={{
-          width:"100%",background:"none",border:"none",cursor:"pointer",
-          padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",
-          borderBottom:`1px solid ${showSalaryEdit?"var(--border)":"transparent"}`
-        }}>
-          <div style={{textAlign:"left"}}>
-            <div style={{fontSize:10,color:"var(--text2)",marginBottom:3,letterSpacing:".04em"}}>
-              급여 정산 후 실질 가용 자금
-            </div>
-            <div style={{fontSize:22,fontWeight:700,color:netCash>=0?"var(--green)":"var(--red)",letterSpacing:"-.02em"}}>
-              {netCash>=0?"+":"-"}{fmtS(Math.abs(netCash))}<span style={{fontSize:12,marginLeft:3}}>원</span>
-            </div>
-          </div>
-          <div style={{textAlign:"right",flexShrink:0}}>
-            <div style={{fontSize:10,color:"var(--text2)",marginBottom:3}}>급여 합계</div>
-            <div style={{fontSize:14,fontWeight:700,color:"var(--gold)"}}>
-              {totalSalary>0 ? fmtS(totalSalary)+"원" : <span style={{color:"var(--text3)",fontSize:11}}>미입력 탭▼</span>}
-            </div>
-            <div style={{fontSize:9,color:"var(--text3)",marginTop:2}}>{showSalaryEdit?"▲ 닫기":"✏ 수정"}</div>
-          </div>
-        </button>
 
-        {/* 흐름 breakdown (항상 표시) */}
-        <div style={{padding:"10px 16px",borderBottom:"1px solid var(--border)"}}>
-          {[
-            {label:"💰 이번달 급여", val:totalSalary, c:"var(--green)", sign:"+"},
-            {label:`💳 지난달(${lm+1}월) 카드 결제`, val:lastMonthCardBill, c:"var(--red)", sign:"-", sub: lastMonthCardBill===0?"카드 내역 없음 (직접 입력 가능)":null},
-            {label:"🏠 고정비+할부", val:fixedTotal+installTotal, c:"var(--text2)", sign:"-"},
-          ].map((r,i)=>(
-            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",
-              borderBottom: i<2 ? "1px dashed var(--border)":"none"}}>
-              <div>
-                <div style={{fontSize:11,color:"var(--text2)"}}>{r.label}</div>
-                {r.sub && <div style={{fontSize:9,color:"var(--text3)",marginTop:1}}>{r.sub}</div>}
-              </div>
-              <div style={{fontSize:13,fontWeight:700,color:r.c}}>{r.sign} {fmtS(r.val)}원</div>
+        {totalSalary === 0 ? (
+          /* 급여 미입력 상태 */
+          <div style={{padding:"18px 16px",textAlign:"center"}}>
+            <div style={{fontSize:22,marginBottom:8}}>💳</div>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>카드 사용 한도를 설정해보세요</div>
+            <div style={{fontSize:11,color:"var(--text2)",marginBottom:14,lineHeight:1.6}}>
+              급여와 저축 목표를 입력하면<br/>
+              이번달 카드를 얼마까지 써도 되는지<br/>
+              실시간으로 확인할 수 있어요
             </div>
-          ))}
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8,
-            padding:"8px 10px",background:netCash>=0?"rgba(60,180,100,.08)":"rgba(200,50,50,.08)",
-            borderRadius:10,border:`1px solid ${netCash>=0?"rgba(60,180,100,.2)":"rgba(200,50,50,.2)"}`}}>
-            <div style={{fontSize:12,fontWeight:700,color:"var(--text)"}}>= 실질 가용 자금</div>
-            <div style={{fontSize:15,fontWeight:700,color:netCash>=0?"var(--green)":"var(--red)"}}>
-              {netCash>=0?"+":""}{fmtS(netCash)}원
-            </div>
+            <button onClick={()=>setShowSalaryEdit(true)} style={{
+              padding:"10px 24px",borderRadius:11,cursor:"pointer",fontWeight:700,fontSize:13,
+              background:"var(--goldD)",border:"1px solid var(--gold)",color:"var(--gold)"
+            }}>급여 입력하기</button>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* 메인: 카드 한도 게이지 */}
+            <div style={{padding:"16px 16px 12px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+                <div>
+                  <div style={{fontSize:10,color:"var(--text2)",marginBottom:3,letterSpacing:".04em"}}>💳 이번달 카드 사용 한도</div>
+                  <div style={{display:"flex",alignItems:"baseline",gap:5}}>
+                    <span style={{fontSize:22,fontWeight:700,color:cardLimitOk?"var(--text)":"var(--red)",letterSpacing:"-.02em"}}>
+                      {fmtS(totalSpent)}
+                    </span>
+                    <span style={{fontSize:12,color:"var(--text3)"}}>/ {fmtS(cardLimit)}원</span>
+                  </div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{
+                    display:"inline-block",padding:"4px 10px",borderRadius:99,fontSize:11,fontWeight:700,
+                    background: cardLimitOk ? "rgba(60,180,100,.15)" : "rgba(200,50,50,.15)",
+                    color: cardLimitOk ? "var(--green)" : "var(--red)",
+                    border: `1px solid ${cardLimitOk ? "rgba(60,180,100,.3)" : "rgba(200,50,50,.3)"}`
+                  }}>
+                    {cardLimitOk ? `${fmtS(cardLeft)}원 남음` : `${fmtS(Math.abs(cardLeft))}원 초과`}
+                  </div>
+                </div>
+              </div>
+
+              {/* 게이지 바 */}
+              <div style={{background:"var(--bg3)",borderRadius:99,height:8,overflow:"hidden",marginBottom:5}}>
+                <div style={{
+                  height:"100%",borderRadius:99,transition:"width .5s ease",
+                  width:`${cardUsedPct}%`,
+                  background: cardUsedPct < 70
+                    ? "linear-gradient(90deg,var(--green),#5cba84)"
+                    : cardUsedPct < 90
+                    ? "linear-gradient(90deg,var(--gold),#c8a030)"
+                    : "linear-gradient(90deg,var(--gold),var(--red))"
+                }}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"var(--text3)"}}>
+                <span>사용 {cardUsedPct}%</span>
+                <span>한도 = 급여 {fmtS(totalSalary)} - 고정비 {fmtS(committed)} - 저축 {fmtS(savingsTarget)}</span>
+              </div>
+            </div>
+
+            {/* 보조 지표: 저축률 + 다음달 청구 예정 */}
+            <div style={{
+              display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,
+              borderTop:"1px solid var(--border)"
+            }}>
+              <div style={{padding:"10px 14px",borderRight:"1px solid var(--border)"}}>
+                <div style={{fontSize:9,color:"var(--text3)",marginBottom:3}}>📈 이달 예상 저축률</div>
+                <div style={{fontSize:16,fontWeight:700,color:savingsRateColor}}>{savingsRate}%</div>
+                <div style={{fontSize:9,color:savingsRateColor,marginTop:1}}>{savingsRateLabel}</div>
+              </div>
+              <div style={{padding:"10px 14px"}}>
+                <div style={{fontSize:9,color:"var(--text3)",marginBottom:3}}>📋 다음달 카드 청구 예정</div>
+                <div style={{fontSize:16,fontWeight:700,color:"var(--text)"}}>{fmtS(thisMonthCardSpend)}원</div>
+                <div style={{fontSize:9,color:"var(--text2)",marginTop:1}}>이달 카드 사용액</div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* 급여 수정 토글 */}
+        {totalSalary > 0 && (
+          <div style={{borderTop:"1px solid var(--border)"}}>
+            <button onClick={()=>setShowSalaryEdit(v=>!v)} style={{
+              width:"100%",background:"none",border:"none",cursor:"pointer",
+              padding:"9px 16px",fontSize:10,color:"var(--text3)",
+              display:"flex",alignItems:"center",justifyContent:"center",gap:5
+            }}>✏ 급여 수정 {showSalaryEdit?"▲":"▼"}</button>
+          </div>
+        )}
 
         {/* 급여 입력 폼 */}
         {showSalaryEdit && (
-          <div style={{padding:"14px 16px"}}>
-            <div style={{fontSize:11,color:"var(--text2)",marginBottom:10}}>월 실수령액 입력 (세후)</div>
-            {[{key:"husband",label:names.husband},{key:"wife",label:names.wife}].map(p=>(
-              <div key={p.key} style={{marginBottom:10}}>
-                <div style={{fontSize:10,color:"var(--text3)",marginBottom:4}}>{p.label}</div>
+          <div style={{padding:"14px 16px",borderTop:"1px solid var(--border)"}}>
+            <div style={{fontSize:11,color:"var(--text2)",marginBottom:12,fontWeight:700}}>급여 & 저축 목표 설정</div>
+            {[
+              {key:"h", label:`👤 ${names.husband} 월 실수령액`, val:editH, set:setEditH},
+              {key:"w", label:`👤 ${names.wife} 월 실수령액`,   val:editW, set:setEditW},
+              {key:"s", label:"🐷 월 저축 목표",               val:editS, set:setEditS,
+               sub:"급여에서 이 금액을 먼저 제외하고 카드 한도를 계산해요"},
+            ].map(f=>(
+              <div key={f.key} style={{marginBottom:12}}>
+                <div style={{fontSize:10,color:"var(--text3)",marginBottom:4}}>{f.label}</div>
+                {f.sub && <div style={{fontSize:9,color:"var(--text3)",marginBottom:5,lineHeight:1.5}}>{f.sub}</div>}
                 <div style={{display:"flex",alignItems:"center",gap:6}}>
-                  <input
-                    type="number"
-                    value={p.key==="husband"?editH:editW}
-                    onChange={e=>p.key==="husband"?setEditH(e.target.value):setEditW(e.target.value)}
-                    placeholder="0"
+                  <input type="number" value={f.val} onChange={e=>f.set(e.target.value)} placeholder="0"
                     style={{flex:1,background:"var(--bg3)",border:"1px solid var(--border)",borderRadius:10,
-                      padding:"9px 12px",color:"var(--text)",fontSize:14,outline:"none"}}
-                  />
+                      padding:"9px 12px",color:"var(--text)",fontSize:14,outline:"none"}}/>
                   <span style={{fontSize:11,color:"var(--text2)",flexShrink:0}}>원</span>
                 </div>
               </div>
