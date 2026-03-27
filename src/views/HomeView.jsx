@@ -4,7 +4,7 @@ import { SliderRow } from "../components/SliderRow";
 import { CAT, CATS, DAY, DAYS, MONTH, YEAR } from "../constants";
 import { fmtS } from "../utils/helpers";
 
-export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget}){
+export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,plan,setPlan}){
   const totalBudget  = Object.values(budgets).reduce((s,v)=>s+v,0);
   const fixedTotal   = fixed.reduce((s,f)=>s+f.amount,0);
   const installTotal = install.reduce((s,i)=>s+i.monthly,0);
@@ -29,6 +29,26 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
   const paceColor   = pacePct<=90?"var(--green)":pacePct<=110?"#d4b84a":"var(--red)";
   const paceStatus  = pacePct<=90?"양호 ✓":pacePct<=110?"보통":"주의";
   const fillColor   = projOver ? "var(--red)" : "var(--green)";
+
+  // ── 급여 & 현금흐름 ──
+  const salary = plan?.salary || { husband: 0, wife: 0 };
+  const totalSalary = (salary.husband || 0) + (salary.wife || 0);
+  // 지난달 카드 지출 (payMethod === 'card' 이면서 지난달 날짜)
+  const now = new Date();
+  const lm = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+  const ly = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+  const lastMonthCardBill = tx
+    .filter(t => { const d = new Date(t.date); return d.getFullYear()===ly && d.getMonth()===lm && t.payMethod==="card"; })
+    .reduce((s,t) => s+t.amount, 0);
+  const netCash = totalSalary - lastMonthCardBill - fixedTotal - installTotal;
+  const [showSalaryEdit, setShowSalaryEdit] = useState(false);
+  const [editH, setEditH] = useState(String(salary.husband||""));
+  const [editW, setEditW] = useState(String(salary.wife||""));
+  const saveSalary = () => {
+    const s = { husband: Number(editH.replace(/,/g,""))||0, wife: Number(editW.replace(/,/g,""))||0 };
+    setPlan(p => ({...p, salary: s}));
+    setShowSalaryEdit(false);
+  };
 
   // 현재 페이스 기반 월말 예측
   const currentPaceDaily         = DAY > 0 ? Math.round(totalSpent / DAY) : 0;
@@ -143,7 +163,86 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
         </div>
       </Card>
 
-      <Card className="u3" style={{padding:"14px",marginBottom:10}}>
+      {/* ── 급여 & 현금흐름 카드 ── */}
+      <Card className="u3" style={{padding:0,marginBottom:10,overflow:"hidden"}}>
+        {/* 헤더 */}
+        <button onClick={()=>setShowSalaryEdit(v=>!v)} style={{
+          width:"100%",background:"none",border:"none",cursor:"pointer",
+          padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",
+          borderBottom:`1px solid ${showSalaryEdit?"var(--border)":"transparent"}`
+        }}>
+          <div style={{textAlign:"left"}}>
+            <div style={{fontSize:10,color:"var(--text2)",marginBottom:3,letterSpacing:".04em"}}>
+              급여 정산 후 실질 가용 자금
+            </div>
+            <div style={{fontSize:22,fontWeight:700,color:netCash>=0?"var(--green)":"var(--red)",letterSpacing:"-.02em"}}>
+              {netCash>=0?"+":"-"}{fmtS(Math.abs(netCash))}<span style={{fontSize:12,marginLeft:3}}>원</span>
+            </div>
+          </div>
+          <div style={{textAlign:"right",flexShrink:0}}>
+            <div style={{fontSize:10,color:"var(--text2)",marginBottom:3}}>급여 합계</div>
+            <div style={{fontSize:14,fontWeight:700,color:"var(--gold)"}}>
+              {totalSalary>0 ? fmtS(totalSalary)+"원" : <span style={{color:"var(--text3)",fontSize:11}}>미입력 탭▼</span>}
+            </div>
+            <div style={{fontSize:9,color:"var(--text3)",marginTop:2}}>{showSalaryEdit?"▲ 닫기":"✏ 수정"}</div>
+          </div>
+        </button>
+
+        {/* 흐름 breakdown (항상 표시) */}
+        <div style={{padding:"10px 16px",borderBottom:"1px solid var(--border)"}}>
+          {[
+            {label:"💰 이번달 급여", val:totalSalary, c:"var(--green)", sign:"+"},
+            {label:`💳 지난달(${lm+1}월) 카드 결제`, val:lastMonthCardBill, c:"var(--red)", sign:"-", sub: lastMonthCardBill===0?"카드 내역 없음 (직접 입력 가능)":null},
+            {label:"🏠 고정비+할부", val:fixedTotal+installTotal, c:"var(--text2)", sign:"-"},
+          ].map((r,i)=>(
+            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",
+              borderBottom: i<2 ? "1px dashed var(--border)":"none"}}>
+              <div>
+                <div style={{fontSize:11,color:"var(--text2)"}}>{r.label}</div>
+                {r.sub && <div style={{fontSize:9,color:"var(--text3)",marginTop:1}}>{r.sub}</div>}
+              </div>
+              <div style={{fontSize:13,fontWeight:700,color:r.c}}>{r.sign} {fmtS(r.val)}원</div>
+            </div>
+          ))}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8,
+            padding:"8px 10px",background:netCash>=0?"rgba(60,180,100,.08)":"rgba(200,50,50,.08)",
+            borderRadius:10,border:`1px solid ${netCash>=0?"rgba(60,180,100,.2)":"rgba(200,50,50,.2)"}`}}>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--text)"}}>= 실질 가용 자금</div>
+            <div style={{fontSize:15,fontWeight:700,color:netCash>=0?"var(--green)":"var(--red)"}}>
+              {netCash>=0?"+":""}{fmtS(netCash)}원
+            </div>
+          </div>
+        </div>
+
+        {/* 급여 입력 폼 */}
+        {showSalaryEdit && (
+          <div style={{padding:"14px 16px"}}>
+            <div style={{fontSize:11,color:"var(--text2)",marginBottom:10}}>월 실수령액 입력 (세후)</div>
+            {[{key:"husband",label:names.husband},{key:"wife",label:names.wife}].map(p=>(
+              <div key={p.key} style={{marginBottom:10}}>
+                <div style={{fontSize:10,color:"var(--text3)",marginBottom:4}}>{p.label}</div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <input
+                    type="number"
+                    value={p.key==="husband"?editH:editW}
+                    onChange={e=>p.key==="husband"?setEditH(e.target.value):setEditW(e.target.value)}
+                    placeholder="0"
+                    style={{flex:1,background:"var(--bg3)",border:"1px solid var(--border)",borderRadius:10,
+                      padding:"9px 12px",color:"var(--text)",fontSize:14,outline:"none"}}
+                  />
+                  <span style={{fontSize:11,color:"var(--text2)",flexShrink:0}}>원</span>
+                </div>
+              </div>
+            ))}
+            <button onClick={saveSalary} style={{
+              width:"100%",padding:"11px",borderRadius:11,cursor:"pointer",fontWeight:700,fontSize:13,
+              background:"var(--goldD)",border:"1px solid var(--gold)",color:"var(--gold)"
+            }}>저장</button>
+          </div>
+        )}
+      </Card>
+
+      <Card className="u5" style={{padding:"14px",marginBottom:10}}>
         <div style={{fontSize:11,color:"var(--text2)",marginBottom:10}}>파트너별 지출</div>
         <div style={{display:"flex",height:5,borderRadius:99,overflow:"hidden",marginBottom:10}}>
           <div style={{width:`${totalSpent>0?hSpent/totalSpent*100:50}%`,background:"var(--h)",transition:"width .7s ease"}}/>
@@ -173,7 +272,7 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
         </div>
       </Card>
 
-      <Card className="u4" style={{overflow:"hidden"}}>
+      <Card className="u6" style={{overflow:"hidden"}}>
         <div style={{padding:"12px 14px 8px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span style={{fontSize:12,fontWeight:700}}>{searchTerm ? "검색 결과" : "최근 내역"}</span>
           <button onClick={()=>setShowFull(!showFull)} style={{background:"none",border:"none",color:"var(--gold)",fontSize:11,fontWeight:700,cursor:"pointer"}}>{showFull?"간략히":"전체보기"}</button>
