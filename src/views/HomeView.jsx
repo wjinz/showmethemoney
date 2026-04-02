@@ -73,7 +73,7 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
       <div className="u1" style={{padding:"22px 0 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
         <div>
           <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:3}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
-          <div className="serif" style={{fontSize:21}}>가정 경영현황</div>
+          <div className="serif" style={{fontSize:21}}>{plan?.isSolo ? "나의 지출 요약" : "가정 경영현황"}</div>
         </div>
         <button onClick={onWidget} style={{background:paceColor+"22",color:paceColor,fontSize:11,fontWeight:700,padding:"5px 11px",borderRadius:99,border:`1px solid ${paceColor}44`,cursor:"pointer"}}>
           PACE {paceStatus} ↗
@@ -269,10 +269,10 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
         {/* 급여 입력 폼 */}
         {showSalaryEdit && (
           <div style={{padding:"14px 16px",borderTop:"1px solid var(--border)"}}>
-            <div style={{fontSize:11,color:"var(--text2)",marginBottom:12,fontWeight:700}}>급여 & 저축 목표 설정</div>
+            <div style={{fontSize:11,color:"var(--text2)",marginBottom:12,fontWeight:700}}>{plan?.isSolo ? "나의 급여 & 저축 목표" : "급여 & 저축 목표 설정"}</div>
             {[
-              {key:"h", label:`👤 ${names.husband} 월 실수령액`, val:editH, set:setEditH},
-              {key:"w", label:`👤 ${names.wife} 월 실수령액`,   val:editW, set:setEditW},
+              {key:"h", label: plan?.isSolo ? "👤 나의 월 실수령액" : `👤 ${names.husband} 월 실수령액`, val:editH, set:setEditH},
+              ...(!plan?.isSolo ? [{key:"w", label:`👤 ${names.wife} 월 실수령액`, val:editW, set:setEditW}] : []),
               {key:"s", label:"🐷 월 저축 목표",               val:editS, set:setEditS,
                sub:"급여에서 이 금액을 먼저 제외하고 카드 한도를 계산해요"},
             ].map(f=>(
@@ -295,35 +295,46 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
         )}
       </Card>
 
-      <Card className="u5" style={{padding:"14px",marginBottom:10}}>
-        <div style={{fontSize:11,color:"var(--text2)",marginBottom:10}}>파트너별 지출</div>
-        <div style={{display:"flex",height:5,borderRadius:99,overflow:"hidden",marginBottom:10}}>
-          <div style={{width:`${totalSpent>0?hSpent/totalSpent*100:50}%`,background:"var(--h)",transition:"width .7s ease"}}/>
-          <div style={{flex:1,background:"var(--w)"}}/>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-          {[{w:"husband",a:hSpent},{w:"wife",a:wSpent}].map(p=>(
-            <div key={p.w} style={{display:"flex",alignItems:"center",gap:8}}>
-              <div style={{width:7,height:7,borderRadius:"50%",background:p.w==="husband"?"var(--h)":"var(--w)"}}/>
-              <div>
-                <div style={{fontSize:10,color:"var(--text2)"}}>{p.w==="husband"?names.husband:names.wife}</div>
-                <div style={{fontSize:13,fontWeight:700}}>{fmtS(p.a)}원</div>
+      {!plan?.isSolo && (
+        <Card className="u5" style={{padding:"14px",marginBottom:10}}>
+          <div style={{fontSize:11,color:"var(--text2)",marginBottom:10}}>파트너별 지출</div>
+          <div style={{display:"flex",height:5,borderRadius:99,overflow:"hidden",marginBottom:10}}>
+            <div style={{width:`${totalSpent>0?hSpent/totalSpent*100:50}%`,background:"var(--h)",transition:"width .7s ease"}}/>
+            <div style={{flex:1,background:"var(--w)"}}/>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+            {[{w:"husband",a:hSpent},{w:"wife",a:wSpent}].map(p=>(
+              <div key={p.w} style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{width:7,height:7,borderRadius:"50%",background:p.w==="husband"?"var(--h)":"var(--w)"}}/>
+                <div>
+                  <div style={{fontSize:10,color:"var(--text2)"}}>{p.w==="husband"?names.husband:names.wife}</div>
+                  <div style={{fontSize:13,fontWeight:700}}>{fmtS(p.a)}원</div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            {["husband","wife"].map(w=>(
+              <button key={w} onClick={()=>onAdd(w)} style={{
+                background:w==="husband"?"var(--hD)":"var(--wD)",
+                border:`1px solid ${w==="husband"?"rgba(92,141,232,.25)":"rgba(217,127,168,.25)"}`,
+                borderRadius:11,padding:"11px",cursor:"pointer",
+                color:w==="husband"?"var(--h)":"var(--w)",fontWeight:700,fontSize:13,
+                display:"flex",alignItems:"center",gap:6,justifyContent:"center"
+              }}><span style={{fontSize:17,lineHeight:1}}>+</span>{w==="husband"?names.husband:names.wife}</button>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {plan?.isSolo && (
+        <div style={{marginBottom:10}}>
+          <button onClick={()=>onAdd("husband")} style={{
+            width:"100%", background:"var(--gold)", border:"none", borderRadius:14, padding:"16px",
+            color:"#fff", fontWeight:700, fontSize:15, cursor:"pointer", boxShadow:"0 4px 12px rgba(200,168,75,0.2)"
+          }}>+ 지출 추가하기</button>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-          {["husband","wife"].map(w=>(
-            <button key={w} onClick={()=>onAdd(w)} style={{
-              background:w==="husband"?"var(--hD)":"var(--wD)",
-              border:`1px solid ${w==="husband"?"rgba(92,141,232,.25)":"rgba(217,127,168,.25)"}`,
-              borderRadius:11,padding:"11px",cursor:"pointer",
-              color:w==="husband"?"var(--h)":"var(--w)",fontWeight:700,fontSize:13,
-              display:"flex",alignItems:"center",gap:6,justifyContent:"center"
-            }}><span style={{fontSize:17,lineHeight:1}}>+</span>{w==="husband"?names.husband:names.wife}</button>
-          ))}
-        </div>
-      </Card>
+      )}
 
       <Card className="u6" style={{overflow:"hidden"}}>
         <div style={{padding:"12px 14px 8px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -363,7 +374,10 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
               <div key={t.id} style={{padding:"9px 14px",borderTop:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:33,height:33,borderRadius:9,background:c.color+"1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{c.icon}</div>
                 <div style={{flex:1}}>
-                  <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:2}}><span style={{fontSize:12,fontWeight:500}}>{c.label}</span><Chip who={t.who} names={names}/></div>
+                  <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:2}}>
+                    <span style={{fontSize:12,fontWeight:500}}>{c.label}</span>
+                    {!plan?.isSolo && <Chip who={t.who} names={names}/>}
+                  </div>
                   <div style={{fontSize:10,color:"var(--text2)"}}>{t.memo||"—"} · {t.date.slice(5)}</div>
                 </div>
                 <span style={{fontSize:13,fontWeight:700,flexShrink:0}}>-{fmtS(t.amount)}원</span>

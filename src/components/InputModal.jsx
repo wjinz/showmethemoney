@@ -7,7 +7,7 @@ import { runOCR } from "../utils/ocr";
 const nowStr = () => toDateStr(new Date());
 
 // OCR 결과 상태: null | "loading" | "success" | "error"
-export function InputModal({ defaultWho, names, onClose, onSave }) {
+export function InputModal({ defaultWho, names, plan, onClose, onSave }) {
   const [who, setWho] = useState(defaultWho);
   const [amount, setAmount] = useState("");
   const [cat, setCat] = useState("");
@@ -97,23 +97,25 @@ export function InputModal({ defaultWho, names, onClose, onSave }) {
           />
         </div>
 
-        {/* 누가 쓴 건지 */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-          {["husband", "wife"].map((r) => (
-            <button
-              key={r}
-              onClick={() => setWho(r)}
-              style={{
-                flex: 1, padding: "12px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 13,
-                background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--bg2)",
-                border: `1px solid ${who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--border)"}`,
-                color: who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--text2)",
-              }}
-            >
-              {r === "husband" ? names.husband : names.wife}
-            </button>
-          ))}
-        </div>
+        {/* 누가 쓴 건지 (커플 모드 전용) */}
+        {!plan?.isSolo && (
+          <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+            {["husband", "wife"].map((r) => (
+              <button
+                key={r}
+                onClick={() => setWho(r)}
+                style={{
+                  flex: 1, padding: "12px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 13,
+                  background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--bg2)",
+                  border: `1px solid ${who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--border)"}`,
+                  color: who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--text2)",
+                }}
+              >
+                {r === "husband" ? names.husband : names.wife}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* 금액 키패드 */}
         <div style={{ background: "var(--bg3)", borderRadius: 16, padding: "20px", marginBottom: 20, border: "1px solid var(--border2)" }}>

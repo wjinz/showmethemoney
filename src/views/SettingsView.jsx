@@ -4,7 +4,7 @@ import { CATS } from "../constants";
 import { fmtS } from "../utils/helpers";
 import { exportTransactions } from "../utils/export";
 
-export function SettingsView({names,setNames,budgets,setBudgets,sliderCfg,setSliderCfg,theme,setTheme,resetAll,householdId,myRole,leaveHousehold,tx}){
+export function SettingsView({names,setNames,budgets,setBudgets,sliderCfg,setSliderCfg,theme,setTheme,resetAll,householdId,myRole,leaveHousehold,tx,plan}){
   const updateName=(role,v)=>setNames({...names,[role]:v});
   const updateBudget=(id,v)=>setBudgets({...budgets,[id]:v});
 
@@ -24,8 +24,8 @@ export function SettingsView({names,setNames,budgets,setBudgets,sliderCfg,setSli
             }}>{t==="dark"?"🌙 다크 모드":"☀️ 라이트 모드"}</button>
           ))}
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          {[{r:"husband",l:"남편 이름"},{r:"wife",l:"와이프 이름"}].map(p=>(
+        <div style={{display:"grid",gridTemplateColumns: plan?.isSolo ? "1fr" : "1fr 1fr", gap:12}}>
+          {[{r:"husband",l: plan?.isSolo ? "사용자 이름" : "남편 이름"}, {r:"wife",l:"와이프 이름"}].slice(0, plan?.isSolo ? 1 : 2).map(p=>(
             <div key={p.r}><div style={{fontSize:11,color:"var(--text2)",marginBottom:6}}>{p.l}</div>
               <input value={names[p.r]} onChange={e=>updateName(p.r,e.target.value)} style={{width:"100%",background:"var(--bg4)",border:"1px solid var(--border)",borderRadius:10,padding:"10px 12px",fontSize:13}}/>
             </div>
@@ -49,9 +49,11 @@ export function SettingsView({names,setNames,budgets,setBudgets,sliderCfg,setSli
       <Card className="u5" style={{padding:"18px",marginBottom:10}}>
         <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".06em",marginBottom:16}}>■ 데이터 및 연결</div>
         <div style={{background:"var(--bg3)",padding:"14px",borderRadius:12,marginBottom:14,border:"1px solid var(--border2)"}}>
-          <div style={{fontSize:10,color:"var(--text2)",marginBottom:4}}>가정 연결 코드</div>
+          <div style={{fontSize:10,color:"var(--text2)",marginBottom:4}}>{plan?.isSolo ? "나의 연결 코드" : "가정 연결 코드"}</div>
           <div style={{fontSize:20,fontWeight:800,color:"var(--gold)",letterSpacing:".1em"}}>{householdId}</div>
-          <div style={{fontSize:10,color:"var(--text3)",marginTop:6}}>내 역할: {myRole==="husband"?names.husband:names.wife}</div>
+          {!plan?.isSolo && (
+            <div style={{fontSize:10,color:"var(--text3)",marginTop:6}}>내 역할: {myRole==="husband"?names.husband:names.wife}</div>
+          )}
         </div>
         <button onClick={()=>exportTransactions(tx)} style={{width:"100%",padding:"12px",borderRadius:10,border:"1px solid var(--goldL)",background:"var(--goldD)",color:"var(--gold)",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:8}}>📥 전체 지출 내역 CSV 내보내기</button>
         <button onClick={leaveHousehold} style={{width:"100%",padding:"12px",borderRadius:10,border:"1px solid var(--border2)",background:"none",color:"var(--text2)",fontSize:12,cursor:"pointer",marginBottom:8}}>가계부 나가기 (다른 코드로 연결)</button>

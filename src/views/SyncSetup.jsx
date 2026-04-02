@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { INIT_BUDGETS } from "../constants";
+import { INIT_BUDGETS, EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS, DEFAULT_TAX_CONFIG } from "../constants";
+import { db } from "../utils/supabase";
 
 export function SyncSetup({onDone}){
   const [tab,  setTab]  = useState("create"); // create | join
+  const [mode, setMode] = useState("couple"); // couple | solo
   const [code, setCode] = useState("");
   const [role, setRole] = useState("husband");
   const [err,  setErr]  = useState("");
@@ -14,23 +16,29 @@ export function SyncSetup({onDone}){
     setBusy(true); setErr("");
     const hid = genCode();
     try {
-      const pairs = [
-        [`${hid}_tx`,      JSON.stringify([])],
-        [`${hid}_fixed`,   JSON.stringify([])],
-        [`${hid}_install`, JSON.stringify([])],
-        [`${hid}_cards`,   JSON.stringify([])],
-        [`${hid}_budgets`, JSON.stringify(INIT_BUDGETS)],
-        [`${hid}_names`,   JSON.stringify({husband:"남편",wife:"와이프"})],
-        [`${hid}_plan`,    JSON.stringify({})],
-        ["householdId",    JSON.stringify(hid)],
-        ["myRole",         JSON.stringify(role)],
+      // 1. Supabase에 초기화 데이터를 업로드하여 다른 기기에서도 접근 가능하게 함
+      const isSolo = mode === "solo";
+      const initialUploads = [
+        db.save(hid, "tx",        EMPTY_TX),
+        db.save(hid, "fixed",     EMPTY_FIXED),
+        db.save(hid, "install",   EMPTY_INSTALL),
+        db.save(hid, "cards",     EMPTY_CARDS),
+        db.save(hid, "assets",    EMPTY_ASSETS),
+        db.save(hid, "budgets",   INIT_BUDGETS),
+        db.save(hid, "names",     isSolo ? { husband: "나", wife: "" } : { husband: "남편", wife: "와이프" }),
+        db.save(hid, "plan",      { isSolo }),
+        db.save(hid, "taxConfig", DEFAULT_TAX_CONFIG)
       ];
-      for (const [k, v] of pairs) {
-        localStorage.setItem(k, v);
-      }
+      await Promise.all(initialUploads);
+
+      // 2. 로컬 설정 저장
+      localStorage.setItem("householdId", JSON.stringify(hid));
+      localStorage.setItem("myRole",      JSON.stringify(role));
+
       onDone(hid, role);
     } catch(e) {
-      setErr(`오류: ${e?.message||"알 수 없는 오류"}. 다시 시도해주세요.`);
+      console.error("Create error:", e);
+      setErr(`오류: ${e?.message || "클라우드 저장 실패"}. 네트워크를 확인해주세요.`);
       setBusy(false);
     }
   };
@@ -40,13 +48,25 @@ export function SyncSetup({onDone}){
     if (hid.length !== 6) { setErr("6자리 코드를 입력해주세요."); return; }
     setBusy(true); setErr("");
     try {
-      const r = localStorage.getItem(`${hid}_tx`);
-      if (!r) { setErr("코드를 찾을 수 없어요. 같은 기기에서 만든 코드인지 확인해주세요."); setBusy(false); return; }
+      // 1. Supabase에서 해당 가계부 데이터가 실제로 존재하는지 확인
+      const data = await db.loadAll(hid);
+      
+      // 데이터가 비어있으면 (key/value 쌍이 하나도 없으면) 잘못된 코드로 판단
+      if (!data || Object.keys(data).length === 0) {
+        setErr("유효하지 않은 코드입니다. 코드를 다시 확인해주세요.");
+        setBusy(false);
+        return;
+      }
+
+      // 2. 존재하면 로컬 설정 저장 후 진입
       localStorage.setItem("householdId", JSON.stringify(hid));
       localStorage.setItem("myRole",      JSON.stringify(role));
+      
       onDone(hid, role);
     } catch(e) {
-      setErr(`연결 오류: ${e?.message||"알 수 없는 오류"}`); setBusy(false);
+      console.error("Join error:", e);
+      setErr(`연결 오류: ${e?.message || "네트워크를 확인해주세요."}`);
+      setBusy(false);
     }
   };
 
@@ -63,16 +83,33 @@ export function SyncSetup({onDone}){
         <div style={{fontSize:13,color:"var(--text2)"}}>부부가 함께 쓰는 가계부</div>
       </div>
 
-      {/* 탭 */}
-      <div style={{display:"flex",gap:6,marginBottom:24,width:"100%",maxWidth:340}}>
-        {[{id:"create",l:"새 가계부 만들기"},{id:"join",l:"코드로 참여하기"}].map(t=>(
-          <button key={t.id} onClick={()=>{setTab(t.id);setErr("");}} style={{
-            flex:1,padding:"11px",borderRadius:13,cursor:"pointer",fontWeight:700,fontSize:12,
-            background:tab===t.id?"var(--goldD)":"var(--bg2)",
-            border:`1px solid ${tab===t.id?"var(--gold)":"var(--border)"}`,
-            color:tab===t.id?"var(--gold)":"var(--text2)"
-          }}>{t.l}</button>
-        ))}
+      {/* 탭/모드 선택 */}
+      <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24,width:"100%",maxWidth:340}}>
+        <div style={{display:"flex",gap:6}}>
+          {[{id:"create",l:"새 가계부 만들기"},{id:"join",l:"코드로 참여하기"}].map(t=>(
+            <button key={t.id} onClick={()=>{setTab(t.id);setErr("");}} style={{
+              flex:1,padding:"11px",borderRadius:13,cursor:"pointer",fontWeight:700,fontSize:12,
+              background:tab===t.id?"var(--goldD)":"var(--bg2)",
+              border:`1px solid ${tab===t.id?"var(--gold)":"var(--border)"}`,
+              color:tab===t.id?"var(--gold)":"var(--text2)"
+            }}>{t.l}</button>
+          ))}
+        </div>
+        
+        {tab==="create" && (
+          <div style={{display:"flex",gap:6,background:"var(--bg3)",padding:4,borderRadius:14,border:"1px solid var(--border)"}}>
+            {[{id:"couple",l:"👥 부부가 함께",e:"👨‍👩‍👧"},{id:"solo",l:"👤 나 혼자 관리",e:"🙋‍♂️"}].map(m=>(
+              <button key={m.id} onClick={()=>setMode(m.id)} style={{
+                flex:1,padding:"10px",borderRadius:11,cursor:"pointer",fontSize:11,fontWeight:700,
+                background:mode===m.id?"var(--bg)":"transparent",
+                border:"none",
+                boxShadow:mode===m.id?"0 2px 8px rgba(0,0,0,0.2)":"none",
+                color:mode===m.id?"var(--gold)":"var(--text3)",
+                display:"flex",alignItems:"center",justifyContent:"center",gap:6
+              }}>{m.e} {m.l}</button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 카드 */}
@@ -80,24 +117,26 @@ export function SyncSetup({onDone}){
         background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:20,
         padding:"24px",width:"100%",maxWidth:340
       }}>
-        {/* 역할 선택 */}
-        <div style={{marginBottom:20}}>
-          <div style={{fontSize:12,color:"var(--text2)",marginBottom:10}}>내 역할</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            {[{id:"husband",l:"남편",e:"👨"},{id:"wife",l:"와이프",e:"👩"}].map(r=>(
-              <button key={r.id} onClick={()=>setRole(r.id)} style={{
-                padding:"14px",borderRadius:13,cursor:"pointer",fontWeight:700,fontSize:14,
-                background:role===r.id?(r.id==="husband"?"var(--hD)":"var(--wD)"):"var(--bg3)",
-                border:`1px solid ${role===r.id?(r.id==="husband"?"rgba(92,141,232,.4)":"rgba(217,127,168,.4)"):"var(--border)"}`,
-                color:role===r.id?(r.id==="husband"?"var(--h)":"var(--w)"):"var(--text2)",
-                display:"flex",flexDirection:"column",alignItems:"center",gap:6
-              }}>
-                <span style={{fontSize:28}}>{r.e}</span>
-                <span>{r.l}</span>
-              </button>
-            ))}
+        {/* 역할 선택 (커플 모드 또는 참여하기 시) */}
+        {(tab==="join" || (tab==="create" && mode==="couple")) && (
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:12,color:"var(--text2)",marginBottom:10}}>내 역할</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {[{id:"husband",l:"남편",e:"👨"},{id:"wife",l:"와이프",e:"👩"}].map(r=>(
+                <button key={r.id} onClick={()=>setRole(r.id)} style={{
+                  padding:"14px",borderRadius:13,cursor:"pointer",fontWeight:700,fontSize:14,
+                  background:role===r.id?(r.id==="husband"?"var(--hD)":"var(--wD)"):"var(--bg3)",
+                  border:`1px solid ${role===r.id?(r.id==="husband"?"rgba(92,141,232,.4)":"rgba(217,127,168,.4)"):"var(--border)"}`,
+                  color:role===r.id?(r.id==="husband"?"var(--h)":"var(--w)"):"var(--text2)",
+                  display:"flex",flexDirection:"column",alignItems:"center",gap:6
+                }}>
+                  <span style={{fontSize:28}}>{r.e}</span>
+                  <span>{r.l}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {tab==="join"&&(
           <div style={{marginBottom:16}}>

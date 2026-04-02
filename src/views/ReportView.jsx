@@ -29,7 +29,7 @@ function StackedBar({data,total,height=24,showLegend=false}){
   );
 }
 
-function ReportContent({tx,budgets,fixed,install,names}){
+function ReportContent({tx,budgets,fixed,install,names,plan}){
   const totalBudget  = Object.values(budgets).reduce((s,v)=>s+v,0);
   const totalSpent   = tx.reduce((s,t)=>s+t.amount,0);
   const projected    = DAY > 0 ? Math.round(totalSpent / DAY * DAYS) : 0;
@@ -94,19 +94,21 @@ function ReportContent({tx,budgets,fixed,install,names}){
         })}
       </Card>
 
-      <Card className="u4" style={{padding:"18px"}}>
-        <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".06em",marginBottom:16}}>■ 파트너 기여도</div>
-        <div style={{display:"flex",gap:12,alignItems:"center"}}>
-          <div style={{flex:1}}>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4}}><span>{names.husband}</span><span>{Math.round(hSpent/Math.max(totalSpent,1)*100)}%</span></div>
-            <Bar pct={totalSpent>0?hSpent/totalSpent*100:0} color="var(--h)" h={8}/>
+      {!plan?.isSolo && (
+        <Card className="u4" style={{padding:"18px"}}>
+          <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".06em",marginBottom:16}}>■ 파트너 기여도</div>
+          <div style={{display:"flex",gap:12,alignItems:"center"}}>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4}}><span>{names.husband}</span><span>{Math.round(hSpent/Math.max(totalSpent,1)*100)}%</span></div>
+              <Bar pct={totalSpent>0?hSpent/totalSpent*100:0} color="var(--h)" h={8}/>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4}}><span>{names.wife}</span><span>{Math.round(wSpent/Math.max(totalSpent,1)*100)}%</span></div>
+              <Bar pct={totalSpent>0?wSpent/totalSpent*100:0} color="var(--w)" h={8}/>
+            </div>
           </div>
-          <div style={{flex:1}}>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4}}><span>{names.wife}</span><span>{Math.round(wSpent/Math.max(totalSpent,1)*100)}%</span></div>
-            <Bar pct={totalSpent>0?wSpent/totalSpent*100:0} color="var(--w)" h={8}/>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }
@@ -135,7 +137,7 @@ export function ReportView({tx, budgets, setBudgets, fixed, install, names, card
         ))}
       </div>
       <div style={{flex:1,overflow:"hidden"}}>
-        {tab==="report"   && <ReportContent tx={tx} budgets={budgets} fixed={fixed} install={install} names={names}/>}
+        {tab==="report"   && <ReportContent tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} plan={plan}/>}
         {tab==="calendar" && <CalendarView  tx={tx} cards={cards} names={names} budgets={budgets} onEdit={onEdit} onDelete={onDelete}/>}
         {tab==="import"   && <DataImportView plan={plan} setPlan={setPlan} onGoToPlan={()=>setTab("plan")}/>}
         {tab==="plan"     && <PlanView      plan={plan} setPlan={setPlan} tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} onGoToImport={()=>setTab("import")}/>}

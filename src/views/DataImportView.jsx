@@ -38,7 +38,7 @@ const detectCols = (headers) => {
     dateIdx:     h.findIndex(x => /일자|날짜|일시|승인일|거래일|date/.test(x)),
     amtIdx:      h.findIndex(x => /이용금액|거래금액|청구금액|결제금액|금액/.test(x) && !/취소|할인|포인트|적립/.test(x)),
     merchantIdx: h.findIndex(x => /가맹점|업체명|상호|점명|merchant|이용처/.test(x)),
-    cancelIdx:   h.findIndex(x => /취소|cancel|구분/.test(x)),
+    cancelIdx:   h.findIndex(x => /취소|cancel|구분|상태|매출구분/.test(x)),
   };
 };
 
@@ -54,7 +54,8 @@ const parseDate = (raw) => {
 };
 
 const parseAmt = (raw) => {
-  const n = parseInt(String(raw || "").replace(/[^0-9]/g, ""));
+  const s = String(raw || "").trim();
+  const n = parseInt(s.replace(/[^0-9-]/g, ""));
   return isNaN(n) ? 0 : n;
 };
 
@@ -146,21 +147,20 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
       alert("날짜와 금액 컬럼을 선택해주세요."); return;
     }
     const parsed = rawRows
-      .filter(r => {
-        // 취소 거래 제외
-        if (cancelIdx >= 0) {
-          const v = String(r[cancelIdx] || "").trim();
-          if (v === "취소" || v === "Y" || v === "1") return false;
-        }
-        return true;
+      .map(r => {
+        const amt = parseAmt(r[amtIdx]);
+        const cancelVal = cancelIdx >= 0 ? String(r[cancelIdx] || "").trim() : "";
+        const isCancel = /취소|반품|Y|1|cancel/.test(cancelVal) || amt < 0;
+        
+        return {
+          date:     parseDate(r[dateIdx]),
+          amount:   Math.abs(amt),
+          merchant: String(r[merchantIdx] ?? "기타").trim() || "기타",
+          cat:      guessCat(r[merchantIdx]),
+          isCancelled: isCancel
+        };
       })
-      .map(r => ({
-        date:     parseDate(r[dateIdx]),
-        amount:   parseAmt(r[amtIdx]),
-        merchant: String(r[merchantIdx] ?? "기타").trim() || "기타",
-        cat:      guessCat(r[merchantIdx]),
-      }))
-      .filter(t => t.date && t.amount > 0);
+      .filter(t => t.date && t.amount > 0 && !t.isCancelled);
 
     if (parsed.length === 0) {
       alert("유효한 거래 데이터가 없어요. 컬럼 설정을 확인해주세요."); return;

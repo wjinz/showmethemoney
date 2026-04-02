@@ -108,9 +108,10 @@ function BaselineTab({ plan, onGoToImport }) {
 function IncomeTab({ plan, setPlan }) {
   const update = (key, val) => setPlan(p => ({ ...p, [key]: val }));
 
-  const monthlyIncome   = plan.monthlyIncome   || 0;
-  const yearSavingGoal  = plan.yearSavingGoal  || 0;
-  const monthlySavingTarget = Math.round(yearSavingGoal / 12);
+  const salary        = plan.salary || { husband: 0, wife: 0, savingsTarget: 0 };
+  const monthlyIncome = (salary.husband || 0) + (salary.wife || 0);
+  const monthlySavingTarget = salary.savingsTarget || 0;
+  const yearSavingGoal      = monthlySavingTarget * 12;
   const monthlyFixed    = plan.monthlyFixedTotal || 0;
   const monthlyAvail    = Math.max(0, monthlyIncome - monthlyFixed - monthlySavingTarget);
 
@@ -120,20 +121,40 @@ function IncomeTab({ plan, setPlan }) {
   return (
     <div>
       <Card style={{ padding: "16px", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 월 실수령액</div>
-        <div style={{ marginBottom: 8 }}>
-          <input type="number" placeholder="예: 4500000" value={plan.monthlyIncome || ""}
-            onChange={e => update("monthlyIncome", parseInt(e.target.value) || 0)}
-            style={iStyle} />
-          {imp && (
-            <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 5 }}>
-              💡 카드 데이터 기준 월평균 지출: <strong style={{ color: "var(--gold)" }}>{fmtS(imp.avgMonthly)}원</strong>
-              {monthlyIncome > 0 && monthlyIncome > imp.avgMonthly && (
-                <span style={{ color: "var(--green)" }}> → 수입이 지출보다 {fmtS(monthlyIncome - imp.avgMonthly)}원 많아요</span>
-              )}
+        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ {plan?.isSolo ? "월 실수령액" : "부부 합산 월 실수령액"}</div>
+        {plan?.isSolo ? (
+          <div style={{ marginBottom: 8 }}>
+            <input type="number" placeholder="0" value={salary.husband || ""}
+              onChange={e => update("salary", { ...salary, husband: parseInt(e.target.value) || 0, wife: 0 })}
+              style={iStyle} />
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 8 }}>
+            <div>
+              <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>남편</div>
+              <input type="number" placeholder="0" value={salary.husband || ""}
+                onChange={e => update("salary", { ...salary, husband: parseInt(e.target.value) || 0 })}
+                style={iStyle} />
             </div>
-          )}
+            <div>
+              <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>아내</div>
+              <input type="number" placeholder="0" value={salary.wife || ""}
+                onChange={e => update("salary", { ...salary, wife: parseInt(e.target.value) || 0 })}
+                style={iStyle} />
+            </div>
+          </div>
+        )}
+        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text2)", marginBottom: 12 }}>
+          합계: <span style={{ color: "var(--green)" }}>{fmtS(monthlyIncome)}원</span>
         </div>
+        {imp && (
+          <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 8 }}>
+            💡 카드 데이터 기준 월평균 지출: <strong style={{ color: "var(--gold)" }}>{fmtS(imp.avgMonthly)}원</strong>
+            {monthlyIncome > 0 && monthlyIncome > imp.avgMonthly && (
+              <span style={{ color: "var(--green)" }}> → 수입이 지출보다 {fmtS(monthlyIncome - imp.avgMonthly)}원 많아요</span>
+            )}
+          </div>
+        )}
 
         {/* 고정 지출 합계 (참고값) */}
         {monthlyFixed > 0 && (
@@ -144,22 +165,20 @@ function IncomeTab({ plan, setPlan }) {
       </Card>
 
       <Card style={{ padding: "16px", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 연간 저축 목표</div>
-        <input type="number" placeholder="예: 24000000" value={plan.yearSavingGoal || ""}
-          onChange={e => update("yearSavingGoal", parseInt(e.target.value) || 0)}
+        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 월 저축 목표</div>
+        <input type="number" placeholder="예: 500000" value={salary.savingsTarget || ""}
+          onChange={e => update("salary", { ...salary, savingsTarget: parseInt(e.target.value) || 0 })}
           style={{ ...iStyle, marginBottom: 8 }} />
-        {yearSavingGoal > 0 && (
-          <div style={{ fontSize: 12, color: "var(--text2)" }}>
-            → 월 <strong style={{ color: "var(--gold)" }}>{fmtS(monthlySavingTarget)}원</strong> 저축
-            {monthlyIncome > 0 && (
-              <span style={{ color: "var(--text3)" }}> ({Math.round(monthlySavingTarget / monthlyIncome * 100)}% 저축률)</span>
-            )}
-          </div>
-        )}
+        <div style={{ fontSize: 12, color: "var(--text2)" }}>
+          → 연간 <strong style={{ color: "var(--gold)" }}>{fmtS(yearSavingGoal)}원</strong> 저축 목표
+          {monthlyIncome > 0 && (
+            <span style={{ color: "var(--text3)" }}> ({Math.round(monthlySavingTarget / monthlyIncome * 100)}% 저축률)</span>
+          )}
+        </div>
       </Card>
 
       <Card style={{ padding: "16px", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 연간 지출 한도 (선택)</div>
+        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 연간 지출 총 한도 (선택)</div>
         <input type="number" placeholder="예: 36000000" value={plan.yearSpendLimit || ""}
           onChange={e => update("yearSpendLimit", parseInt(e.target.value) || 0)}
           style={iStyle} />
@@ -198,15 +217,61 @@ function IncomeTab({ plan, setPlan }) {
 // ────────────────────────────────────────────────
 // 3. 카테고리 예산 탭
 // ────────────────────────────────────────────────
-function BudgetTab({ plan, setPlan, tx, budgets, setBudgets }) {
+function BudgetTab({ plan, setPlan, tx, budgets, setBudgets, fixed, install }) {
   const [editMode, setEditMode] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult]   = useState(null); // { budgets, reasons, tip }
+  const [aiError, setAiError]     = useState(null);
   const update = (key, val) => setPlan(p => ({ ...p, [key]: val }));
 
   const imp = plan.importedAnalysis;
-  const monthlyIncome      = plan.monthlyIncome || 0;
-  const monthlySavingTarget = Math.round((plan.yearSavingGoal || 0) / 12);
-  const monthlyFixed       = plan.monthlyFixedTotal || 0;
-  const monthlyAvail       = Math.max(0, monthlyIncome - monthlyFixed - monthlySavingTarget);
+
+  // 급여는 HomeView와 동일한 plan.salary 활용
+  const salary        = plan.salary || { husband: 0, wife: 0, savingsTarget: 0 };
+  const totalSalary   = (salary.husband || 0) + (salary.wife || 0);
+  const savingsTarget = salary.savingsTarget || 0;
+  const fixedTotal    = (fixed  || []).reduce((s, f) => s + f.amount,  0);
+  const installTotal  = (install|| []).reduce((s, i) => s + i.monthly, 0);
+  const monthlyAvail  = Math.max(0, totalSalary - fixedTotal - installTotal - savingsTarget);
+
+  // 최근 3개월 카테고리별 평균 지출
+  const now = new Date();
+  const catHistory = {};
+  for (let i = 1; i <= 3; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+    tx.filter(t => t.date.startsWith(ym)).forEach(t => {
+      catHistory[t.cat] = (catHistory[t.cat] || 0) + t.amount / 3;
+    });
+  }
+
+  const runAI = async () => {
+    if (!totalSalary) { setAiError("먼저 홈 화면에서 급여를 입력해주세요."); return; }
+    setAiLoading(true); setAiError(null); setAiResult(null);
+    try {
+      const resp = await fetch("/api/budget-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ totalSalary, fixedTotal, installTotal, savingsTarget, catHistory }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || "AI 오류");
+      setAiResult(data);
+    } catch (e) {
+      setAiError(e.message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applyAI = () => {
+    if (!aiResult?.budgets) return;
+    setBudgets(b => ({ ...b, ...aiResult.budgets }));
+    setAiResult(null);
+  };
+
+  const monthlyIncome      = totalSalary;
+  const monthlySavingTarget = savingsTarget;
 
   const curMonthStr = `${YEAR}-${String(MONTH).padStart(2,"0")}`;
   const totalBudget = Object.values(budgets).reduce((s, v) => s + v, 0);
@@ -255,6 +320,93 @@ function BudgetTab({ plan, setPlan, tx, budgets, setBudgets }) {
           </>
         )}
       </Card>
+
+      {/* ── AI 예산 배분 ── */}
+      {!aiResult ? (
+        <div style={{
+          background: "var(--bg3)", border: "1px solid var(--border)",
+          borderRadius: 14, padding: "14px 16px", marginBottom: 10,
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>🤖 AI 예산 자동 배분</div>
+              <div style={{ fontSize: 10, color: "var(--text2)" }}>
+                {totalSalary > 0
+                  ? `급여 ${fmtS(totalSalary)}원 기준 · 배분 가능 ${fmtS(monthlyAvail)}원`
+                  : "홈 화면에서 급여를 먼저 입력해주세요"}
+              </div>
+            </div>
+            <button onClick={runAI} disabled={aiLoading || !totalSalary} style={{
+              padding: "8px 16px", borderRadius: 10, cursor: totalSalary ? "pointer" : "not-allowed",
+              fontWeight: 700, fontSize: 12, flexShrink: 0,
+              background: totalSalary ? "var(--goldD)" : "var(--bg2)",
+              border: `1px solid ${totalSalary ? "var(--gold)" : "var(--border)"}`,
+              color: totalSalary ? "var(--gold)" : "var(--text3)",
+              opacity: aiLoading ? 0.6 : 1,
+            }}>
+              {aiLoading ? (
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" style={{ animation: "spin 1s linear infinite" }}>
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="31" strokeDashoffset="10"/>
+                  </svg>
+                  분석 중…
+                </span>
+              ) : "추천받기 →"}
+            </button>
+          </div>
+          {aiError && <div style={{ fontSize: 11, color: "var(--red)", marginTop: 8 }}>⚠ {aiError}</div>}
+        </div>
+      ) : (
+        /* AI 결과 카드 */
+        <div style={{
+          background: "rgba(60,180,100,.06)", border: "1px solid rgba(60,180,100,.25)",
+          borderRadius: 14, padding: "14px 16px", marginBottom: 10,
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>🤖 AI 추천 예산</div>
+          {aiResult.tip && (
+            <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 12, fontStyle: "italic", lineHeight: 1.5 }}>
+              "{aiResult.tip}"
+            </div>
+          )}
+          {CATS.map(cat => {
+            const ai  = aiResult.budgets?.[cat.id] || 0;
+            const cur = budgets[cat.id] || 0;
+            const diff = ai - cur;
+            return (
+              <div key={cat.id} style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "6px 0", borderBottom: "1px solid var(--border)",
+              }}>
+                <span style={{ fontSize: 13, width: 20, textAlign: "center" }}>{cat.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600 }}>{cat.label}</div>
+                  {aiResult.reasons?.[cat.id] && (
+                    <div style={{ fontSize: 9, color: "var(--text3)" }}>{aiResult.reasons[cat.id]}</div>
+                  )}
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: cat.color }}>{fmtS(ai)}원</div>
+                  {diff !== 0 && (
+                    <div style={{ fontSize: 9, color: diff > 0 ? "var(--green)" : "var(--red)" }}>
+                      {diff > 0 ? "▲" : "▼"} {fmtS(Math.abs(diff))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button onClick={applyAI} style={{
+              flex: 1, padding: "10px", borderRadius: 10, cursor: "pointer", fontWeight: 700, fontSize: 13,
+              background: "var(--goldD)", border: "1px solid var(--gold)", color: "var(--gold)",
+            }}>전체 적용</button>
+            <button onClick={() => setAiResult(null)} style={{
+              padding: "10px 16px", borderRadius: 10, cursor: "pointer", fontSize: 12,
+              background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text2)",
+            }}>취소</button>
+          </div>
+        </div>
+      )}
 
       {/* 임포트 데이터 기반 자동 채우기 */}
       {imp && (
@@ -418,10 +570,11 @@ function EventsTab({ plan, setPlan }) {
 // 5. 플랜 요약 탭
 // ────────────────────────────────────────────────
 function SummaryTab({ plan, tx, budgets, fixed, install }) {
-  const imp = plan.importedAnalysis;
-  const monthlyIncome       = plan.monthlyIncome || 0;
-  const yearSavingGoal      = plan.yearSavingGoal || 0;
-  const monthlySavingTarget = Math.round(yearSavingGoal / 12);
+  const imp                 = plan.importedAnalysis;
+  const salary              = plan.salary || { husband: 0, wife: 0, savingsTarget: 0 };
+  const monthlyIncome       = (salary.husband || 0) + (salary.wife || 0);
+  const monthlySavingTarget = salary.savingsTarget || 0;
+  const yearSavingGoal      = monthlySavingTarget * 12;
 
   // 고정비 계산 (FixedView 데이터 활용)
   const monthlyFixed = (fixed || []).reduce((s, f) => s + (f.amount || 0), 0)
@@ -574,7 +727,7 @@ export function PlanView({ plan, setPlan, tx, budgets, setBudgets, fixed, instal
 
           {tab === "baseline" && <BaselineTab plan={plan} onGoToImport={onGoToImport} />}
           {tab === "income"   && <IncomeTab   plan={plan} setPlan={setPlan} />}
-          {tab === "budget"   && <BudgetTab   plan={plan} setPlan={setPlan} tx={tx} budgets={budgets} setBudgets={setBudgets} />}
+          {tab === "budget"   && <BudgetTab   plan={plan} setPlan={setPlan} tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} />}
           {tab === "events"   && <EventsTab   plan={plan} setPlan={setPlan} />}
           {tab === "summary"  && <SummaryTab  plan={plan} tx={tx} budgets={budgets} fixed={fixed} install={install} />}
         </div>

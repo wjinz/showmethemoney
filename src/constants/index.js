@@ -33,6 +33,13 @@ export const EMPTY_INSTALL = [];
 export const EMPTY_CARDS   = [];
 export const EMPTY_ASSETS  = [];
 
+export const getNow  = () => new Date();
+export const getYear = () => getNow().getFullYear();
+export const getMonth= () => getNow().getMonth() + 1;
+export const getDay  = () => getNow().getDate();
+export const getDaysInMonth = (y, m) => new Date(y, m, 0).getDate();
+
+// 레거시 호환용 (모듈 로드 시점 고정 - 주의 필요)
 export const NOW   = new Date();
 export const DAYS  = new Date(NOW.getFullYear(),NOW.getMonth()+1,0).getDate();
 export const DAY   = NOW.getDate();
