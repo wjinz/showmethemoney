@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { G } from "./styles/globalStyles";
-import { validate } from "./utils/validate";
-import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued } from "./utils/offlineQueue";
+import { G } from "./styles/globalStyles.js";
+import { validate } from "./utils/validate.js";
+import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued } from "./utils/offlineQueue.js";
 import {
   CATS, INIT_BUDGETS, DEFAULT_SLIDER_CFG, DEFAULT_TAX_CONFIG,
   EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS,
   getYear,
-} from "./constants";
-import { HomeView } from "./views/HomeView";
-import { EntryView } from "./views/EntryView";
-import { ReportView } from "./views/ReportView";
-import { FixedView } from "./views/FixedView";
-import { SettingsView } from "./views/SettingsView";
-import { AssetView } from "./views/AssetView";
-import { SyncSetup } from "./views/SyncSetup";
-import { WidgetView } from "./views/WidgetView";
-import { Nav } from "./components/Nav";
-import { InputModal } from "./components/InputModal";
-import { db } from "./utils/supabase";
-import { BudgetContext } from "./context/BudgetContext";
+} from "./constants/index.js";
+import { HomeView } from "./views/HomeView.jsx";
+import { EntryView } from "./views/EntryView.jsx";
+import { ReportView } from "./views/ReportView.jsx";
+import { FixedView } from "./views/FixedView.jsx";
+import { SettingsView } from "./views/SettingsView.jsx";
+import { AssetView } from "./views/AssetView.jsx";
+import { SyncSetup } from "./views/SyncSetup.jsx";
+import { WidgetView } from "./views/WidgetView.jsx";
+import { Nav } from "./components/Nav.jsx";
+import { InputModal } from "./components/InputModal.jsx";
+import { db } from "./utils/supabase.js";
+import { BudgetContext } from "./context/BudgetContext.jsx";
 
 export default function App() {
   const [ready, setReady] = useState(false);
