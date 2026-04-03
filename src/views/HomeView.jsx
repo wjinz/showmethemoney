@@ -1,24 +1,46 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, Ring, Chip, SectionHeader } from "../components/UI";
 import { SliderRow } from "../components/SliderRow";
-import { CAT, CATS, DAY, DAYS, MONTH, YEAR } from "../constants";
+import { CAT, CATS, getYear, getMonth, getDay, getDaysInMonth } from "../constants";
 import { fmtS } from "../utils/helpers";
 
 export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,plan,setPlan}){
+  const YEAR  = getYear();
+  const MONTH = getMonth();
+  const DAY   = getDay();
+  const DAYS  = getDaysInMonth(YEAR, MONTH);
+
+  // 기본 집계 — 빠른 연산이라 메모화 불필요
   const totalBudget  = Object.values(budgets).reduce((s,v)=>s+v,0);
   const fixedTotal   = fixed.reduce((s,f)=>s+f.amount,0);
   const installTotal = install.reduce((s,i)=>s+i.monthly,0);
-  const totalSpent   = tx.reduce((s,t)=>s+t.amount,0);
+
+  // Task 4-1: tx 배열 연산 useMemo 최적화 — tx가 변경될 때만 재계산
+  const totalSpent = useMemo(
+    () => tx.reduce((s,t)=>s+t.amount, 0),
+    [tx]
+  );
+  const hSpent = useMemo(
+    () => tx.filter(t=>t.who==="husband").reduce((s,t)=>s+t.amount, 0),
+    [tx]
+  );
+  const wSpent = useMemo(
+    () => tx.filter(t=>t.who==="wife").reduce((s,t)=>s+t.amount, 0),
+    [tx]
+  );
+  const curMonthPrefix = `${YEAR}-${String(MONTH).padStart(2,"0")}`;
+  const thisMonthCardSpend = useMemo(
+    () => tx.filter(t => t.date.startsWith(curMonthPrefix) && t.payMethod==="card").reduce((s,t)=>s+t.amount, 0),
+    [tx, curMonthPrefix]
+  );
+
   const pct          = Math.round(totalSpent/totalBudget*100);
   const paceTarget   = Math.round(DAY/DAYS*totalBudget);
   const pacePct      = paceTarget>0?Math.round(totalSpent/paceTarget*100):0;
   const remaining    = totalBudget-totalSpent;
-  const hSpent       = tx.filter(t=>t.who==="husband").reduce((s,t)=>s+t.amount,0);
-  const wSpent       = tx.filter(t=>t.who==="wife").reduce((s,t)=>s+t.amount,0);
-  const recent       = [...tx].sort((a,b)=>b.id-a.id).slice(0,4);
-
-  const daysLeft       = Math.max(DAYS - DAY, 1);
+  const daysLeft     = Math.max(DAYS - DAY, 1);
   const defaultPaceVal = Math.min(Math.round(remaining / daysLeft), sliderCfg.paceMaxDaily);
+
   const [paceDaily, setPaceDaily] = useState(Math.max(0, defaultPaceVal));
   const [searchTerm, setSearchTerm] = useState("");
   const [showFull, setShowFull] = useState(false);
@@ -50,10 +72,6 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
   const savingsRate      = totalSalary > 0 ? Math.round(estimatedSavings / totalSalary * 100) : 0;
   const savingsRateColor = savingsRate >= 20 ? "var(--green)" : savingsRate >= 10 ? "var(--gold)" : "var(--red)";
   const savingsRateLabel = savingsRate >= 20 ? "우수 ✓" : savingsRate >= 10 ? "양호" : savingsRate >= 0 ? "주의 ⚠" : "적자 ⚠";
-  const thisMonthCardSpend = tx
-    .filter(t => { const d = new Date(t.date); return d.getFullYear()===YEAR && d.getMonth()+1===MONTH && t.payMethod==="card"; })
-    .reduce((s,t) => s+t.amount, 0);
-
   const [showSalaryEdit, setShowSalaryEdit] = useState(!totalSalary);
   const [editH, setEditH] = useState(String(salary.husband || ""));
   const [editW, setEditW] = useState(String(salary.wife || ""));

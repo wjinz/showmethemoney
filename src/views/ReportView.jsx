@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, SectionHeader, Bar } from "../components/UI";
-import { CAT, CATS, DAY, DAYS, MONTH, YEAR } from "../constants";
+import { CAT, CATS, getYear, getMonth, getDay, getDaysInMonth } from "../constants";
 import { fmtS } from "../utils/helpers";
 import { CalendarView } from "./CalendarView";
 import { PlanView } from "./PlanView";
@@ -30,24 +30,36 @@ function StackedBar({data,total,height=24,showLegend=false}){
 }
 
 function ReportContent({tx,budgets,fixed,install,names,plan}){
-  const totalBudget  = Object.values(budgets).reduce((s,v)=>s+v,0);
-  const totalSpent   = tx.reduce((s,t)=>s+t.amount,0);
-  const projected    = DAY > 0 ? Math.round(totalSpent / DAY * DAYS) : 0;
-  const hSpent = tx.filter(t=>t.who==="husband").reduce((s,t)=>s+t.amount,0);
-  const wSpent = tx.filter(t=>t.who==="wife").reduce((s,t)=>s+t.amount,0);
+  const YEAR  = getYear();
+  const MONTH = getMonth();
+  const DAY   = getDay();
+  const DAYS  = getDaysInMonth(YEAR, MONTH);
 
-  const curMonthStr = `${YEAR}-${String(MONTH).padStart(2,"0")}`;
-  const curTx  = tx.filter(t=>t.date.startsWith(curMonthStr));
-  const catData= CATS.map(c=>({cat:c.id,amount:curTx.filter(t=>t.cat===c.id).reduce((s,t)=>s+t.amount,0)}));
-  const curTotal = curTx.reduce((s,t)=>s+t.amount,0);
+  const totalBudget = Object.values(budgets).reduce((s,v)=>s+v,0);
 
-  const prevYear  = MONTH===1 ? YEAR-1 : YEAR;
-  const prevMonth = MONTH===1 ? 12 : MONTH-1;
+  // Task 4-1: tx 배열 연산 useMemo 최적화
+  const curMonthStr  = `${YEAR}-${String(MONTH).padStart(2,"0")}`;
+  const prevYear     = MONTH===1 ? YEAR-1 : YEAR;
+  const prevMonth    = MONTH===1 ? 12 : MONTH-1;
   const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2,"0")}`;
-  const prevTx   = tx.filter(t=>t.date.startsWith(prevMonthStr));
-  const prevTotal= prevTx.reduce((s,t)=>s+t.amount,0);
-  const hasPrev  = prevTotal > 0;
+
+  const totalSpent = useMemo(() => tx.reduce((s,t)=>s+t.amount, 0), [tx]);
+  const hSpent     = useMemo(() => tx.filter(t=>t.who==="husband").reduce((s,t)=>s+t.amount, 0), [tx]);
+  const wSpent     = useMemo(() => tx.filter(t=>t.who==="wife").reduce((s,t)=>s+t.amount, 0), [tx]);
+
+  const curTx    = useMemo(() => tx.filter(t=>t.date.startsWith(curMonthStr)), [tx, curMonthStr]);
+  const curTotal = useMemo(() => curTx.reduce((s,t)=>s+t.amount, 0), [curTx]);
+  const catData  = useMemo(
+    () => CATS.map(c=>({cat:c.id,amount:curTx.filter(t=>t.cat===c.id).reduce((s,t)=>s+t.amount,0)})),
+    [curTx]
+  );
+
+  const prevTx    = useMemo(() => tx.filter(t=>t.date.startsWith(prevMonthStr)), [tx, prevMonthStr]);
+  const prevTotal = useMemo(() => prevTx.reduce((s,t)=>s+t.amount, 0), [prevTx]);
+  const hasPrev   = prevTotal > 0;
   const prevLabel = `${prevYear}년 ${prevMonth}월`;
+
+  const projected = DAY > 0 ? Math.round(totalSpent / DAY * DAYS) : 0;
 
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>
@@ -113,7 +125,7 @@ function ReportContent({tx,budgets,fixed,install,names,plan}){
   );
 }
 
-export function ReportView({tx, budgets, setBudgets, fixed, install, names, cards, plan, setPlan, taxConfig, setTaxConfig, onEdit, onDelete}) {
+export function ReportView({tx, budgets, setBudgets, fixed, install, names, cards, plan, setPlan, taxConfig, setTaxConfig, onEdit, onDelete, loadTxYear}) {
   const [tab, setTab] = useState("report");
   return (
     <div style={{height:"100%",display:"flex",flexDirection:"column"}}>
@@ -138,7 +150,7 @@ export function ReportView({tx, budgets, setBudgets, fixed, install, names, card
       </div>
       <div style={{flex:1,overflow:"hidden"}}>
         {tab==="report"   && <ReportContent tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} plan={plan}/>}
-        {tab==="calendar" && <CalendarView  tx={tx} cards={cards} names={names} budgets={budgets} onEdit={onEdit} onDelete={onDelete}/>}
+        {tab==="calendar" && <CalendarView tx={tx} cards={cards} names={names} budgets={budgets} onEdit={onEdit} onDelete={onDelete} loadTxYear={loadTxYear} />}
         {tab==="import"   && <DataImportView plan={plan} setPlan={setPlan} onGoToPlan={()=>setTab("plan")}/>}
         {tab==="plan"     && <PlanView      plan={plan} setPlan={setPlan} tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} onGoToImport={()=>setTab("import")}/>}
         {tab==="tax"      && <TaxOptimizerView tx={tx} names={names} taxConfig={taxConfig} setTaxConfig={setTaxConfig}/>}

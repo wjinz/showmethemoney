@@ -17,9 +17,14 @@ export async function runOCR(imageFile) {
         const base64Image = dataUrl.split(',')[1];
         const mediaType = dataUrl.match(/data:(image\/[^;]+);/)?.[1] ?? 'image/jpeg';
 
+        /** @type {Record<string, string>} */
+        const headers = { 'Content-Type': 'application/json' };
+        const secret = import.meta.env.VITE_INTERNAL_API_SECRET;
+        if (secret) headers['x-internal-secret'] = secret;
+
         const response = await fetch('/api/ocr', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ image: base64Image, mediaType }),
         });
 

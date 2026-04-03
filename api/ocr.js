@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   // CORS 헤더 설정 (같은 도메인 배포지만 명시적으로 허용)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-internal-secret');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -14,6 +14,12 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  // 내부 시크릿 인증 (INTERNAL_API_SECRET 환경 변수로 보호)
+  const internalSecret = process.env.INTERNAL_API_SECRET;
+  if (internalSecret && req.headers['x-internal-secret'] !== internalSecret) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;

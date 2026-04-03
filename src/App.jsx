@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { G } from "./styles/globalStyles";
-import { 
+import { validate } from "./utils/validate";
+import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued } from "./utils/offlineQueue";
+import {
   CATS, INIT_BUDGETS, DEFAULT_SLIDER_CFG, DEFAULT_TAX_CONFIG,
-  EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS
+  EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS,
+  getYear,
 } from "./constants";
 import { HomeView } from "./views/HomeView";
 import { EntryView } from "./views/EntryView";
@@ -15,6 +18,7 @@ import { WidgetView } from "./views/WidgetView";
 import { Nav } from "./components/Nav";
 import { InputModal } from "./components/InputModal";
 import { db } from "./utils/supabase";
+import { BudgetContext } from "./context/BudgetContext";
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -48,10 +52,29 @@ export default function App() {
     catch (e) { console.error("private save error:", e); }
   }, []);
 
+  // 로드된 연도 추적 (tx Lazy Loading용)
+  const loadedTxYears = useRef(/** @type {Set<number>} */ (new Set()));
+
   // 공유 데이터 상태 업데이트 핸들러 (실시간 반영용)
   const updateSharedState = useCallback((key, value) => {
+    // tx_YYYY 패턴 처리 (Task 4-2: 연도별 tx 분리)
+    if (key.startsWith('tx_')) {
+      const year = Number(key.slice(3));
+      if (!isNaN(year) && loadedTxYears.current.has(year)) {
+        // 해당 연도가 이미 로드된 경우에만 실시간 업데이트 반영
+        setTxRaw(prev => {
+          const filtered = prev.filter(t => {
+            const [ty] = t.date.split('-').map(Number);
+            return ty !== year;
+          });
+          return [...filtered, ...value];
+        });
+      }
+      setLastSync(new Date());
+      return;
+    }
     switch(key) {
-      case 'tx': setTxRaw(value); break;
+      case 'tx': setTxRaw(value); break; // 레거시 키 호환
       case 'fixed': setFixedRaw(value); break;
       case 'install': setInstallRaw(value); break;
       case 'cards': setCardsRaw(value); break;
@@ -70,14 +93,58 @@ export default function App() {
     setSyncStatus("syncing");
     try {
       const allData = await db.loadAll(hid);
-      if (allData.tx) setTxRaw(allData.tx);
+
+      // Task 4-2: tx 연도별 분리 로드
+      // 1단계: 레거시 'tx' 키가 있으면 연도별로 마이그레이션
+      if (Array.isArray(allData.tx) && allData.tx.length > 0) {
+        console.log('[tx-migrate] 레거시 tx 키 감지 — 연도별 분리 마이그레이션 시작');
+        /** @type {Object.<number, Array>} */
+        const byYear = {};
+        allData.tx.forEach(t => {
+          const year = Number(String(t.date ?? '').slice(0, 4));
+          if (!isNaN(year) && year > 2000) {
+            if (!byYear[year]) byYear[year] = [];
+            byYear[year].push(t);
+          }
+        });
+        await Promise.all(
+          Object.entries(byYear).map(([y, items]) => db.saveTx(hid, Number(y), items))
+        );
+        // 레거시 키를 빈 배열로 덮어써 중복 방지
+        await db.save(hid, 'tx', []);
+        console.log('[tx-migrate] 완료. 연도:', Object.keys(byYear).join(', '));
+      }
+
+      // 2단계: 현재 연도 tx만 로드 (성능 최적화)
+      const currentYear = getYear();
+      const curTx = await db.loadTx(hid, currentYear);
+      setTxRaw(curTx);
+      loadedTxYears.current.add(currentYear);
+
       if (allData.fixed) setFixedRaw(allData.fixed);
       if (allData.install) setInstallRaw(allData.install);
       if (allData.cards) setCardsRaw(allData.cards);
       if (allData.assets) setAssetsRaw(allData.assets);
       if (allData.budgets) setBudgetsRaw(allData.budgets);
       if (allData.names) setNamesRaw(allData.names);
-      if (allData.plan) setPlanRaw(allData.plan);
+      if (allData.plan) {
+        const loadedPlan = allData.plan;
+        // Task 1-1: plan.monthlyIncome → plan.salary 마이그레이션 (1회성)
+        if (loadedPlan.monthlyIncome && !loadedPlan.salary?.husband) {
+          const migratedPlan = {
+            ...loadedPlan,
+            salary: {
+              husband:       loadedPlan.monthlyIncome || 0,
+              wife:          0,
+              savingsTarget: loadedPlan.yearSavingGoal || 0,
+            },
+          };
+          setPlanRaw(migratedPlan);
+          await db.save(hid, "plan", migratedPlan);
+        } else {
+          setPlanRaw(loadedPlan);
+        }
+      }
       if (allData.taxConfig) setTaxConfigRaw(allData.taxConfig);
       setSyncStatus("ok");
     } catch(e) {
@@ -121,20 +188,132 @@ export default function App() {
     return () => { subscription.unsubscribe(); };
   }, [setupDone, householdId, updateSharedState]);
 
-  // 공유 데이터 저장 도우미 (Supabase 전송)
+  // Task 5-3: 온라인 복구 시 오프라인 큐 flush
+  useEffect(() => {
+    if (!setupDone || !householdId) return;
+
+    const handleOnline = async () => {
+      if (!hasQueued()) return;
+      console.log('[offlineQueue] 온라인 복구 감지 — 큐 flush 시작');
+      setSyncStatus("syncing");
+      const count = await flushOfflineQueue(db, householdId);
+      if (count > 0) {
+        setSyncStatus("ok");
+        // 파트너 기기와 동기화 위해 최신 데이터 재로드
+        await loadShared(householdId);
+      } else {
+        setSyncStatus("error");
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => { window.removeEventListener('online', handleOnline); };
+  }, [setupDone, householdId, loadShared]);
+
+  // 공유 데이터 저장 도우미 (Supabase 전송) — validate + 지수 백오프 재시도 포함
   const setShared = useCallback(async (key, value, rawSetter) => {
-    rawSetter(value);
-    setSyncStatus("syncing");
-    try {
-      await db.save(householdId, key, value);
-      setSyncStatus("ok");
-    } catch(e) {
-      console.error(`Save error for ${key}:`, e);
+    validate(key, value); // 스키마 불일치 경고 (Task 2-4)
+    rawSetter(value);     // 낙관적 UI 업데이트
+
+    // 오프라인 상태 시 큐에 저장 후 즉시 반환 (Task 5-3)
+    if (!navigator.onLine) {
+      enqueueOffline(key, value);
       setSyncStatus("error");
+      return;
+    }
+
+    setSyncStatus("syncing");
+    let retries = 0;
+    while (retries < 3) {
+      try {
+        await db.save(householdId, key, value);
+        setSyncStatus("ok");
+        return;
+      } catch (e) {
+        retries++;
+        if (retries === 3) {
+          // 저장 실패 시 큐에 보관 (Task 5-3)
+          enqueueOffline(key, value);
+          console.error(`[sync] 저장 실패 (3회 시도) key=${key}:`, e);
+          setSyncStatus("error");
+        } else {
+          await new Promise(r => setTimeout(r, 1000 * retries)); // 1s → 2s 백오프
+        }
+      }
     }
   }, [householdId]);
 
-  const setTx = useCallback(v => setShared("tx", typeof v === 'function' ? v(tx) : v, setTxRaw), [tx, setShared]);
+  // Task 4-2: tx 저장 시 연도별 키(tx_YYYY)로 분리 저장
+  const setTx = useCallback(v => {
+    const newTx = typeof v === 'function' ? v(tx) : v;
+    // 연도별로 그룹핑하여 각 연도 키로 저장
+    /** @type {Object.<number, Array>} */
+    const byYear = {};
+    newTx.forEach(t => {
+      const year = Number(String(t.date ?? '').slice(0, 4));
+      if (!isNaN(year) && year > 2000) {
+        if (!byYear[year]) byYear[year] = [];
+        byYear[year].push(t);
+      }
+    });
+    // 로드된 연도 중 변경된 것만 저장 (각 연도별 upsert)
+    const currentYear = getYear();
+    const yearsToSave = Object.keys(byYear).map(Number);
+    // 낙관적 UI 업데이트
+    validate('tx', newTx);
+    setTxRaw(newTx);
+    setSyncStatus("syncing");
+    // 비동기 저장 (각 연도별)
+    const saveAll = async () => {
+      let retries = 0;
+      while (retries < 3) {
+        try {
+          await Promise.all(
+            yearsToSave.map(y => db.saveTx(householdId, y, byYear[y] ?? []))
+          );
+          // 현재 연도 데이터가 없어진 경우 빈 배열로 저장
+          if (!byYear[currentYear]) {
+            await db.saveTx(householdId, currentYear, []);
+          }
+          setSyncStatus("ok");
+          return;
+        } catch (e) {
+          retries++;
+          if (retries === 3) {
+            console.error(`[sync] tx 저장 실패 (3회 시도):`, e);
+            setSyncStatus("error");
+          } else {
+            await new Promise(r => setTimeout(r, 1000 * retries));
+          }
+        }
+      }
+    };
+    saveAll();
+  }, [tx, householdId]);
+
+  /**
+   * 특정 과거 연도의 tx를 lazy 로드합니다.
+   * CalendarView / ReportView에서 과거 연도 탐색 시 호출.
+   * @param {number} year
+   */
+  const loadTxYear = useCallback(async (year) => {
+    if (loadedTxYears.current.has(year)) return; // 이미 로드됨
+    loadedTxYears.current.add(year); // 중복 요청 방지 (낙관적 마킹)
+    try {
+      const pastTx = await db.loadTx(householdId, year);
+      setTxRaw(prev => {
+        // 기존에 해당 연도 tx가 있으면 교체, 없으면 추가
+        const filtered = prev.filter(t => {
+          const [ty] = t.date.split('-').map(Number);
+          return ty !== year;
+        });
+        return [...filtered, ...pastTx];
+      });
+    } catch (e) {
+      console.error(`[loadTxYear] ${year}년 tx 로드 실패:`, e);
+      loadedTxYears.current.delete(year); // 실패 시 재시도 허용
+    }
+  }, [householdId]);
   const setFixed = useCallback(v => setShared("fixed", typeof v === 'function' ? v(fixed) : v, setFixedRaw), [fixed, setShared]);
   const setInstall = useCallback(v => setShared("install", typeof v === 'function' ? v(install) : v, setInstallRaw), [install, setShared]);
   const setCards = useCallback(v => setShared("cards", typeof v === 'function' ? v(cards) : v, setCardsRaw), [cards, setShared]);
@@ -228,8 +407,14 @@ export default function App() {
     </div>
   );
 
+  const budgetContextValue = {
+    tx, setTx, loadTxYear, budgets, setBudgets, plan, setPlan, names, setNames,
+    fixed, setFixed, install, setInstall, cards, setCards, assets, setAssets,
+    syncStatus, householdId, myRole,
+  };
+
   return (
-    <>
+    <BudgetContext.Provider value={budgetContextValue}>
       <style dangerouslySetInnerHTML={{ __html: G }} />
       <div className={`app-root${theme === "light" ? " light" : ""}`}
         style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -237,7 +422,7 @@ export default function App() {
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
           {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} plan={plan} setPlan={setPlan} />}
           {view === "entry" && <EntryView names={names} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
-          {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} />}
+          {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} />}
           {view === "asset" && <AssetView assets={assets} setAssets={setAssets} />}
           {view === "fixed" && <FixedView fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} tx={tx} names={names} sliderCfg={sliderCfg} />}
           {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} />}
@@ -246,6 +431,6 @@ export default function App() {
         {modal && <InputModal defaultWho={modal} names={names} plan={plan} onClose={() => setModal(null)} onSave={addTx} />}
         {showWidget && <WidgetView tx={tx} budgets={budgets} names={names} onClose={() => setShowWidget(false)} />}
       </div>
-    </>
+    </BudgetContext.Provider>
   );
 }

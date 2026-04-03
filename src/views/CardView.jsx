@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { Card, SectionHeader } from "../components/UI";
-import { CARD_ICONS_LIST, CARD_PRESETS_COLOR, NOW } from "../constants";
+import { CARD_ICONS_LIST, CARD_PRESETS_COLOR } from "../constants";
 import { fmt, fmtPeriodLabel, getBillingPeriod } from "../utils/helpers";
 
 export function CardView({cards, setCards}){
   const [showAdd,setShowAdd]=useState(false);
-  const [newC,setNewC]=useState({name:"",icon:"💳",color:"#1c2340",billingStartDay:1,billingEndDay:25,billingEndNextMonth:false,paymentDay:10});
+  // Task 0-2: name → label 통일
+  const [newC,setNewC]=useState({label:"",icon:"💳",color:"#1c2340",billingStartDay:1,billingEndDay:25,billingEndNextMonth:false,paymentDay:10});
 
   const add=()=>{
-    if(!newC.name)return;
+    if(!newC.label)return;
     setCards(prev=>[...prev,{...newC,id:Date.now()}]);
     setShowAdd(false);
-    setNewC({name:"",icon:"💳",color:"#1c2340",billingStartDay:1,billingEndDay:25,billingEndNextMonth:false,paymentDay:10});
+    setNewC({label:"",icon:"💳",color:"#1c2340",billingStartDay:1,billingEndDay:25,billingEndNextMonth:false,paymentDay:10});
   };
   const del=id=>setCards(prev=>prev.filter(c=>c.id!==id));
 
@@ -31,7 +32,7 @@ export function CardView({cards, setCards}){
         <Card className="u2" style={{padding:"20px",marginBottom:16,border:`1px solid var(--gold)`}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
             <div><div style={{fontSize:11,color:"var(--text2)",marginBottom:6}}>카드 이름</div>
-              <input value={newC.name} onChange={e=>setNewC({...newC,name:e.target.value})} placeholder="예: 국민 노리체크" style={{width:"100%",background:"var(--bg4)",border:"1px solid var(--border)",borderRadius:10,padding:"10px 12px",fontSize:13}}/>
+              <input value={newC.label} onChange={e=>setNewC({...newC,label:e.target.value})} placeholder="예: 국민 노리체크" style={{width:"100%",background:"var(--bg4)",border:"1px solid var(--border)",borderRadius:10,padding:"10px 12px",fontSize:13}}/>
             </div>
             <div><div style={{fontSize:11,color:"var(--text2)",marginBottom:6}}>아이콘</div>
               <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
@@ -83,7 +84,7 @@ export function CardView({cards, setCards}){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <div style={{width:40,height:40,borderRadius:12,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>{c.icon}</div>
-              <div><div style={{fontSize:17,fontWeight:700,color:"#fff"}}>{c.name}</div><div style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{c.paymentDay}일 결제</div></div>
+              <div><div style={{fontSize:17,fontWeight:700,color:"#fff"}}>{c.label}</div><div style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{c.paymentDay}일 결제</div></div>
             </div>
             <button onClick={()=>del(c.id)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:16,cursor:"pointer"}}>✕</button>
           </div>

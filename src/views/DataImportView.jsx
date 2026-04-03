@@ -416,7 +416,7 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span style={{ fontSize: 14 }}>{c.icon}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{c.name}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{c.label}</span>
                   <span style={{ fontSize: 10, color: "var(--text3)" }}>{pct}%</span>
                 </div>
                 <div style={{ textAlign: "right" }}>

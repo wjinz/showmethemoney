@@ -1,12 +1,16 @@
 import { Ring } from "../components/UI";
 import { fmt, fmtS } from "../utils/helpers";
-import { DAY, DAYS, MONTH, YEAR } from "../constants";
+import { getYear, getMonth, getDay, getDaysInMonth } from "../constants";
 
 export function WidgetView({tx, budgets, names, onClose}){
+  const MONTH = getMonth();
+  const DAY   = getDay();
+  const DAYS  = getDaysInMonth(getYear(), MONTH);
+
   const totalBudget = Object.values(budgets).reduce((s,v)=>s+v,0);
   const totalSpent  = tx.reduce((s,t)=>s+t.amount,0);
   const pct         = Math.round(totalSpent / totalBudget * 100);
-  
+
   const paceTarget = Math.round(DAY/DAYS * totalBudget);
   const pacePct    = paceTarget>0 ? Math.round(totalSpent/paceTarget*100) : 0;
   

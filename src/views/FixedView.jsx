@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card, SectionHeader, Bar, Chip } from "../components/UI";
-import { CAT, CATS, MONTH, YEAR } from "../constants";
+import { CAT, CATS } from "../constants";
 import { fmt, fmtS } from "../utils/helpers";
 import { CardView } from "./CardView";
 import { SimulatorView } from "./SimulatorView";
@@ -83,7 +83,7 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
                       <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>총 결제 금액</div><input type="number" value={newI.total} onChange={e => setNewI({ ...newI, total: e.target.value })} style={{ ...iStyle, textAlign: "right" }} /></div>
                       <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>개월 수</div><input type="number" value={newI.month} onChange={e => setNewI({ ...newI, month: parseInt(e.target.value) || 1 })} style={{ ...iStyle, textAlign: "right" }} /></div>
                     </div>
-                    <div style={{ marginBottom: 16 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>결제 카드</div><select value={newI.cardId} onChange={e => setNewI({ ...newI, cardId: e.target.value })} style={iStyle}>{cards.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+                    <div style={{ marginBottom: 16 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>결제 카드</div><select value={newI.cardId} onChange={e => setNewI({ ...newI, cardId: e.target.value })} style={iStyle}>{cards.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
                     <div style={{ marginBottom: 16 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>최초 결제일</div><input type="date" value={newI.date} onChange={e => setNewI({ ...newI, date: e.target.value })} style={iStyle} /></div>
                     <button onClick={addI} style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: "var(--blue)", color: "#fff", fontWeight: 700, fontSize: 14 }}>할부 등록</button>
                   </div>

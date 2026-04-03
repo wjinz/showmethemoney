@@ -139,7 +139,7 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
                 background: cardId === c.id ? c.color : "var(--bg3)",
                 color: cardId === c.id ? "#fff" : "var(--text3)",
                 border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
-              }}>{c.icon} {c.name}</button>
+              }}>{c.icon} {c.label}</button>
             ))}
           </div>
         )}

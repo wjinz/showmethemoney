@@ -83,7 +83,7 @@ input[type=range]::-moz-range-thumb{
 input[type=range]::-moz-range-track{height:6px;border-radius:99px;background:var(--track)}
 
 @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 @keyframes spin{to{transform:rotate(360deg)}}

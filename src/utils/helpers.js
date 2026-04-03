@@ -1,6 +1,7 @@
-import { NOW } from '../constants';
-
-export const today_str = () => NOW.toISOString().split("T")[0];
+export const today_str = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+};
 export const fmt  = n => n.toLocaleString("ko-KR")+"원";
 export const fmtS = n => {
   if(n>=100000000) return (n/100000000).toFixed(1)+"억";
@@ -21,7 +22,7 @@ export function fmtPeriodLabel(s, e) {
   return sm===em ? `${sm}월 ${sd}일 ~ ${ed}일` : `${sm}/${sd} ~ ${em}/${ed}`;
 }
 
-export function getBillingPeriod(card, today = NOW) {
+export function getBillingPeriod(card, today = new Date()) {
   const { billingStartDay, billingEndDay, billingEndNextMonth, paymentDay } = card;
   const y = today.getFullYear();
   const m = today.getMonth(); // 0-indexed

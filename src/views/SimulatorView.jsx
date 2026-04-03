@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Card, SectionHeader } from "../components/UI";
 import { SliderRow } from "../components/SliderRow";
-import { YEAR } from "../constants";
+import { getYear } from "../constants";
 import { fmtS } from "../utils/helpers";
 
 const simTooltip=({active,payload,label})=>{
@@ -74,7 +74,7 @@ export function SimulatorView({sliderCfg,onUpdateSimCfg}){
             borderRadius:10,padding:"10px 14px",fontSize:12,
             color:goalYear>0?"var(--green)":"var(--red)"
           }}>
-            {goalYear>0?`✓ ${goalYear}년 후 달성 예상 (${YEAR+goalYear}년)`:`✗ ${years}년 내 달성 불가`}
+            {goalYear>0?`✓ ${goalYear}년 후 달성 예상 (${getYear()+goalYear}년)`:`✗ ${years}년 내 달성 불가`}
           </div>
         </div>
       </Card>

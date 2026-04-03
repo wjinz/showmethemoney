@@ -1,20 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, Chip } from "../components/UI";
 import { TxEditModal } from "../components/TxEditModal";
-import { CAT, CATS, DNAMES, MONTH, YEAR } from "../constants";
+import { CAT, CATS, DNAMES, getYear, getMonth } from "../constants";
 import { fmt, fmtMonthDay, fmtPeriodLabel, fmtS, getBillingPeriod, today_str, toDateStr } from "../utils/helpers";
 
-export function CalendarView({tx, cards, names, budgets, onEdit, onDelete}) {
-  const [selDate, setSelDate] = useState(today_str());
+/**
+ * @param {{ tx: Array, cards: Array, names: Object, budgets: Object,
+ *           onEdit: Function, onDelete: Function,
+ *           loadTxYear?: (year: number) => void }} props
+ */
+export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadTxYear}) {
+  const [selDate, setSelDate] = useState(toDateStr(new Date()));
   const [selCard, setSelCard] = useState(null);
   const [editingTx, setEditingTx] = useState(null);
 
-  const [viewYear,  setViewYear]  = useState(YEAR);
-  const [viewMonth, setViewMonth] = useState(MONTH);
+  const [viewYear,  setViewYear]  = useState(getYear());
+  const [viewMonth, setViewMonth] = useState(getMonth());
+
+  // Task 4-2: 과거 연도로 이동 시 해당 연도 tx lazy 로드
+  useEffect(() => {
+    if (loadTxYear && viewYear !== getYear()) {
+      loadTxYear(viewYear);
+    }
+  }, [viewYear, loadTxYear]);
 
   const firstDay    = new Date(viewYear, viewMonth-1, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
-  const isCurrentMonth = viewYear===YEAR && viewMonth===MONTH;
+  const isCurrentMonth = viewYear===getYear() && viewMonth===getMonth();
 
   const dailyMap = {};
   tx.forEach(t => {
@@ -84,7 +96,7 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete}) {
       {isCurrentMonth && (
         <div className="u2" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
           {[
-            {l:"이달 지출", v:fmtS(tx.filter(t=>t.date.startsWith(`${YEAR}-${String(MONTH).padStart(2,"0")}`)).reduce((s,t)=>s+t.amount,0))+"원", c:"var(--text)"},
+            {l:"이달 지출", v:fmtS(tx.filter(t=>t.date.startsWith(`${getYear()}-${String(getMonth()).padStart(2,"0")}`)).reduce((s,t)=>s+t.amount,0))+"원", c:"var(--text)"},
             {l:"결제 예정", v:cards.length>0?fmtS(cardPayDates.reduce((s,cp)=>{
               const s2=toDateStr(cp.cycleStart),e2=toDateStr(cp.cycleEnd);
               return s+tx.filter(t=>t.cardId===cp.card.id&&t.date>=s2&&t.date<=e2).reduce((a,t)=>a+t.amount,0);
@@ -220,7 +232,7 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete}) {
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
                 <div style={{display:"flex",alignItems:"center",gap:7}}>
                   <span style={{fontSize:15}}>{cp.card.icon}</span>
-                  <span style={{fontSize:13,fontWeight:700}}>{cp.card.name}</span>
+                  <span style={{fontSize:13,fontWeight:700}}>{cp.card.label}</span>
                   <span style={{fontSize:10,color:"var(--text2)"}}>결제일</span>
                 </div>
                 <span style={{fontSize:16,fontWeight:700,color:"var(--pink)"}}>{fmt(cardTotal)}</span>
@@ -238,7 +250,7 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete}) {
           </div>
         ):selTx.map(t=>{
           const c = CAT[t.cat]||CATS[8];
-          const cardName = t.cardId ? cards.find(cd=>cd.id===t.cardId)?.name : null;
+          const cardName = t.cardId ? cards.find(cd=>cd.id===t.cardId)?.label : null;
           const canEdit = onEdit && onDelete;
           return(
             <div

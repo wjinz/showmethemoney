@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, Bar } from "../components/UI";
-import { CAT, CATS, DAY, MONTH, YEAR, MONTH_NAMES } from "../constants";
+import { CAT, CATS, getYear, getMonth, getDay, MONTH_NAMES } from "../constants";
 import { fmtS } from "../utils/helpers";
 
 // ────────────────────────────────────────────────
@@ -105,15 +105,24 @@ function BaselineTab({ plan, onGoToImport }) {
 // ────────────────────────────────────────────────
 // 2. 수입/저축 탭
 // ────────────────────────────────────────────────
-function IncomeTab({ plan, setPlan }) {
+function IncomeTab({ plan, setPlan, fixed, install }) {
   const update = (key, val) => setPlan(p => ({ ...p, [key]: val }));
 
-  const salary        = plan.salary || { husband: 0, wife: 0, savingsTarget: 0 };
-  const monthlyIncome = (salary.husband || 0) + (salary.wife || 0);
+  const salary              = plan.salary || { husband: 0, wife: 0, savingsTarget: 0 };
+  const monthlyIncome       = (salary.husband || 0) + (salary.wife || 0);
   const monthlySavingTarget = salary.savingsTarget || 0;
   const yearSavingGoal      = monthlySavingTarget * 12;
-  const monthlyFixed    = plan.monthlyFixedTotal || 0;
-  const monthlyAvail    = Math.max(0, monthlyIncome - monthlyFixed - monthlySavingTarget);
+
+  // Task 1-2: plan.monthlyFixedTotal(항상 0) 대신 props에서 실시간 계산
+  const monthlyFixed = useMemo(() => {
+    const fixedSum = (fixed || []).reduce((s, f) => s + (f.amount || 0), 0);
+    const installSum = (install || [])
+      .filter(i => (i.paidMonths || 0) < (i.months || 1))
+      .reduce((s, i) => s + Math.round((i.totalAmount || 0) / (i.months || 1)), 0);
+    return fixedSum + installSum;
+  }, [fixed, install]);
+
+  const monthlyAvail = Math.max(0, monthlyIncome - monthlyFixed - monthlySavingTarget);
 
   const imp = plan.importedAnalysis;
   const avgSuggest = imp ? imp.avgMonthly : null;
@@ -249,9 +258,14 @@ function BudgetTab({ plan, setPlan, tx, budgets, setBudgets, fixed, install }) {
     if (!totalSalary) { setAiError("먼저 홈 화면에서 급여를 입력해주세요."); return; }
     setAiLoading(true); setAiError(null); setAiResult(null);
     try {
+      /** @type {Record<string, string>} */
+      const headers = { "Content-Type": "application/json" };
+      const secret = import.meta.env.VITE_INTERNAL_API_SECRET;
+      if (secret) headers["x-internal-secret"] = secret;
+
       const resp = await fetch("/api/budget-ai", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ totalSalary, fixedTotal, installTotal, savingsTarget, catHistory }),
       });
       const data = await resp.json();
@@ -273,7 +287,7 @@ function BudgetTab({ plan, setPlan, tx, budgets, setBudgets, fixed, install }) {
   const monthlyIncome      = totalSalary;
   const monthlySavingTarget = savingsTarget;
 
-  const curMonthStr = `${YEAR}-${String(MONTH).padStart(2,"0")}`;
+  const curMonthStr = `${getYear()}-${String(getMonth()).padStart(2,"0")}`;
   const totalBudget = Object.values(budgets).reduce((s, v) => s + v, 0);
   const diff = monthlyAvail > 0 ? monthlyAvail - totalBudget : null;
 
@@ -421,7 +435,7 @@ function BudgetTab({ plan, setPlan, tx, budgets, setBudgets, fixed, install }) {
 
       {/* 카테고리별 */}
       {CATS.map(cat => {
-        const planKey = `monthPlan_${YEAR}_${MONTH}_${cat.id}`;
+        const planKey = `monthPlan_${getYear()}_${getMonth()}_${cat.id}`;
         const planAmt = plan[planKey] ?? (budgets[cat.id] || 0);
         const spent   = tx.filter(t => t.cat === cat.id && t.date.startsWith(curMonthStr)).reduce((s, t) => s + t.amount, 0);
         const pct     = planAmt > 0 ? Math.round(spent / planAmt * 100) : 0;
@@ -469,17 +483,20 @@ function BudgetTab({ plan, setPlan, tx, budgets, setBudgets, fixed, install }) {
 // 4. 연간 이벤트 탭
 // ────────────────────────────────────────────────
 function EventsTab({ plan, setPlan }) {
-  const [newEv, setNewEv] = useState({ title: "", amount: "", month: MONTH, cat: "etc" });
+  const currentMonth = getMonth();
+  const currentYear  = getYear();
+
+  const [newEv, setNewEv] = useState({ title: "", amount: "", month: currentMonth, cat: "etc" });
 
   const addEvent = () => {
     if (!newEv.title || !newEv.amount) return;
     setPlan(p => ({ ...p, events: [...(p.events || []), { id: Date.now(), ...newEv, amount: parseInt(newEv.amount) }] }));
-    setNewEv({ title: "", amount: "", month: MONTH, cat: "etc" });
+    setNewEv({ title: "", amount: "", month: currentMonth, cat: "etc" });
   };
-  const delEvent = id => setPlan(p => ({ ...p, events: (p.events || []).filter(e => e.id !== id) }));
+  const delEvent = (id) => setPlan(p => ({ ...p, events: (p.events || []).filter(e => e.id !== id) }));
 
-  const upcoming = [...(plan.events || [])].filter(e => e.month >= MONTH).sort((a, b) => a.month - b.month);
-  const past     = [...(plan.events || [])].filter(e => e.month < MONTH).sort((a, b) => a.month - b.month);
+  const upcoming = [...(plan.events || [])].filter(e => e.month >= currentMonth).sort((a, b) => a.month - b.month);
+  const past     = [...(plan.events || [])].filter(e => e.month < currentMonth).sort((a, b) => a.month - b.month);
   const totalEventAmt = (plan.events || []).reduce((s, e) => s + e.amount, 0);
 
   return (
@@ -512,7 +529,7 @@ function EventsTab({ plan, setPlan }) {
 
       {totalEventAmt > 0 && (
         <div style={{ background: "var(--goldD)", border: "1px solid var(--gold)", borderRadius: 11, padding: "11px 14px", marginBottom: 10, fontSize: 12 }}>
-          {YEAR}년 예정 큰 지출 합계: <strong style={{ color: "var(--gold)" }}>{fmtS(totalEventAmt)}원</strong>
+          {currentYear}년 예정 큰 지출 합계: <strong style={{ color: "var(--gold)" }}>{fmtS(totalEventAmt)}원</strong>
           <span style={{ color: "var(--text2)", marginLeft: 4 }}>({fmtS(Math.round(totalEventAmt / 12))}원/월 적립 시 도달)</span>
         </div>
       )}
@@ -570,15 +587,21 @@ function EventsTab({ plan, setPlan }) {
 // 5. 플랜 요약 탭
 // ────────────────────────────────────────────────
 function SummaryTab({ plan, tx, budgets, fixed, install }) {
+  const YEAR  = getYear();
+  const MONTH = getMonth();
+  const DAY   = getDay();
+
   const imp                 = plan.importedAnalysis;
   const salary              = plan.salary || { husband: 0, wife: 0, savingsTarget: 0 };
   const monthlyIncome       = (salary.husband || 0) + (salary.wife || 0);
   const monthlySavingTarget = salary.savingsTarget || 0;
   const yearSavingGoal      = monthlySavingTarget * 12;
 
-  // 고정비 계산 (FixedView 데이터 활용)
+  // 고정비 계산: 완납된 할부는 제외 (Task 0-3: !i.paid → paidMonths 비교)
   const monthlyFixed = (fixed || []).reduce((s, f) => s + (f.amount || 0), 0)
-    + (install || []).filter(i => !i.paid).reduce((s, i) => s + Math.round((i.totalAmount || 0) / (i.months || 1)), 0);
+    + (install || [])
+      .filter(i => (i.paidMonths || 0) < (i.months || 1))
+      .reduce((s, i) => s + Math.round((i.totalAmount || 0) / (i.months || 1)), 0);
 
   const totalBudget   = Object.values(budgets).reduce((s, v) => s + v, 0);
   const yearActualSpent = tx.filter(t => t.date.startsWith(`${YEAR}`)).reduce((s, t) => s + t.amount, 0);
@@ -697,6 +720,7 @@ function SummaryTab({ plan, tx, budgets, fixed, install }) {
 // 메인 PlanView
 // ────────────────────────────────────────────────
 export function PlanView({ plan, setPlan, tx, budgets, setBudgets, fixed, install, onGoToImport }) {
+  const YEAR = getYear();
   const [tab, setTab] = useState("baseline");
 
   return (
@@ -726,7 +750,7 @@ export function PlanView({ plan, setPlan, tx, budgets, setBudgets, fixed, instal
           </div>
 
           {tab === "baseline" && <BaselineTab plan={plan} onGoToImport={onGoToImport} />}
-          {tab === "income"   && <IncomeTab   plan={plan} setPlan={setPlan} />}
+          {tab === "income"   && <IncomeTab   plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}
           {tab === "budget"   && <BudgetTab   plan={plan} setPlan={setPlan} tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} />}
           {tab === "events"   && <EventsTab   plan={plan} setPlan={setPlan} />}
           {tab === "summary"  && <SummaryTab  plan={plan} tx={tx} budgets={budgets} fixed={fixed} install={install} />}
