@@ -17,7 +17,7 @@ import { SyncSetup } from "./views/SyncSetup.jsx";
 import { WidgetView } from "./views/WidgetView.jsx";
 import { Nav } from "./components/Nav.jsx";
 import { InputModal } from "./components/InputModal.jsx";
-import { db } from "./utils/supabase.js";
+import { db, isSupabaseConfigured } from "./utils/supabase.js";
 import { BudgetContext } from "./context/BudgetContext.jsx";
 
 export default function App() {
@@ -358,6 +358,20 @@ export default function App() {
     await loadShared(hid);
     setSetupDone(true);
   }, [loadShared, savePrivate]);
+
+  if (!isSupabaseConfigured) return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: G }} />
+      <div className="app-root" style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 20, padding: 20, textAlign: "center" }}>
+        <div style={{ fontSize: 48 }}>⚠️</div>
+        <div className="serif" style={{ fontSize: 20 }}>설정 오류</div>
+        <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6 }}>
+          Supabase 환경 변수가 설정되지 않았습니다.<br/>
+          Vercel 대시보드에서 <b>VITE_SUPABASE_URL</b> 및 <b>VITE_SUPABASE_ANON_KEY</b>를 확인해 주세요.
+        </div>
+      </div>
+    </>
+  );
 
   if (!ready) return (
     <>

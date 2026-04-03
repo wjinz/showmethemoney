@@ -3,11 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl     = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('[Supabase] 환경 변수가 설정되지 않았습니다. .env.local을 확인하세요. (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)');
-}
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = isSupabaseConfigured 
+  ? createClient(supabaseUrl, supabaseAnonKey) 
+  : null;
 
 export const db = {
   // 특정 가계부 아이디(hid)의 모든 데이터를 불러옵니다.
