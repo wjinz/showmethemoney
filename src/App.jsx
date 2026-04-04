@@ -513,40 +513,39 @@ export default function App() {
       width: "100%", maxWidth: 480, zIndex: 200,
       display: "flex", justifyContent: "space-between", alignItems: "center",
       padding: "6px 14px",
-      background: syncStatus === "error" ? "var(--redD)" : "var(--bg3)",
+      background: syncStatus === "error" ? "var(--redD)" : "var(--nav-bg)",
+      backdropFilter: "blur(10px)",
       borderBottom: `1px solid ${syncStatus === "error" ? "rgba(170,32,32,.3)" : "var(--border)"}`,
       fontSize: 10, color: syncStatus === "error" ? "var(--red)" : "var(--text3)",
+      transition: "all .3s"
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div 
+        onClick={() => window.location.reload()}
+        style={{ 
+          display: "flex", alignItems: "center", gap: 6, cursor: "pointer", 
+          padding: "2px 6px", borderRadius: 8, transition: "background .2s" 
+        }}
+        onMouseOver={e => e.currentTarget.style.background = "var(--dim)"}
+        onMouseOut={e => e.currentTarget.style.background = "transparent"}
+        title="새로고침"
+      >
         <div style={{
-          width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+          width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
           background: syncStatus === "syncing" ? "var(--gold)" : syncStatus === "error" ? "var(--red)" : "var(--green)",
-          animation: syncStatus === "syncing" ? "pulse 1s infinite" : "none"
+          animation: syncStatus === "syncing" ? "spin 1s linear infinite" : "none",
+          boxShadow: `0 0 8px ${syncStatus === "syncing" ? "var(--gold)" : syncStatus === "error" ? "var(--red)" : "var(--green)"}80`
         }} />
-        <span>{syncStatus === "error" ? "연결 끊김" : syncStatus === "syncing" ? "데이터 전송 중" : "실시간 클라우드 연결됨"}</span>
-        <button 
-          onClick={() => window.location.reload()}
-          style={{
-            background: "var(--bg2)", border: "1px solid var(--border)", 
-            color: "var(--text2)", borderRadius: "8px",
-            cursor: "pointer", fontSize: 16, padding: "4px 8px", marginLeft: 8,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 5px rgba(0,0,0,0.1)", fontWeight: 800,
-            transition: "all .2s"
-          }}
-          onMouseOver={e => {e.currentTarget.style.background = "var(--goldD)"; e.currentTarget.style.color = "var(--gold)";}}
-          onMouseOut={e => {e.currentTarget.style.background = "var(--bg2)"; e.currentTarget.style.color = "var(--text2)";}}
-          title="새로고침"
-        >
-          ⟳ 새로고침
-        </button>
+        <span style={{ fontWeight: 600 }}>
+          {syncStatus === "error" ? "서버 연결 오류" : syncStatus === "syncing" ? "동기화 중..." : "클라우드 실시간 연결됨 ⟳"}
+        </span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ letterSpacing: ".08em", fontWeight: 700, color: "var(--gold)" }}>{householdId}</span>
         <span style={{
           background: myRole === "husband" ? "var(--hD)" : "var(--wD)",
           color: myRole === "husband" ? "var(--h)" : "var(--w)",
-          padding: "1px 7px", borderRadius: 99, fontWeight: 700, fontSize: 9
+          padding: "1px 7px", borderRadius: 99, fontWeight: 700, fontSize: 9,
+          border: `1px solid ${myRole === "husband" ? "var(--h)" : "var(--w)"}30`
         }}>{myRole === "husband" ? names.husband : names.wife}</span>
       </div>
     </div>

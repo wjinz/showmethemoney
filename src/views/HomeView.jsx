@@ -129,19 +129,19 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
               </div>
               
               {/* === 깔끔한 가로형 지시선 1: 가계 종합 (좌상단) === */}
-              {/* x 좌표 정밀 계산: y=25 기준 원 궤적(반지름 65)의 x 좌표 = 약 13.8 -> 130 - 13.8 = 116.2 */}
-              <div style={{position:"absolute", top:25, right:116, display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap"}}>
-                <div style={{fontSize:10, fontWeight:700, color:"var(--gold)"}}>가계 전체</div>
-                <div style={{width:16, height:1.5, background:"var(--goldD)", opacity:0.8}} />
-                <div style={{width:4, height:4, borderRadius:"50%", background:"var(--gold)"}} />
+              {/* x 좌표 정밀 계산: r=65, y_rel=-40 -> x_rel=-51.23 -> x_pos=13.77 -> right=116.23 */}
+              <div style={{position:"absolute", top:25, right:116.2, transform:"translateY(-50%)", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap", pointerEvents:"none"}}>
+                <div style={{fontSize:10, fontWeight:800, color:"var(--gold)", letterSpacing:"-.02em"}}>가계 전체</div>
+                <div style={{width:20, height:1, background:"var(--gold)", opacity:0.5}} />
+                <div style={{width:5, height:5, borderRadius:"50%", background:"var(--gold)", boxShadow:"0 0 4px var(--gold)"}} />
               </div>
 
               {/* === 깔끔한 가로형 지시선 2: 생활비 (좌하단) === */}
-              {/* x 좌표 정밀 계산: y=105 기준 원 궤적(반지름 48)의 x 좌표 = 약 38.5 -> 130 - 38.5 = 91.5 */}
-              <div style={{position:"absolute", top:105, right:92, display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap"}}>
-                <div style={{fontSize:10, fontWeight:700, color:"var(--blue)"}}>생활비 전용</div>
-                <div style={{width:10, height:1.5, background:"var(--blueD)", opacity:0.8}} />
-                <div style={{width:4, height:4, borderRadius:"50%", background:"var(--blue)"}} />
+              {/* x 좌표 정밀 계산: r=48, y_rel=40 -> x_rel=-26.53 -> x_pos=38.47 -> right=91.53 */}
+              <div style={{position:"absolute", top:105, right:91.5, transform:"translateY(-50%)", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap", pointerEvents:"none"}}>
+                <div style={{fontSize:10, fontWeight:800, color:"var(--blue)", letterSpacing:"-.02em"}}>생활비 전용</div>
+                <div style={{width:14, height:1, background:"var(--blue)", opacity:0.5}} />
+                <div style={{width:5, height:5, borderRadius:"50%", background:"var(--blue)", boxShadow:"0 0 4px var(--blue)"}} />
               </div>
             </div>
           </div>

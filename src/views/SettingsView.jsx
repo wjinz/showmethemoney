@@ -45,7 +45,7 @@ export function SettingsView({
               border:`1px solid ${theme===t?"var(--gold)":"var(--border)"}`,
               color:theme===t?"var(--gold)":"var(--text2)",
               transition:"all .15s"
-            }}>{t === "dark" ? "다크 (기본)" : t === "light" ? "라이트" : "올드스쿨"}</button>
+            }}>{t === "dark" ? "다크 (기본)" : t === "light" ? "라이트" : "Win 3.1 / 386 DOS"}</button>
           ))}
         </div>
         <SliderRow 

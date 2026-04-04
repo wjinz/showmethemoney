@@ -41,22 +41,68 @@ export const G = `
   --dim:rgba(0,0,0,0.04);
 }
 
-/* ── 올드스쿨 ── */
+/* ── 올드스쿨 (Win 3.1 / DOS 에디션) ── */
 .oldschool{
-  --bg:#eae4d7;--bg2:#f7f4ec;--bg3:#d6cebf;--bg4:#c5bca8;
-  --border:#b8ac95;--border2:#a3957c;
-  --gold:#b27400;--goldL:#8c5b00;--goldD:rgba(178,116,0,0.15);
-  --red:#9c2a2a;--redD:rgba(156,42,42,0.15);
-  --green:#2b6e3f;--greenD:rgba(43,110,63,0.15);
-  --blue:#2c4b8e;--blueD:rgba(44,75,142,0.15);
-  --pink:#a8486b;--pinkD:rgba(168,72,107,0.15);
-  --purple:#5a3f8c;--purpleD:rgba(90,63,140,0.15);
-  --text:#2a2520;--text2:#595248;--text3:#827a6f;
+  --bg:#008080; /* 클래식 틸 */
+  --bg2:#c0c0c0; /* 실버 윈도우 */
+  --bg3:#dfdfdf; /* 밝은 회색 */
+  --bg4:#808080; /* 어두운 회색 */
+  --border:#000000;
+  --border2:#808080;
+  --gold:#808000;
+  --goldL:#ffff00;
+  --goldD:rgba(128,128,0,0.1);
+  --red:#ff0000;
+  --redD:rgba(255,0,0,0.1);
+  --green:#008000;
+  --greenD:rgba(0,128,0,0.1);
+  --blue:#000080;
+  --blueD:rgba(0,0,128,0.1);
+  --pink:#800080;
+  --pinkD:rgba(128,0,128,0.1);
+  --purple:#800000;
+  --purpleD:rgba(128,0,0,0.1);
+  --text:#000000;
+  --text2:#333333;
+  --text3:#555555;
   --h:var(--blue);--hD:var(--blueD);
   --w:var(--pink);--wD:var(--pinkD);
-  --nav-bg:rgba(234,228,215,0.97);
-  --track:rgba(0,0,0,0.12);
-  --dim:rgba(0,0,0,0.06);
+  --nav-bg:#c0c0c0;
+  --track:#808080;
+  --dim:rgba(0,0,0,0.05);
+}
+
+.oldschool, .oldschool * {
+  font-family: "Courier New", Courier, monospace !important;
+  letter-spacing: -0.5px;
+}
+
+.oldschool .card{
+  border: 2px outset #fff !important;
+  box-shadow: 1px 1px 0 #000 !important;
+  border-radius: 0 !important;
+  background: var(--bg2) !important;
+}
+
+.oldschool button:not(.fab){
+  border: 2px outset #fff !important;
+  border-radius: 0 !important;
+  background: #c0c0c0 !important;
+  color: #000 !important;
+  box-shadow: 1px 1px 0 #000 !important;
+}
+
+.oldschool button:active:not(.fab){
+  border: 2px inset #fff !important;
+  box-shadow: none !important;
+  transform: translate(1px, 1px);
+}
+
+.oldschool .input, .oldschool input[type=text], .oldschool input[type=number]{
+  border: 2px inset #fff !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  color: #000 !important;
 }
 
 /* 라이트 슬라이더 thumb */
