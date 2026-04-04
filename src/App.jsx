@@ -501,7 +501,7 @@ export default function App() {
   if (!setupDone) return (
     <>
       <style dangerouslySetInnerHTML={{ __html: G }} />
-      <div className={`app-root${theme === "light" ? " light" : ""}`}>
+      <div className={`app-root ${theme !== "dark" ? theme : ""}`.trim()}>
         <SyncSetup onDone={handleSetupDone} />
       </div>
     </>
@@ -527,16 +527,18 @@ export default function App() {
         <button 
           onClick={() => window.location.reload()}
           style={{
-            background: "none", border: "none", color: "inherit", 
-            cursor: "pointer", fontSize: 13, marginLeft: 4, 
-            display: "flex", alignItems: "center", padding: 0,
-            opacity: 0.6, transition: "opacity .2s"
+            background: "var(--bg2)", border: "1px solid var(--border)", 
+            color: "var(--text2)", borderRadius: "8px",
+            cursor: "pointer", fontSize: 16, padding: "4px 8px", marginLeft: 8,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 2px 5px rgba(0,0,0,0.1)", fontWeight: 800,
+            transition: "all .2s"
           }}
-          onMouseOver={e => e.currentTarget.style.opacity = 1}
-          onMouseOut={e => e.currentTarget.style.opacity = 0.6}
+          onMouseOver={e => {e.currentTarget.style.background = "var(--goldD)"; e.currentTarget.style.color = "var(--gold)";}}
+          onMouseOut={e => {e.currentTarget.style.background = "var(--bg2)"; e.currentTarget.style.color = "var(--text2)";}}
           title="새로고침"
         >
-          ⟳
+          ⟳ 새로고침
         </button>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -559,7 +561,7 @@ export default function App() {
   return (
     <BudgetContext.Provider value={budgetContextValue}>
       <style dangerouslySetInnerHTML={{ __html: G }} />
-      <div className={`app-root${theme === "light" ? " light" : ""}`}
+      <div className={`app-root ${theme !== "dark" ? theme : ""}`.trim()}
         style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>

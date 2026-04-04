@@ -41,6 +41,24 @@ export const G = `
   --dim:rgba(0,0,0,0.04);
 }
 
+/* ── 올드스쿨 ── */
+.oldschool{
+  --bg:#eae4d7;--bg2:#f7f4ec;--bg3:#d6cebf;--bg4:#c5bca8;
+  --border:#b8ac95;--border2:#a3957c;
+  --gold:#b27400;--goldL:#8c5b00;--goldD:rgba(178,116,0,0.15);
+  --red:#9c2a2a;--redD:rgba(156,42,42,0.15);
+  --green:#2b6e3f;--greenD:rgba(43,110,63,0.15);
+  --blue:#2c4b8e;--blueD:rgba(44,75,142,0.15);
+  --pink:#a8486b;--pinkD:rgba(168,72,107,0.15);
+  --purple:#5a3f8c;--purpleD:rgba(90,63,140,0.15);
+  --text:#2a2520;--text2:#595248;--text3:#827a6f;
+  --h:var(--blue);--hD:var(--blueD);
+  --w:var(--pink);--wD:var(--pinkD);
+  --nav-bg:rgba(234,228,215,0.97);
+  --track:rgba(0,0,0,0.12);
+  --dim:rgba(0,0,0,0.06);
+}
+
 /* 라이트 슬라이더 thumb */
 .light input[type=range]::-webkit-slider-thumb{
   background:var(--bg2);border:3px solid var(--bg4);

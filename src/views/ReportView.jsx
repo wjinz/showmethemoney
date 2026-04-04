@@ -103,15 +103,17 @@ function ReportContent({tx,budgets,fixed,install,names,plan}){
       <Card className="u3" style={{padding:"18px",marginBottom:10}}>
         <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".06em",marginBottom:16}}>■ 카테고리별 상세 비교 (vs 예산)</div>
         {catData.map(d=>{
-          const c=CAT[d.cat]; const b=budgets[d.cat]||0; const pct=b>0?Math.round(d.amount/b*100):0;
+          const c=d.cat.endsWith("_internal") ? d : CAT[d.cat]; 
+          const b=budgets[d.cat]||0; 
+          const pct=b>0?Math.round(d.amount/b*100):0;
           if(d.amount===0 && b===0) return null;
           return(
             <div key={d.cat} style={{marginBottom:14}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{c.icon}</span><span style={{fontSize:12,fontWeight:500}}>{c.label}</span></div>
-                <div style={{fontSize:12,fontWeight:700}}>{fmtS(d.amount)}원 <span style={{fontSize:10,color:"var(--text2)",fontWeight:400}}>/ {fmtS(b)}원</span></div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{c?.icon||"➖"}</span><span style={{fontSize:12,fontWeight:500}}>{c?.label||"기타"}</span></div>
+                <div style={{fontSize:12,fontWeight:700}}>{fmtS(d.amount)}원 <span style={{fontSize:10,color:"var(--text2)",fontWeight:400}}>{!d.cat.endsWith("_internal") ? `/ ${fmtS(b)}원` : ""}</span></div>
               </div>
-              <Bar pct={pct} color={c.color} h={4}/>
+              <Bar pct={!d.cat.endsWith("_internal") ? pct : 100} color={c?.color||"#888"} h={4}/>
             </div>
           );
         })}

@@ -36,14 +36,16 @@ export function SettingsView({
 
       <Card className="u2" style={{ padding: "18px", marginBottom: 12 }}>
         <div style={{ fontSize: 11, color: "var(--text2)", letterSpacing: ".06em", marginBottom: 16 }}>■ 앱 스타일 및 테마</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-          {["dark", "light", "oled"].map(t => (
+        <div style={{display:"flex",gap:8,marginBottom:10}}>
+          {["dark", "light", "oldschool"].map(t => (
             <button key={t} onClick={() => setTheme(t)} style={{
-              flex: 1, padding: "10px", borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: "pointer",
-              background: theme === t ? "var(--goldD)" : "var(--bg3)",
-              border: `1px solid ${theme === t ? "var(--gold)" : "var(--border)"}`,
-              color: theme === t ? "var(--gold)" : "var(--text2)"
-            }}>{t.toUpperCase()}</button>
+              flex:1,padding:"10px",borderRadius:12,cursor:"pointer",
+              fontWeight:700,fontSize:11,textTransform:"uppercase",
+              background:theme===t?"var(--goldD)":"var(--bg2)",
+              border:`1px solid ${theme===t?"var(--gold)":"var(--border)"}`,
+              color:theme===t?"var(--gold)":"var(--text2)",
+              transition:"all .15s"
+            }}>{t === "dark" ? "다크 (기본)" : t === "light" ? "라이트" : "올드스쿨"}</button>
           ))}
         </div>
         <SliderRow 

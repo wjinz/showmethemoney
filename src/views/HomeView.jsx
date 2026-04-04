@@ -114,32 +114,34 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
       <Card className="u2" style={{padding:"20px", marginBottom:10, overflow:"hidden", position:"relative"}}>
         <div style={{position:"absolute", top:-40, right:-40, width:160, height:160, borderRadius:"50%", background:isTotalMode?"radial-gradient(circle,var(--goldD) 0%,transparent 70%)":"radial-gradient(circle,var(--blueD) 0%,transparent 70%)", pointerEvents:"none", opacity:0.6}}/>
         <div style={{display:"flex", gap:20, alignItems:"center", marginBottom:16}}>
-          {/* 차트 영역: 170px 넓이에 도표를 우측에 붙이고, 좌측 빈 공간에 가로형 지시선을 배치 */}
-          <div style={{position:"relative", width:170, height:110, display:"flex", alignItems:"center", justifyContent:"flex-end", flexShrink:0}}>
+          {/* 차트 영역: 200px 넓이에 도표를 우측에 붙이고, 좌측 빈 공간에 가로형 지시선을 배치 */}
+          <div style={{position:"relative", width:200, height:130, display:"flex", alignItems:"center", justifyContent:"flex-end", flexShrink:0}}>
             
-            <div style={{position:"relative", width:110, height:110, display:"flex", alignItems:"center", justifyContent:"center"}}>
-              {/* 링 본체 */}
-              <Ring pct={pct} size={110} stroke={8} color="var(--gold)" />
-              <div style={{position:"absolute", width:80, height:80, pointerEvents:"none"}}>
-                <Ring pct={totalBudget>0?Math.round(variableSpent/totalBudget*100):0} size={80} stroke={6} color="var(--blue)" />
+            <div style={{position:"relative", width:130, height:130, display:"flex", alignItems:"center", justifyContent:"center"}}>
+              {/* 링 본체 (크기 및 두께 확대) */}
+              <Ring pct={pct} size={130} stroke={12} color="var(--gold)" />
+              <div style={{position:"absolute", width:96, height:96, pointerEvents:"none"}}>
+                <Ring pct={totalBudget>0?Math.round(variableSpent/totalBudget*100):0} size={96} stroke={10} color="var(--blue)" />
               </div>
               <div style={{position:"absolute", textAlign:"center"}}>
-                <div style={{fontSize:20, fontWeight:800, color:isTotalMode?"var(--gold)":"var(--blue)"}}>{isTotalMode ? pct : (totalBudget>0?Math.round(variableSpent/totalBudget*100):0)}%</div>
-                <div style={{fontSize:8, color:"var(--text3)", textTransform:"uppercase"}}>{isTotalMode ? "Total" : "Life"}</div>
+                <div style={{fontSize:22, fontWeight:800, color:isTotalMode?"var(--gold)":"var(--blue)"}}>{isTotalMode ? pct : (totalBudget>0?Math.round(variableSpent/totalBudget*100):0)}%</div>
+                <div style={{fontSize:9, color:"var(--text3)", textTransform:"uppercase"}}>{isTotalMode ? "Total" : "Life"}</div>
               </div>
               
               {/* === 깔끔한 가로형 지시선 1: 가계 종합 (좌상단) === */}
-              <div style={{position:"absolute", top:15, right:92, display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap"}}>
+              {/* x 좌표 정밀 계산: y=25 기준 원 궤적(반지름 65)의 x 좌표 = 약 13.8 -> 130 - 13.8 = 116.2 */}
+              <div style={{position:"absolute", top:25, right:116, display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap"}}>
                 <div style={{fontSize:10, fontWeight:700, color:"var(--gold)"}}>가계 전체</div>
                 <div style={{width:16, height:1.5, background:"var(--goldD)", opacity:0.8}} />
-                <div style={{width:4, height:4, borderRadius:"50%", background:"var(--gold)", marginLeft:-2}} />
+                <div style={{width:4, height:4, borderRadius:"50%", background:"var(--gold)"}} />
               </div>
 
               {/* === 깔끔한 가로형 지시선 2: 생활비 (좌하단) === */}
-              <div style={{position:"absolute", top:80, right:86, display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap"}}>
+              {/* x 좌표 정밀 계산: y=105 기준 원 궤적(반지름 48)의 x 좌표 = 약 38.5 -> 130 - 38.5 = 91.5 */}
+              <div style={{position:"absolute", top:105, right:92, display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap"}}>
                 <div style={{fontSize:10, fontWeight:700, color:"var(--blue)"}}>생활비 전용</div>
                 <div style={{width:10, height:1.5, background:"var(--blueD)", opacity:0.8}} />
-                <div style={{width:4, height:4, borderRadius:"50%", background:"var(--blue)", marginLeft:-2}} />
+                <div style={{width:4, height:4, borderRadius:"50%", background:"var(--blue)"}} />
               </div>
             </div>
           </div>
