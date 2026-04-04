@@ -58,6 +58,19 @@ export const db = {
     if (error) throw error;
   },
 
+  /**
+   * 해당 가계부의 모든 연도별 지출 내역(tx_YYYY)을 일괄 삭제합니다.
+   * @param {string} hid - 가계부 ID
+   */
+  async clearAllTransactions(hid) {
+    const { error } = await supabase
+      .from('household_data')
+      .delete()
+      .eq('id', hid)
+      .like('key', 'tx_%');
+    if (error) throw error;
+  },
+
   // 특정 가계부 아이디의 특정 키(fixed, plan 등) 데이터를 저장(upsert)합니다.
   async save(hid, key, value) {
     const { error } = await supabase

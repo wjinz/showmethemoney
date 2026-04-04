@@ -281,13 +281,11 @@ export default function App() {
       let retries = 0;
       while (retries < 3) {
         try {
+          // Task 8-2: 로드된 모든 연도에 대해 동기화 수행 (삭제로 인해 빈 연도가 된 경우 포함)
+          const allLoadedYears = Array.from(loadedTxYears.current);
           await Promise.all(
-            yearsToSave.map(y => db.saveTx(householdId, y, byYear[y] ?? []))
+            allLoadedYears.map(y => db.saveTx(householdId, y, byYear[y] ?? []))
           );
-          // 현재 연도 데이터가 없어진 경우 빈 배열로 저장
-          if (!byYear[currentYear]) {
-            await db.saveTx(householdId, currentYear, []);
-          }
           setSyncStatus("ok");
           return;
         } catch (e) {
@@ -342,9 +340,65 @@ export default function App() {
   const addTx = useCallback(t => setTx(ts => [...ts, { ...t, id: Date.now() }]), [setTx]);
   const deleteTx = useCallback(id => setTx(ts => ts.filter(t => t.id !== id)), [setTx]);
   const editTx = useCallback((id, updates) => setTx(ts => ts.map(t => t.id === id ? { ...t, ...updates } : t)), [setTx]);
+  
+  // -- 세분화된 초기화 함수들 (Task 12-1) --
+  
+  /** 1. 지출 내역만 초기화 */
+  const resetTx = useCallback(async () => {
+    setSyncStatus("syncing");
+    await db.clearAllTransactions(householdId);
+    // 레거시 'tx' 키도 혹시 모르니 정리
+    await db.save(householdId, "tx", EMPTY_TX);
+    setTxRaw(EMPTY_TX);
+    loadedTxYears.current.clear();
+    const curYear = getYear();
+    loadedTxYears.current.add(curYear);
+    setSyncStatus("ok");
+    addToast("모든 지출 내역이 초기화되었습니다.");
+  }, [householdId, addToast]);
 
+  /** 2. 고정비 및 할부 초기화 */
+  const resetFixed = useCallback(async () => {
+    setSyncStatus("syncing");
+    await Promise.all([
+      db.save(householdId, "fixed", EMPTY_FIXED),
+      db.save(householdId, "install", EMPTY_INSTALL)
+    ]);
+    setFixedRaw(EMPTY_FIXED);
+    setInstallRaw(EMPTY_INSTALL);
+    setSyncStatus("ok");
+    addToast("고정비/할부 내역이 초기화되었습니다.");
+  }, [householdId, addToast]);
+
+  /** 3. 예산 설정 초기화 */
+  const resetBudgets = useCallback(async () => {
+    setSyncStatus("syncing");
+    await db.save(householdId, "budgets", INIT_BUDGETS);
+    setBudgetsRaw(INIT_BUDGETS);
+    setSyncStatus("ok");
+    addToast("카테고리별 예산이 초기화되었습니다.");
+  }, [householdId, addToast]);
+
+  /** 4. 기본 설정(이름, 플랜) 초기화 */
+  const resetSetup = useCallback(async () => {
+    setSyncStatus("syncing");
+    await Promise.all([
+      db.save(householdId, "plan", {}),
+      db.save(householdId, "names", { husband: "남편", wife: "와이프" }),
+      db.save(householdId, "taxConfig", DEFAULT_TAX_CONFIG)
+    ]);
+    setPlanRaw({});
+    setNamesRaw({ husband: "남편", wife: "와이프" });
+    setTaxConfigRaw(DEFAULT_TAX_CONFIG);
+    setSyncStatus("ok");
+    addToast("사용자 설정이 초기화되었습니다.");
+  }, [householdId, addToast]);
+
+  /** 전체 초기화 */
   const resetAll = useCallback(async () => {
-    const promises = [
+    setSyncStatus("syncing");
+    await Promise.all([
+      db.clearAllTransactions(householdId),
       db.save(householdId, "tx", EMPTY_TX),
       db.save(householdId, "fixed", EMPTY_FIXED),
       db.save(householdId, "install", EMPTY_INSTALL),
@@ -353,10 +407,11 @@ export default function App() {
       db.save(householdId, "plan", {}),
       db.save(householdId, "budgets", INIT_BUDGETS),
       db.save(householdId, "taxConfig", DEFAULT_TAX_CONFIG)
-    ];
-    await Promise.all(promises);
+    ]);
     await loadShared(householdId);
-  }, [householdId, loadShared]);
+    setSyncStatus("ok");
+    addToast("전체 데이터가 초기화되었습니다.");
+  }, [householdId, loadShared, addToast]);
 
   const leaveHousehold = useCallback(async () => {
     await savePrivate("householdId", null);
@@ -451,7 +506,7 @@ export default function App() {
           {view === "entry" && <EntryView names={names} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
           {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} />}
           {view === "fixed" && <FixedView fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} tx={tx} names={names} sliderCfg={sliderCfg} />}
-          {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} />}
+          {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} />}
         </div>
         <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} />
         {modal && <InputModal defaultWho={modal} names={names} plan={plan} onClose={() => setModal(null)} onSave={addTx} />}
