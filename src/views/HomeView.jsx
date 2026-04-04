@@ -17,10 +17,12 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
   const installTotal = install.reduce((s,i)=>s+i.monthly,0);
 
   // Task 4-1: tx 배열 연산 useMemo 최적화 — tx가 변경될 때만 재계산
-  const totalSpent = useMemo(
+  const variableSpent = useMemo(
     () => tx.reduce((s,t)=>s+t.amount, 0),
     [tx]
   );
+  const totalSpent = variableSpent + fixedTotal + installTotal;
+  const totalBudgetAll = totalBudget + fixedTotal + installTotal;
   const hSpent = useMemo(
     () => tx.filter(t=>t.who==="husband").reduce((s,t)=>s+t.amount, 0),
     [tx]
@@ -35,10 +37,10 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
     [tx, curMonthPrefix]
   );
 
-  const pct          = Math.round(totalSpent/totalBudget*100);
+  const pct          = totalBudgetAll > 0 ? Math.round(totalSpent/totalBudgetAll*100) : 0;
   const paceTarget   = Math.round(DAY/DAYS*totalBudget);
-  const pacePct      = paceTarget>0?Math.round(totalSpent/paceTarget*100):0;
-  const remaining    = totalBudget-totalSpent;
+  const pacePct      = paceTarget>0?Math.round(variableSpent/paceTarget*100):0;
+  const remaining    = totalBudget-variableSpent;
   const daysLeft     = Math.max(DAYS - DAY, 1);
   const defaultPaceVal = Math.min(Math.round(remaining / daysLeft), sliderCfg.paceMaxDaily);
 
@@ -48,15 +50,15 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
   const [editItem, setEditItem] = useState(null);
 
   const paceMax     = sliderCfg.paceMaxDaily;
-  const projected   = totalSpent + paceDaily * daysLeft;
+  const projected   = variableSpent + paceDaily * daysLeft;
   const projOver    = projected > totalBudget;
   const paceColor   = pacePct<=90?"var(--green)":pacePct<=110?"#d4b84a":"var(--red)";
   const paceStatus  = pacePct<=90?"양호 ✓":pacePct<=110?"보통":"주의";
   const fillColor   = projOver ? "var(--red)" : "var(--green)";
 
-  // 현재 페이스 기반 월말 예측 (급여 계산보다 먼저 정의)
-  const currentPaceDaily  = DAY > 0 ? Math.round(totalSpent / DAY) : 0;
-  const projectedAtPace   = totalSpent + currentPaceDaily * daysLeft;
+  // 현재 페이스 기반 월말 예측 (변동 생활비 기준 유지)
+  const currentPaceDaily  = DAY > 0 ? Math.round(variableSpent / DAY) : 0;
+  const projectedAtPace   = variableSpent + currentPaceDaily * daysLeft;
   const remainingAtPace   = totalBudget - projectedAtPace;
   const isOnTrack         = remainingAtPace >= 0;
   const paceProgressPct   = totalBudget > 0 ? Math.min(Math.round(projectedAtPace / totalBudget * 100), 130) : 0;
@@ -67,8 +69,8 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
   const savingsTarget  = salary.savingsTarget || 0;
   const committed      = fixedTotal + installTotal;
   const cardLimit      = Math.max(totalSalary - committed - savingsTarget, 0);
-  const cardUsedPct    = cardLimit > 0 ? Math.min(Math.round(totalSpent / cardLimit * 100), 100) : 0;
-  const cardLeft       = cardLimit - totalSpent;
+  const cardUsedPct    = cardLimit > 0 ? Math.min(Math.round(variableSpent / cardLimit * 100), 100) : 0;
+  const cardLeft       = cardLimit - variableSpent;
   const cardLimitOk    = cardLeft >= 0;
   const estimatedSavings = totalSalary - committed - projectedAtPace;
   const savingsRate      = totalSalary > 0 ? Math.round(estimatedSavings / totalSalary * 100) : 0;
@@ -111,7 +113,7 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
           <div style={{flex:1}}>
             <div style={{fontSize:11,color:"var(--text2)",marginBottom:2}}>누적 지출</div>
             <div style={{fontSize:21,fontWeight:700,letterSpacing:"-.02em"}}>{fmtS(totalSpent)}<span style={{fontSize:13,color:"var(--text2)",marginLeft:2}}>원</span></div>
-            <div style={{fontSize:12,color:"var(--text2)",marginTop:1}}>/ {fmtS(totalBudget)}원</div>
+            <div style={{fontSize:12,color:"var(--text2)",marginTop:1}}>/ {fmtS(totalBudgetAll)}원</div>
             <div style={{display:"flex",gap:16,marginTop:12}}>
               <div style={{flex:1}}><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>📌 고정 지출</div><div style={{fontSize:12,fontWeight:700,color:"var(--blue)"}}>{fmtS(fixedTotal)}원</div></div>
               <div style={{flex:1}}><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>💳 카드 할부</div><div style={{fontSize:12,fontWeight:700,color:"var(--pink)"}}>{fmtS(installTotal)}원</div></div>
