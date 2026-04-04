@@ -427,18 +427,31 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
           }
 
           return displayList.map(t => {
-            const c=CAT[t.cat]||CATS[8];
+            const c = CAT[t.cat] || CATS[8];
+            const card = t.cardId ? (cards || []).find(cc => cc.id === t.cardId) : null;
+            const pmI = t.payMethod === "credit" ? "💳" : t.payMethod === "debit" ? "🏦" : "💵";
+            const pmL = card ? card.label : (t.payMethod === "credit" ? "신용" : t.payMethod === "debit" ? "체크" : "현금");
+
             return(
-              <div key={t.id} onClick={() => setEditItem(t)} style={{padding:"9px 14px",borderTop:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10,cursor:"pointer",transition:"background .15s"}} onMouseOver={e=>e.currentTarget.style.background="var(--bg3)"} onMouseOut={e=>e.currentTarget.style.background="none"}>
-                <div style={{width:33,height:33,borderRadius:9,background:c.color+"1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{c.icon}</div>
-                <div style={{flex:1}}>
+              <div key={t.id} onClick={() => setEditItem(t)} style={{padding:"9px 14px",borderTop:"1px solid var(--border)",display:"flex",alignItems:"center",gap:12,cursor:"pointer",transition:"background .15s"}} onMouseOver={e=>e.currentTarget.style.background="var(--bg3)"} onMouseOut={e=>e.currentTarget.style.background="none"}>
+                <div style={{width:34,height:34,borderRadius:10,background:c.color+"1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{c.icon}</div>
+                <div style={{flex:1, minWidth:0}}>
                   <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:2}}>
-                    <span style={{fontSize:12,fontWeight:500}}>{c.label}</span>
+                    <span style={{fontSize:13,fontWeight:600}}>{c.label}</span>
                     {!plan?.isSolo && <Chip who={t.who} names={names}/>}
                   </div>
-                  <div style={{fontSize:10,color:"var(--text2)"}}>{t.memo||"—"} · {t.date.slice(5)}</div>
+                  <div style={{display:"flex", alignItems:"center", gap:4, fontSize:10, color:"var(--text3)"}}>
+                    <span style={{color:"var(--text2)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{t.memo||"—"}</span>
+                    <span>·</span>
+                    <span style={{background:"var(--bg3)", padding:"1px 4px", borderRadius:4, fontSize:9, display:"flex", alignItems:"center", gap:2, border:"1px solid var(--border)"}}>
+                      <span>{pmI}</span>
+                      <span>{pmL}</span>
+                    </span>
+                    <span>·</span>
+                    <span>{t.date.slice(5)}</span>
+                  </div>
                 </div>
-                <span style={{fontSize:13,fontWeight:700,flexShrink:0}}>-{fmtS(t.amount)}원</span>
+                <span style={{fontSize:14,fontWeight:800,flexShrink:0, color:"var(--text)"}}>-{fmtS(t.amount)}원</span>
               </div>
             );
           });
@@ -451,12 +464,12 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
           cards={cards} 
           names={names} 
           plan={plan}
-          onSave={updates => {
-            onEdit(editItem.id, updates);
+          onEdit={(id, updates) => {
+            onEdit(id, updates);
             setEditItem(null);
           }}
-          onDelete={() => {
-            onDelete(editItem.id);
+          onDelete={(id) => {
+            onDelete(id);
             setEditItem(null);
           }}
           onClose={() => setEditItem(null)} 

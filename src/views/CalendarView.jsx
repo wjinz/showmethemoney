@@ -250,15 +250,18 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
           </div>
         ):selTx.map(t=>{
           const c = CAT[t.cat]||CATS[8];
-          const cardName = t.cardId ? cards.find(cd=>cd.id===t.cardId)?.label : null;
+          const card = t.cardId ? (cards || []).find(cc => cc.id === t.cardId) : null;
+          const pmI = t.payMethod === "credit" ? "💳" : t.payMethod === "debit" ? "🏦" : "💵";
+          const pmL = card ? card.label : (t.payMethod === "credit" ? "신용" : t.payMethod === "debit" ? "체크" : "현금");
           const canEdit = onEdit && onDelete;
+
           return(
             <div
               key={t.id}
-              onClick={() => canEdit && setEditingTx(t)}
+              onClick={(e) => { if(canEdit) { e.stopPropagation(); setEditingTx(t); } }}
               style={{
                 padding:"10px 15px", borderBottom:"1px solid var(--border)",
-                display:"flex", alignItems:"center", gap:10,
+                display:"flex", alignItems:"center", gap:12,
                 cursor: canEdit ? "pointer" : "default",
                 transition: "background .15s",
               }}
@@ -273,15 +276,17 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
                 <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:2,flexWrap:"wrap"}}>
                   <span style={{fontSize:12,fontWeight:600}}>{c.label}</span>
                   <Chip who={t.who} names={names}/>
-                  {cardName && (
-                    <span style={{fontSize:9,color:"var(--pink)",background:"var(--pinkD)",padding:"1px 6px",borderRadius:99}}>
-                      {cardName}
-                    </span>
-                  )}
                 </div>
-                {t.memo && <div style={{fontSize:10,color:"var(--text2)"}}>{t.memo}</div>}
+                <div style={{display:"flex", alignItems:"center", gap:4, fontSize:10, color:"var(--text3)"}}>
+                  <span style={{color:"var(--text2)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{t.memo||"—"}</span>
+                  <span>·</span>
+                  <span style={{background:"var(--bg2)", padding:"0 4px", borderRadius:4, fontSize:9, display:"flex", alignItems:"center", gap:2, border:"1px solid var(--border)"}}>
+                    <span>{pmI}</span>
+                    <span>{pmL}</span>
+                  </span>
+                </div>
               </div>
-              <span style={{fontSize:13,fontWeight:700,flexShrink:0}}>-{fmtS(t.amount)}원</span>
+              <span style={{fontSize:13,fontWeight:700,flexShrink:0, color:"var(--text)"}}>-{fmtS(t.amount)}원</span>
               {canEdit && <span style={{fontSize:12,color:"var(--text3)",flexShrink:0}}>✎</span>}
             </div>
           );

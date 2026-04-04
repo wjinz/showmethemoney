@@ -18,19 +18,22 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) 
   const [ocrStatus, setOcrStatus] = useState(null); // null | "loading" | "success" | "error"
   const [ocrMsg, setOcrMsg] = useState("");
 
-  const press = (v) => {
+  const press = (v, e) => {
+    if (e) e.stopPropagation();
     if (v === "C") setAmount("");
     else if (v === "⌫") setAmount(amount.slice(0, -1));
     else if (amount.length < 9) setAmount(amount + v);
   };
 
-  const save = () => {
+  const save = (e) => {
+    if (e) e.stopPropagation();
     if (!amount || !cat) return;
     onSave({ who, amount: parseInt(amount), cat, memo, payMethod, date, cardId });
     onClose();
   };
 
   const handleOCR = async (e) => {
+    e.stopPropagation();
     const file = e.target.files[0];
     if (!file) return;
 
@@ -84,7 +87,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) 
         {/* 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div className="serif" style={{ fontSize: 22 }}>지출 직접 입력</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, color: "var(--text3)", cursor: "pointer" }}>✕</button>
+          <button onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ background: "none", border: "none", fontSize: 20, color: "var(--text3)", cursor: "pointer" }}>✕</button>
         </div>
 
         {/* 날짜 선택 */}
@@ -93,7 +96,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) 
           <input
             type="date"
             value={date}
-            onChange={e => setDate(e.target.value)}
+            onChange={e => { e.stopPropagation(); setDate(e.target.value); }}
             style={{ background: "none", border: "none", color: "var(--text)", fontSize: 14, outline: "none", flex: 1, colorScheme: "dark", cursor: "pointer" }}
           />
         </div>
@@ -104,7 +107,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) 
             {["husband", "wife"].map((r) => (
               <button
                 key={r}
-                onClick={() => setWho(r)}
+                onClick={(e) => { e.stopPropagation(); setWho(r); }}
                 style={{
                   flex: 1, padding: "12px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 13,
                   background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--bg2)",
@@ -131,7 +134,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) 
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "⌫"].map((v) => (
               <button
                 key={v}
-                onClick={() => press(v)}
+                onClick={(e) => press(String(v), e)}
                 style={{ height: 52, borderRadius: 12, border: "1px solid var(--border)", background: "var(--bg2)", fontSize: 20, fontWeight: 700, cursor: "pointer" }}
               >
                 {v}
@@ -180,7 +183,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) 
             ].map((m) => (
               <button
                 key={m.id}
-                onClick={() => { setPayMethod(m.id); if(m.id==="cash") setCardId(""); }}
+                onClick={(e) => { e.stopPropagation(); setPayMethod(m.id); if(m.id==="cash") setCardId(""); }}
                 style={{
                   flex: 1, padding: "10px", borderRadius: 12, cursor: "pointer", fontSize: 12, fontWeight: 700,
                   background: payMethod === m.id ? "var(--goldD)" : "var(--bg3)",
@@ -200,7 +203,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) 
               {(cards || []).map(c => (
                 <button
                   key={c.id}
-                  onClick={() => setCardId(cardId === c.id ? "" : c.id)}
+                  onClick={(e) => { e.stopPropagation(); setCardId(cardId === c.id ? "" : c.id); }}
                   style={{
                     flexShrink: 0, padding: "8px 14px", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer",
                     background: cardId === c.id ? c.color : "var(--bg3)",

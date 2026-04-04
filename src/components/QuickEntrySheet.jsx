@@ -189,7 +189,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
             ].map(m => (
               <button
                 key={m.id}
-                onClick={() => { setPayMethod(m.id); if(m.id==="cash") setCardId(""); }}
+                onClick={(e) => { e.stopPropagation(); setPayMethod(m.id); if(m.id==="cash") setCardId(""); }}
                 style={{
                   flex: 1, padding: "9px", borderRadius: 11,
                   cursor: "pointer", fontSize: 12, fontWeight: 700,
@@ -208,7 +208,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
               {(cards || []).map(c => (
                 <button
                   key={c.id}
-                  onClick={() => setCardId(cardId === c.id ? "" : c.id)}
+                  onClick={(e) => { e.stopPropagation(); setCardId(cardId === c.id ? "" : c.id); }}
                   style={{
                     flexShrink: 0, padding: "7px 14px",
                     borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: "pointer",

@@ -214,13 +214,17 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
           </div>
         ) : dateTx.map(t => {
           const c = CAT[t.cat] || CATS[8];
+          const card = t.cardId ? (cards || []).find(cc => cc.id === t.cardId) : null;
+          const pmI = t.payMethod === "credit" ? "💳" : t.payMethod === "debit" ? "🏦" : "💵";
+          const pmL = card ? card.label : (t.payMethod === "credit" ? "신용" : t.payMethod === "debit" ? "체크" : "현금");
+
           return (
             <div
               key={t.id}
-              onClick={() => setEditingTx(t)}
+              onClick={(e) => { e.stopPropagation(); setEditingTx(t); }}
               style={{
                 padding: "11px 14px", borderTop: "1px solid var(--border)",
-                display: "flex", alignItems: "center", gap: 10,
+                display: "flex", alignItems: "center", gap: 12,
                 cursor: "pointer", transition: "background .15s",
               }}
               onMouseEnter={e => e.currentTarget.style.background = "var(--bg3)"}
@@ -229,15 +233,21 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
               <div style={{ width: 34, height: 34, borderRadius: 9, background: c.color + "1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>
                 {c.icon}
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 1 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{c.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{c.label}</span>
                   <Chip who={t.who} names={names} />
                 </div>
-                <div style={{ fontSize: 10, color: "var(--text2)" }}>{t.memo || "—"}</div>
+                <div style={{display:"flex", alignItems:"center", gap:4, fontSize:10, color:"var(--text3)"}}>
+                  <span style={{color:"var(--text2)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{t.memo||"—"}</span>
+                  <span>·</span>
+                  <span style={{background:"var(--bg2)", padding:"0 4px", borderRadius:4, fontSize:9, display:"flex", alignItems:"center", gap:2, border:"1px solid var(--border)"}}>
+                    <span>{pmI}</span>
+                    <span>{pmL}</span>
+                  </span>
+                </div>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 700, flexShrink: 0 }}>-{fmtS(t.amount)}원</span>
-              {/* 수정 힌트 아이콘 */}
+              <span style={{ fontSize: 13, fontWeight: 700, flexShrink: 0, color: "var(--text)" }}>-{fmtS(t.amount)}원</span>
               <span style={{ fontSize: 13, color: "var(--text3)", flexShrink: 0 }}>✎</span>
             </div>
           );

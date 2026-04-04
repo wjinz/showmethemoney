@@ -23,7 +23,8 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete }
   const [cardId,    setCardId]    = useState(tx.cardId || "");
   const [confirmDel, setConfirmDel] = useState(false);
 
-  const press = (v) => {
+  const press = (v, e) => {
+    e.stopPropagation();
     if (v === "C") setAmount("");
     else if (v === "⌫") setAmount(amount.slice(0, -1));
     else if (amount.length < 9) setAmount(amount + v);
@@ -35,7 +36,8 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete }
     onClose();
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e) => {
+    e.stopPropagation();
     if (!confirmDel) { setConfirmDel(true); return; }
     onDelete(tx.id);
     onClose();
@@ -56,7 +58,7 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete }
         {/* 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div className="serif" style={{ fontSize: 20 }}>내역 수정</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, color: "var(--text3)", cursor: "pointer" }}>✕</button>
+          <button onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ background: "none", border: "none", fontSize: 20, color: "var(--text3)", cursor: "pointer" }}>✕</button>
         </div>
 
         {/* 날짜 */}
@@ -68,10 +70,9 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete }
           />
         </div>
 
-        {/* 누가 */}
         <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
           {["husband", "wife"].map(r => (
-            <button key={r} onClick={() => setWho(r)} style={{
+            <button key={r} onClick={(e) => { e.stopPropagation(); setWho(r); }} style={{
               flex: 1, padding: "11px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 13,
               background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--bg2)",
               border: `1px solid ${who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--border)"}`,
@@ -91,7 +92,7 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete }
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7 }}>
             {[1,2,3,4,5,6,7,8,9,"C",0,"⌫"].map(v => (
-              <button key={v} onClick={() => press(v)} style={{
+              <button key={v} onClick={(e) => press(String(v), e)} style={{
                 height: 48, borderRadius: 11, border: "1px solid var(--border)",
                 background: "var(--bg2)", fontSize: 18, fontWeight: 700, cursor: "pointer",
                 color: v === "C" ? "var(--red)" : v === "⌫" ? "var(--gold)" : "var(--text)",
@@ -122,14 +123,13 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete }
             style={{ width: "100%", background: "none", border: "none", color: "var(--text)", fontSize: 14, padding: "12px 0", outline: "none" }} />
         </div>
 
-        {/* 결제 수단 */}
         <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
           {[
             { id: "credit", l: "신용카드", i: "💳" },
             { id: "debit",  l: "체크/현금", i: "🏦" },
             { id: "cash",   l: "현금영수증", i: "💵" },
           ].map(m => (
-            <button key={m.id} onClick={() => setPayMethod(m.id)} style={{
+            <button key={m.id} onClick={(e) => { e.stopPropagation(); setPayMethod(m.id); }} style={{
               flex: 1, padding: "9px", borderRadius: 12, cursor: "pointer", fontSize: 11, fontWeight: 700,
               background: payMethod === m.id ? "var(--goldD)" : "var(--bg3)",
               border: `1px solid ${payMethod === m.id ? "var(--gold)" : "var(--border)"}`,
@@ -139,11 +139,10 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete }
           ))}
         </div>
 
-        {/* 카드 선택 */}
         {cards.length > 0 && (
           <div style={{ display: "flex", gap: 6, overflowX: "auto", marginBottom: 14 }}>
             {cards.map(c => (
-              <button key={c.id} onClick={() => setCardId(cardId === c.id ? "" : c.id)} style={{
+              <button key={c.id} onClick={(e) => { e.stopPropagation(); setCardId(cardId === c.id ? "" : c.id); }} style={{
                 flexShrink: 0, padding: "6px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
                 background: cardId === c.id ? c.color : "var(--bg3)",
                 color: cardId === c.id ? "#fff" : "var(--text3)",

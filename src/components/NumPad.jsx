@@ -1,5 +1,6 @@
 export function NumPad({ value, onChange }) {
-  const press = (v) => {
+  const press = (v, e) => {
+    if (e) e.stopPropagation();
     if (v === "C") onChange("");
     else if (v === "⌫") onChange(value.slice(0, -1));
     else if (value.length < 9) onChange(value + v);
@@ -10,7 +11,7 @@ export function NumPad({ value, onChange }) {
       {[1,2,3,4,5,6,7,8,9,"C",0,"⌫"].map(v => (
         <button
           key={v}
-          onClick={() => press(String(v))}
+          onClick={(e) => press(String(v), e)}
           style={{
             height: 52, borderRadius: 13,
             border: "1px solid var(--border)",
