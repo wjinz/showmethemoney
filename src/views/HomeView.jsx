@@ -5,7 +5,7 @@ import { CAT, CATS, getYear, getMonth, getDay, getDaysInMonth } from "../constan
 import { fmtS } from "../utils/helpers";
 import { TxEditModal } from "../components/TxEditModal";
 
-export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,plan,setPlan,cards,onEdit,onDelete,onSettings}){
+export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,plan,setPlan,cards,onEdit,onDelete}){
   const YEAR  = getYear();
   const MONTH = getMonth();
   const DAY   = getDay();
@@ -90,13 +90,10 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
 
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>
-      <div className="u1" style={{padding:"22px 0 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div style={{display:"flex", gap:10, alignItems:"center"}}>
-          <div onClick={onSettings} style={{width:38, height:38, borderRadius:12, background:"var(--bg3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, cursor:"pointer", border:"1px solid var(--border)"}}>⚙️</div>
-          <div>
-            <div style={{fontSize:10,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:2}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
-            <div className="serif" style={{fontSize:18}}>{plan?.isSolo ? "나의 지출 요약" : "가정 경영현황"}</div>
-          </div>
+      <div className="u1" style={{padding:"22px 0 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
+        <div>
+          <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:4}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
+          <div className="serif" style={{fontSize:22}}>{plan?.isSolo ? "나의 지출 요약" : "가정 경영현황"}</div>
         </div>
         <div style={{textAlign: "right"}}>
           <div style={{fontSize:10, color:"var(--text3)", marginBottom:4}}>순수 생활비 잔액</div>

@@ -7,7 +7,7 @@ import { exportTransactions } from "../utils/export";
 export function SettingsView({
   names, setNames, budgets, setBudgets, sliderCfg, setSliderCfg, theme, setTheme,
   resetAll, resetTx, resetFixed, resetBudgets, resetSetup, householdId, myRole,
-  leaveHousehold, tx, plan, onBugReport, onAdminTrigger, isAdmin, onClose
+  leaveHousehold, tx, plan, onBugReport, onAdminTrigger, isAdmin
 }) {
   const [clickCount, setClickCount] = useState(0);
   const updateName = (role, v) => setNames(prev => ({ ...prev, [role]: v }));
@@ -16,10 +16,6 @@ export function SettingsView({
     <div style={{ padding: "0 16px 96px", overflowY: "auto", height: "100%", background: "var(--bg)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 0 12px" }}>
         <SectionHeader sub="Preferences" title="환경 설정" />
-        <button onClick={onClose} style={{
-          background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 10,
-          padding: "8px 16px", fontSize: 13, cursor: "pointer", color: "var(--text2)"
-        }}>닫기</button>
       </div>
 
       <Card className="u1" style={{ padding: "18px", marginBottom: 12 }}>
