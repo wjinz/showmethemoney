@@ -32,6 +32,11 @@ export const EMPTY_FIXED   = [];
 export const EMPTY_INSTALL = [];
 export const EMPTY_CARDS   = [];
 export const EMPTY_ASSETS  = [];
+export const EMPTY_PLAN    = { 
+  salary: { husband: 0, wife: 0, savingsTarget: 0 },
+  utilizationTarget: 100,
+  events: []
+};
 
 export const getNow  = () => new Date();
 export const getYear = () => getNow().getFullYear();

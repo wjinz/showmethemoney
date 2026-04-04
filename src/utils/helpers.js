@@ -2,12 +2,13 @@ export const today_str = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
 };
-export const fmt  = n => n.toLocaleString("ko-KR")+"원";
+export const fmt  = n => (Number(n)||0).toLocaleString("ko-KR")+"원";
 export const fmtS = n => {
-  if(n>=100000000) return (n/100000000).toFixed(1)+"억";
-  if(n>=10000)     return Math.round(n/10000)+"만";
-  return n.toLocaleString();
+  if(n>=100000000) return (n/100000000).toFixed(1).toLocaleString()+"억";
+  if(n>=10000)     return Math.round(n/10000).toLocaleString()+"만";
+  return (Number(n)||0).toLocaleString();
 };
+export const fmtC = n => (Number(n)||0).toLocaleString(); // Comma only
 
 export function toDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;

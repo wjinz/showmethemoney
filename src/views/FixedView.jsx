@@ -34,8 +34,8 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
   };
   const delI = id => setInstall(p => p.filter(i => i.id !== id));
 
-  const fTotal = fixed.reduce((s, f) => s + f.amount, 0);
-  const iTotal = install.reduce((s, i) => s + i.monthly, 0);
+  const fTotal = (fixed || []).reduce((s, f) => s + (f.amount || 0), 0);
+  const iTotal = (install || []).reduce((s, i) => s + (i.monthly || 0), 0);
 
   const iStyle = {
     width: "100%", background: "var(--bg4)", border: "1px solid var(--border)",

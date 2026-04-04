@@ -4,7 +4,7 @@ import { validate } from "./utils/validate.js";
 import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued } from "./utils/offlineQueue.js";
 import {
   CATS, INIT_BUDGETS, DEFAULT_SLIDER_CFG, DEFAULT_TAX_CONFIG,
-  EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS,
+  EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS, EMPTY_PLAN,
   getYear,
 } from "./constants/index.js";
 import { HomeView } from "./views/HomeView.jsx";
@@ -44,7 +44,7 @@ export default function App() {
   const [install, setInstallRaw] = useState(EMPTY_INSTALL);
   const [cards, setCardsRaw] = useState(EMPTY_CARDS);
   const [assets, setAssetsRaw] = useState(EMPTY_ASSETS);
-  const [plan, setPlanRaw] = useState({});
+  const [plan, setPlanRaw] = useState(EMPTY_PLAN);
   const [budgets, setBudgetsRaw] = useState(INIT_BUDGETS);
   const [names, setNamesRaw] = useState({ husband: "남편", wife: "와이프" });
   const [taxConfig, setTaxConfigRaw] = useState(DEFAULT_TAX_CONFIG);
@@ -564,9 +564,9 @@ export default function App() {
         style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
-          {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={() => setView("settings")} />}
+          {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} />}
           {view === "entry" && <EntryView names={names} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
-          {view === "budget" && <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} />}
+          {view === "budget" && <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} names={names} />}
           {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} />}
           {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} />}
           {view === "admin" && isAdmin && <AdminView onClose={handleAdminLogout} addToast={addToast} />}
