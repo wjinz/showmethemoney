@@ -3,8 +3,9 @@ import { Card, Ring, Chip, SectionHeader } from "../components/UI";
 import { SliderRow } from "../components/SliderRow";
 import { CAT, CATS, getYear, getMonth, getDay, getDaysInMonth } from "../constants";
 import { fmtS } from "../utils/helpers";
+import { TxEditModal } from "../components/TxEditModal";
 
-export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,plan,setPlan}){
+export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,plan,setPlan,cards,onEdit,onDelete}){
   const YEAR  = getYear();
   const MONTH = getMonth();
   const DAY   = getDay();
@@ -44,6 +45,7 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
   const [paceDaily, setPaceDaily] = useState(Math.max(0, defaultPaceVal));
   const [searchTerm, setSearchTerm] = useState("");
   const [showFull, setShowFull] = useState(false);
+  const [editItem, setEditItem] = useState(null);
 
   const paceMax     = sliderCfg.paceMaxDaily;
   const projected   = totalSpent + paceDaily * daysLeft;
@@ -88,14 +90,15 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
 
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>
-      <div className="u1" style={{padding:"22px 0 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+      <div className="u1" style={{padding:"22px 0 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
         <div>
-          <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:3}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
-          <div className="serif" style={{fontSize:21}}>{plan?.isSolo ? "나의 지출 요약" : "가정 경영현황"}</div>
+          <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:4}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
+          <div className="serif" style={{fontSize:22}}>{plan?.isSolo ? "나의 지출 요약" : "가정 경영현황"}</div>
         </div>
-        <button onClick={onWidget} style={{background:paceColor+"22",color:paceColor,fontSize:11,fontWeight:700,padding:"5px 11px",borderRadius:99,border:`1px solid ${paceColor}44`,cursor:"pointer"}}>
-          PACE {paceStatus} ↗
-        </button>
+        <div style={{textAlign: "right"}}>
+          <div style={{fontSize:10, color:"var(--text3)", marginBottom:4}}>남은 생활비</div>
+          <div style={{fontSize:15, fontWeight:800, color: remaining >= 0 ? "var(--green)" : "var(--red)"}}>{fmtS(remaining)}원</div>
+        </div>
       </div>
 
       <Card className="u2" style={{padding:"18px",marginBottom:10,overflow:"hidden",position:"relative"}}>
@@ -389,7 +392,7 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
           return displayList.map(t => {
             const c=CAT[t.cat]||CATS[8];
             return(
-              <div key={t.id} style={{padding:"9px 14px",borderTop:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10}}>
+              <div key={t.id} onClick={() => setEditItem(t)} style={{padding:"9px 14px",borderTop:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10,cursor:"pointer",transition:"background .15s"}} onMouseOver={e=>e.currentTarget.style.background="var(--bg3)"} onMouseOut={e=>e.currentTarget.style.background="none"}>
                 <div style={{width:33,height:33,borderRadius:9,background:c.color+"1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{c.icon}</div>
                 <div style={{flex:1}}>
                   <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:2}}>
@@ -404,6 +407,24 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
           });
         })()}
       </Card>
+
+      {editItem && (
+        <TxEditModal 
+          tx={editItem} 
+          cards={cards} 
+          names={names} 
+          plan={plan}
+          onSave={updates => {
+            onEdit(editItem.id, updates);
+            setEditItem(null);
+          }}
+          onDelete={() => {
+            onDelete(editItem.id);
+            setEditItem(null);
+          }}
+          onClose={() => setEditItem(null)} 
+        />
+      )}
     </div>
   );
 }

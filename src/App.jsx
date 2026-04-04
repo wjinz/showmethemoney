@@ -17,6 +17,8 @@ import { SyncSetup } from "./views/SyncSetup.jsx";
 import { WidgetView } from "./views/WidgetView.jsx";
 import { Nav } from "./components/Nav.jsx";
 import { InputModal } from "./components/InputModal.jsx";
+import { QuickEntrySheet } from "./components/QuickEntrySheet.jsx";
+import { useToast, ToastContainer } from "./components/Toast.jsx";
 import { db, isSupabaseConfigured } from "./utils/supabase.js";
 import { BudgetContext } from "./context/BudgetContext.jsx";
 
@@ -45,6 +47,8 @@ export default function App() {
   const [theme, setThemeRaw] = useState("dark");
   const [modal, setModal] = useState(null);
   const [showWidget, setShowWidget] = useState(false);
+  const [showQuickEntry, setShowQuickEntry] = useState(false);
+  const { toasts, addToast } = useToast();
 
   // 로컬/비공개 데이터 저장소
   const savePrivate = useCallback((key, value) => {
@@ -123,7 +127,14 @@ export default function App() {
 
       if (allData.fixed) setFixedRaw(allData.fixed);
       if (allData.install) setInstallRaw(allData.install);
-      if (allData.cards) setCardsRaw(allData.cards);
+      if (allData.cards) {
+        // Task 10-1: card.name -> card.label 마이그레이션
+        const normalizedCards = allData.cards.map(c => c.label ? c : { ...c, label: c.name || "미지정" });
+        setCardsRaw(normalizedCards);
+        if (allData.cards.some(c => !Object.hasOwn(c, 'label'))) {
+           await db.save(hid, "cards", normalizedCards);
+        }
+      }
       if (allData.assets) setAssetsRaw(allData.assets);
       if (allData.budgets) setBudgetsRaw(allData.budgets);
       if (allData.names) setNamesRaw(allData.names);
@@ -199,16 +210,18 @@ export default function App() {
       const count = await flushOfflineQueue(db, householdId);
       if (count > 0) {
         setSyncStatus("ok");
+        addToast(`☁ 오프라인 내역 ${count}건 동기화 완료`, "success");
         // 파트너 기기와 동기화 위해 최신 데이터 재로드
         await loadShared(householdId);
       } else {
         setSyncStatus("error");
+        addToast("동기화 중 오류가 발생했습니다.", "error");
       }
     };
 
     window.addEventListener('online', handleOnline);
     return () => { window.removeEventListener('online', handleOnline); };
-  }, [setupDone, householdId, loadShared]);
+  }, [setupDone, householdId, loadShared, addToast]);
 
   // 공유 데이터 저장 도우미 (Supabase 전송) — validate + 지수 백오프 재시도 포함
   const setShared = useCallback(async (key, value, rawSetter) => {
@@ -434,16 +447,17 @@ export default function App() {
         style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
-          {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} plan={plan} setPlan={setPlan} />}
+          {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} />}
           {view === "entry" && <EntryView names={names} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
-          {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} />}
-          {view === "asset" && <AssetView assets={assets} setAssets={setAssets} />}
+          {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} />}
           {view === "fixed" && <FixedView fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} tx={tx} names={names} sliderCfg={sliderCfg} />}
           {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} />}
         </div>
-        <Nav view={view} setView={setView} />
+        <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} />
         {modal && <InputModal defaultWho={modal} names={names} plan={plan} onClose={() => setModal(null)} onSave={addTx} />}
         {showWidget && <WidgetView tx={tx} budgets={budgets} names={names} onClose={() => setShowWidget(false)} />}
+        {showQuickEntry && <QuickEntrySheet names={names} plan={plan} cards={cards} tx={tx} onSave={addTx} onClose={() => setShowQuickEntry(false)} />}
+        <ToastContainer toasts={toasts} />
       </div>
     </BudgetContext.Provider>
   );

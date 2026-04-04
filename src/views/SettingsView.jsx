@@ -55,6 +55,13 @@ export function SettingsView({names,setNames,budgets,setBudgets,sliderCfg,setSli
             <div style={{fontSize:10,color:"var(--text3)",marginTop:6}}>내 역할: {myRole==="husband"?names.husband:names.wife}</div>
           )}
         </div>
+        {plan?.isSolo && (
+          <button onClick={() => {
+            if(confirm("커플 모드로 전환할까요? 파트너가 동일한 가계부를 공유할 수 있습니다.")) {
+              setPlan(p => ({ ...p, isSolo: false }));
+            }
+          }} style={{width:"100%",padding:"12px",borderRadius:10,border:"1px solid var(--gold)",background:"var(--goldD)",color:"var(--gold)",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:8}}>👥 파트너 초대 — 커플 모드로 전환</button>
+        )}
         <button onClick={()=>exportTransactions(tx)} style={{width:"100%",padding:"12px",borderRadius:10,border:"1px solid var(--goldL)",background:"var(--goldD)",color:"var(--gold)",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:8}}>📥 전체 지출 내역 CSV 내보내기</button>
         <button onClick={leaveHousehold} style={{width:"100%",padding:"12px",borderRadius:10,border:"1px solid var(--border2)",background:"none",color:"var(--text2)",fontSize:12,cursor:"pointer",marginBottom:8}}>가계부 나가기 (다른 코드로 연결)</button>
         <button onClick={()=>{if(confirm("모든 데이터를 초기화할까요?"))resetAll();}} style={{width:"100%",padding:"12px",borderRadius:10,border:"1px solid var(--redD)",background:"var(--redD)",color:"var(--red)",fontSize:12,fontWeight:700,cursor:"pointer"}}>전체 데이터 초기화</button>

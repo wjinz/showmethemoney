@@ -9,7 +9,7 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
   const [tab, setTab] = useState("fixed");
   const [showAdd, setShowAdd] = useState(false);
   const [newF, setNewF] = useState({ name: "", amount: "", cat: "housing", day: 1 });
-  const [newI, setNewI] = useState({ name: "", total: "", month: 3, cardId: cards[0]?.id || "", date: "" });
+  const [newI, setNewI] = useState({ name: "", total: "", months: 3, cardId: cards[0]?.id || "", date: "" });
 
   const addF = () => {
     if (!newF.name || !newF.amount) return;
@@ -19,9 +19,9 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
   const delF = id => setFixed(p => p.filter(f => f.id !== id));
 
   const addI = () => {
-    if (!newI.name || !newI.total || !newI.date) return;
-    setInstall(p => [...p, { ...newI, id: Date.now(), total: parseInt(newI.total), monthly: Math.round(newI.total / newI.month) }]);
-    setShowAdd(false); setNewI({ name: "", total: "", month: 3, cardId: cards[0]?.id || "", date: "" });
+    if (!newI.name || !newI.total || !newI.months || !newI.date) return;
+    setInstall(p => [...p, { ...newI, id: Date.now(), total: parseInt(newI.total), monthly: Math.round(newI.total / newI.months) }]);
+    setShowAdd(false); setNewI({ name: "", total: "", months: 3, cardId: cards[0]?.id || "", date: "" });
   };
   const delI = id => setInstall(p => p.filter(i => i.id !== id));
 
@@ -80,8 +80,10 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
                   <div>
                     <div style={{ marginBottom: 14 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>할부 항목</div><input value={newI.name} onChange={e => setNewI({ ...newI, name: e.target.value })} placeholder="예: 맥북 프로 맥스" style={iStyle} /></div>
                     <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 12, marginBottom: 14 }}>
-                      <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>총 결제 금액</div><input type="number" value={newI.total} onChange={e => setNewI({ ...newI, total: e.target.value })} style={{ ...iStyle, textAlign: "right" }} /></div>
-                      <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>개월 수</div><input type="number" value={newI.month} onChange={e => setNewI({ ...newI, month: parseInt(e.target.value) || 1 })} style={{ ...iStyle, textAlign: "right" }} /></div>
+                      <div style={{ flex: 1 }}>
+                        <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>할부 원금</div><input type="number" value={newI.total} onChange={e => setNewI({ ...newI, total: e.target.value })} placeholder="0" style={iStyle} /></div>
+                      </div>
+                      <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>개월 수</div><input type="number" value={newI.months} onChange={e => setNewI({ ...newI, months: parseInt(e.target.value) || 1 })} style={{ ...iStyle, textAlign: "right" }} /></div>
                     </div>
                     <div style={{ marginBottom: 16 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>결제 카드</div><select value={newI.cardId} onChange={e => setNewI({ ...newI, cardId: e.target.value })} style={iStyle}>{cards.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
                     <div style={{ marginBottom: 16 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>최초 결제일</div><input type="date" value={newI.date} onChange={e => setNewI({ ...newI, date: e.target.value })} style={iStyle} /></div>
@@ -113,8 +115,8 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
               const card = cards.find(c => c.id === i.cardId);
               return (
                 <Card key={i.id} className="u4" style={{ padding: "14px 15px", marginBottom: 8 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                    <div><div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3 }}>{i.name}</div><div style={{ fontSize: 10, color: "var(--text2)" }}>{card?.name || "카드"} · {i.month}개월 · {i.date}</div></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div><div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3 }}>{i.name}</div><div style={{ fontSize: 10, color: "var(--text2)" }}>{card?.label || card?.name || "카드"} · {i.months || i.month}개월 · {i.date} {i.memo ? `· ${i.memo}` : ""}</div></div>
                     <div style={{ textAlign: "right" }}><div style={{ fontSize: 15, fontWeight: 700, color: "var(--pink)" }}>{fmtS(i.monthly)}원</div><div style={{ fontSize: 9, color: "var(--text3)" }}>총 {fmtS(i.total)}원</div></div>
                   </div>
                   <button onClick={() => delI(i.id)} style={{ width: "100%", fontSize: 10, color: "var(--text3)", background: "var(--track)", border: "none", borderRadius: 6, padding: "4px", cursor: "pointer" }}>항목 삭제</button>

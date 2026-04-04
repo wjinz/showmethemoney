@@ -7,6 +7,7 @@ import { PlanView } from "./PlanView";
 import { TaxOptimizerView } from "./TaxOptimizerView";
 import { PredictionView } from "./PredictionView";
 import { DataImportView } from "./DataImportView";
+import { AssetView } from "./AssetView";
 
 function StackedBar({data,total,height=24,showLegend=false}){
   return(
@@ -125,7 +126,7 @@ function ReportContent({tx,budgets,fixed,install,names,plan}){
   );
 }
 
-export function ReportView({tx, budgets, setBudgets, fixed, install, names, cards, plan, setPlan, taxConfig, setTaxConfig, onEdit, onDelete, loadTxYear}) {
+export function ReportView({tx, budgets, setBudgets, fixed, install, names, cards, plan, setPlan, taxConfig, setTaxConfig, onEdit, onDelete, loadTxYear, assets, setAssets}) {
   const [tab, setTab] = useState("report");
   return (
     <div style={{height:"100%",display:"flex",flexDirection:"column"}}>
@@ -136,7 +137,8 @@ export function ReportView({tx, budgets, setBudgets, fixed, install, names, card
           {id:"import",l:"📁 데이터"},
           {id:"plan",l:"🎯 계획"},
           {id:"tax",l:"💸 연말정산"},
-          {id:"pred",l:"🔮 예측"}
+          {id:"pred",l:"🔮 예측"},
+          {id:"asset",l:"💰 자산"}
         ].map(t=>(
           <button key={t.id} onClick={()=>setTab(t.id)} style={{
             flexShrink:0,padding:"10px 12px",borderRadius:12,cursor:"pointer",
@@ -155,6 +157,7 @@ export function ReportView({tx, budgets, setBudgets, fixed, install, names, card
         {tab==="plan"     && <PlanView      plan={plan} setPlan={setPlan} tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} onGoToImport={()=>setTab("import")}/>}
         {tab==="tax"      && <TaxOptimizerView tx={tx} names={names} taxConfig={taxConfig} setTaxConfig={setTaxConfig}/>}
         {tab==="pred"     && <PredictionView tx={tx} fixed={fixed}/>}
+        {tab==="asset"    && <AssetView assets={assets} setAssets={setAssets}/>}
       </div>
     </div>
   );
