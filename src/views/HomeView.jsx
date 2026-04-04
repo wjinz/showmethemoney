@@ -114,15 +114,27 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
       <Card className="u2" style={{padding:"20px", marginBottom:10, overflow:"hidden", position:"relative"}}>
         <div style={{position:"absolute", top:-40, right:-40, width:160, height:160, borderRadius:"50%", background:isTotalMode?"radial-gradient(circle,var(--goldD) 0%,transparent 70%)":"radial-gradient(circle,var(--blueD) 0%,transparent 70%)", pointerEvents:"none", opacity:0.6}}/>
         <div style={{display:"flex", gap:20, alignItems:"center", marginBottom:16}}>
-          <div style={{position:"relative", width:110, height:110, display:"flex", alignItems:"center", justifyContent:"center"}}>
+          <div style={{position:"relative", width:160, height:120, display:"flex", alignItems:"center", justifyContent:"flex-start"}}>
             {/* 레이어드 링: 바깥쪽(종합), 안쪽(생활비) */}
-            <Ring pct={pct} size={110} stroke={8} color="var(--gold)" />
-            <div style={{position:"absolute", width:80, height:80, pointerEvents:"none"}}>
-              <Ring pct={totalBudget>0?Math.round(variableSpent/totalBudget*100):0} size={80} stroke={6} color="var(--blue)" />
+            <div style={{position:"relative", width:110, height:110, display:"flex", alignItems:"center", justifyContent:"center"}}>
+              <Ring pct={pct} size={110} stroke={8} color="var(--gold)" />
+              <div style={{position:"absolute", width:80, height:80, pointerEvents:"none"}}>
+                <Ring pct={totalBudget>0?Math.round(variableSpent/totalBudget*100):0} size={80} stroke={6} color="var(--blue)" />
+              </div>
+              <div style={{position:"absolute", textAlign:"center"}}>
+                <div style={{fontSize:20, fontWeight:800, color:isTotalMode?"var(--gold)":"var(--blue)"}}>{isTotalMode ? pct : (totalBudget>0?Math.round(variableSpent/totalBudget*100):0)}%</div>
+                <div style={{fontSize:8, color:"var(--text3)", textTransform:"uppercase"}}>{isTotalMode ? "Total" : "Life"}</div>
+              </div>
             </div>
-            <div style={{position:"absolute", textAlign:"center"}}>
-              <div style={{fontSize:20, fontWeight:800, color:isTotalMode?"var(--gold)":"var(--blue)"}}>{isTotalMode ? pct : (totalBudget>0?Math.round(variableSpent/totalBudget*100):0)}%</div>
-              <div style={{fontSize:8, color:"var(--text3)", textTransform:"uppercase"}}>{isTotalMode ? "Total" : "Life"}</div>
+
+            {/* 지시선 라벨 (Task 21-1) */}
+            <div style={{position:"absolute", left:115, top:22, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:4}}>
+              <span style={{fontSize:14, color:"var(--gold)"}}>←</span>
+              <div style={{fontSize:10, fontWeight:700, color:"var(--gold)", background:"var(--goldD)1a", padding:"2px 6px", borderRadius:4}}>🏢 가계 전체</div>
+            </div>
+            <div style={{position:"absolute", left:85, top:68, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:4}}>
+              <span style={{fontSize:14, color:"var(--blue)"}}>←</span>
+              <div style={{fontSize:10, fontWeight:700, color:"var(--blue)", background:"var(--blueD)1a", padding:"2px 6px", borderRadius:4}}>🛒 생활비 전용</div>
             </div>
           </div>
           <div style={{flex:1}}>
