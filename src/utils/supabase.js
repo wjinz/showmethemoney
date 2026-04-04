@@ -80,6 +80,45 @@ export const db = {
     if (error) throw error;
   },
 
+  /**
+   * 버그 리포트를 글로벌 시스템 영역에 저장합니다.
+   * @param {string} hid - 가계부 ID
+   * @param {object} data - 버그 내용 및 환경 정보
+   */
+  async reportBug(hid, data) {
+    const key = `bug_${Date.now()}_${hid}`;
+    const { error } = await supabase
+      .from('household_data')
+      .upsert({ id: 'GLOBAL_SYSTEM', key, value: data, updated_at: new Date().toISOString() });
+    if (error) throw error;
+  },
+
+  /**
+   * 모든 버그 리포트를 불러옵니다 (관리자용).
+   */
+  async loadBugs() {
+    const { data, error } = await supabase
+      .from('household_data')
+      .select('*')
+      .eq('id', 'GLOBAL_SYSTEM')
+      .like('key', 'bug_%')
+      .order('updated_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  /**
+   * 특정 버그 리포트의 상태를 업데이트합니다.
+   * @param {string} key - 버그 리포트 키
+   * @param {object} newValue - 업데이트할 버그 데이터 객체
+   */
+  async updateBugStatus(key, newValue) {
+    const { error } = await supabase
+      .from('household_data')
+      .upsert({ id: 'GLOBAL_SYSTEM', key, value: newValue, updated_at: new Date().toISOString() });
+    if (error) throw error;
+  },
+
   // 실시간 구독 설정 — tx_YYYY 키 변경도 처리
   subscribe(hid, onUpdate) {
     return supabase

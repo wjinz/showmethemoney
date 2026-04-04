@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { Card, SectionHeader } from "../components/UI";
 import { SliderRow } from "../components/SliderRow";
 import { CATS } from "../constants";
 import { fmtS } from "../utils/helpers";
 import { exportTransactions } from "../utils/export";
 
-export function SettingsView({names,setNames,budgets,setBudgets,sliderCfg,setSliderCfg,theme,setTheme,resetAll,resetTx,resetFixed,resetBudgets,resetSetup,householdId,myRole,leaveHousehold,tx,plan}){
+export function SettingsView({names,setNames,budgets,setBudgets,sliderCfg,setSliderCfg,theme,setTheme,resetAll,resetTx,resetFixed,resetBudgets,resetSetup,householdId,myRole,leaveHousehold,tx,plan,onBugReport,onAdminTrigger,isAdmin}){
+  const [clickCount, setClickCount] = useState(0);
   const updateName=(role,v)=>setNames(prev=>({...prev,[role]:v}));
   const updateBudget=(id,v)=>setBudgets(prev=>({...prev,[id]:v}));
 
@@ -66,6 +68,12 @@ export function SettingsView({names,setNames,budgets,setBudgets,sliderCfg,setSli
         
         <button onClick={()=>exportTransactions(tx)} style={{width:"100%",padding:"12px",borderRadius:10,border:"1px solid var(--goldL)",background:"var(--goldD)",color:"var(--gold)",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:8}}>📥 전체 지출 내역 CSV 내보내기</button>
         
+        <button onClick={onBugReport} style={{width:"100%",padding:"12px",borderRadius:10,border:"1px solid var(--blueL)",background:"var(--blueD)",color:"var(--blue)",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:8}}>🐞 오류 제보하기 (시스템 개선)</button>
+
+        {isAdmin && (
+          <button onClick={onAdminTrigger} style={{width:"100%",padding:"12px",borderRadius:10,border:"1px solid var(--gold)",background:"var(--gold)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:8}}>👨‍💻 관리자 페이지 바로가기</button>
+        )}
+        
         <div style={{marginTop:20, paddingTop:16, borderTop:"1px solid var(--border)", opacity:0.9}}>
           <div style={{fontSize:11, color:"var(--red)", fontWeight:700, marginBottom:12}}>⚠️ 위험 구역 (데이터 관리)</div>
           
@@ -83,7 +91,20 @@ export function SettingsView({names,setNames,budgets,setBudgets,sliderCfg,setSli
           <button onClick={()=>{if(confirm("정말로 모든 데이터를 초기화할까요?\n지출 내역, 고정비, 예산 등 모든 정보가 삭제됩니다."))resetAll();}} style={{width:"100%",padding:"12px",borderRadius:10,border:"1px solid var(--red)",background:"var(--red)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>전체 데이터 초기화</button>
         </div>
       </Card>
-      <div style={{textAlign:"center",padding:"10px",opacity:0.3,fontSize:10}}>Family Budget v4.0.0</div>
+      <div 
+        onClick={() => {
+          const newCount = clickCount + 1;
+          if (newCount >= 5) {
+            onAdminTrigger();
+            setClickCount(0);
+          } else {
+            setClickCount(newCount);
+          }
+        }}
+        style={{textAlign:"center",padding:"10px",opacity:0.3,fontSize:10,cursor:"pointer"}}
+      >
+        Family Budget v4.0.0 {clickCount > 0 && `(${clickCount})`}
+      </div>
     </div>
   );
 }

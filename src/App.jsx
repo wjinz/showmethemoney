@@ -17,10 +17,13 @@ import { SyncSetup } from "./views/SyncSetup.jsx";
 import { WidgetView } from "./views/WidgetView.jsx";
 import { Nav } from "./components/Nav.jsx";
 import { InputModal } from "./components/InputModal.jsx";
+import { BugReportModal } from "./components/BugReportModal.jsx";
+import { AdminLoginModal } from "./components/AdminLoginModal.jsx";
 import { QuickEntrySheet } from "./components/QuickEntrySheet.jsx";
 import { useToast, ToastContainer } from "./components/Toast.jsx";
 import { db, isSupabaseConfigured } from "./utils/supabase.js";
 import { BudgetContext } from "./context/BudgetContext.jsx";
+import { AdminView } from "./views/AdminView.jsx";
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -29,6 +32,9 @@ export default function App() {
   const [myRole, setMyRole] = useState("husband");
   const [view, setView] = useState("home");
   const [syncStatus, setSyncStatus] = useState("ok");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [showBugReport, setShowBugReport] = useState(false);
   const [lastSync, setLastSync] = useState(null);
 
   // 공유 데이터 필드들
@@ -179,9 +185,11 @@ export default function App() {
         const savedRole   = safeGet("myRole");
         const savedSlider = safeGet("sliderCfg");
         const savedTheme  = safeGet("theme");
+        const savedIsAdmin = safeGet("isAdmin");
 
         if (savedSlider) setSliderCfgRaw(savedSlider);
         if (savedTheme) setThemeRaw(savedTheme);
+        if (savedIsAdmin) setIsAdmin(true);
         if (savedHid) {
           setHouseholdId(savedHid);
           setMyRole(savedRole || "husband");
@@ -451,6 +459,18 @@ export default function App() {
     setSetupDone(true);
   }, [loadShared, savePrivate]);
 
+  const handleAdminLogin = useCallback(async () => {
+    setIsAdmin(true);
+    await savePrivate("isAdmin", true);
+    setView("admin");
+  }, [savePrivate]);
+
+  const handleAdminLogout = useCallback(async () => {
+    setIsAdmin(false);
+    await savePrivate("isAdmin", false);
+    setView("settings");
+  }, [savePrivate]);
+
   if (!isSupabaseConfigured) return (
     <>
       <style dangerouslySetInnerHTML={{ __html: G }} />
@@ -530,12 +550,15 @@ export default function App() {
           {view === "entry" && <EntryView names={names} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
           {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} />}
           {view === "fixed" && <FixedView fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} tx={tx} names={names} sliderCfg={sliderCfg} />}
-          {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} />}
+          {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} />}
+          {view === "admin" && isAdmin && <AdminView onClose={handleAdminLogout} addToast={addToast} />}
         </div>
         <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} />
         {modal && <InputModal defaultWho={modal} names={names} plan={plan} onClose={() => setModal(null)} onSave={addTx} />}
         {showWidget && <WidgetView tx={tx} budgets={budgets} names={names} onClose={() => setShowWidget(false)} />}
         {showQuickEntry && <QuickEntrySheet names={names} plan={plan} cards={cards} tx={tx} onSave={addTx} onClose={() => setShowQuickEntry(false)} />}
+        {showBugReport && <BugReportModal householdId={householdId} onClose={() => setShowBugReport(false)} addToast={addToast} />}
+        {showAdminLogin && <AdminLoginModal onLogin={handleAdminLogin} onClose={() => setShowAdminLogin(false)} addToast={addToast} />}
         <ToastContainer toasts={toasts} />
       </div>
     </BudgetContext.Provider>
