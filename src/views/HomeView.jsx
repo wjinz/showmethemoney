@@ -6,6 +6,7 @@ import { fmtS } from "../utils/helpers";
 import { TxEditModal } from "../components/TxEditModal";
 
 export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,plan,setPlan,cards,onEdit,onDelete}){
+  const [isTotalMode, setIsTotalMode] = useState(true);
   const YEAR  = getYear();
   const MONTH = getMonth();
   const DAY   = getDay();
@@ -92,109 +93,120 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
 
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>
-      <div className="u1" style={{padding:"22px 0 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
-        <div>
-          <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:4}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
-          <div className="serif" style={{fontSize:22}}>{plan?.isSolo ? "나의 지출 요약" : "가정 경영현황"}</div>
+      <div className="u1" style={{padding:"20px 0 10px", display:"flex", flexDirection:"column", gap:14}}>
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+          <div>
+            <div style={{fontSize:10,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:2}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
+            <div className="serif" style={{fontSize:20}}>{isTotalMode ? "가계 종합 현황" : "생활비 집중 관리"}</div>
+          </div>
+          <div style={{display:"flex", background:"var(--bg3)", borderRadius:12, padding:4, border:"1px solid var(--border)"}}>
+            <button onClick={()=>setIsTotalMode(true)} style={{padding:"6px 12px", borderRadius:9, fontSize:11, fontWeight:700, cursor:"pointer", border:"none", background:isTotalMode?"var(--gold)":"none", color:isTotalMode?"#fff":"var(--text2)", transition:"all .2s"}}>🏢 종합</button>
+            <button onClick={()=>setIsTotalMode(false)} style={{padding:"6px 12px", borderRadius:9, fontSize:11, fontWeight:700, cursor:"pointer", border:"none", background:!isTotalMode?"var(--blue)":"none", color:!isTotalMode?"#fff":"var(--text2)", transition:"all .2s"}}>🛒 생활비</button>
+          </div>
         </div>
-        <div style={{textAlign: "right"}}>
-          <div style={{fontSize:10, color:"var(--text3)", marginBottom:4}}>순수 생활비 잔액</div>
-          <div style={{fontSize:17, fontWeight:800, color: remaining >= 0 ? "var(--green)" : "var(--red)"}}>{fmtS(remaining)}원</div>
+        
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", background:"rgba(255,255,255,0.03)", borderRadius:14, padding:"12px 16px", border:"1px solid var(--border)"}}>
+          <div style={{fontSize:11, color:"var(--text2)"}}>{isTotalMode ? "🏢 전체 예산 대비 집행률" : "🛒 순수 변동비 집행률"}</div>
+          <div style={{fontSize:15, fontWeight:800, color: remaining >= 0 ? "var(--green)" : "var(--red)"}}>{fmtS(isTotalMode ? totalBudgetAll - totalSpent : remaining)}원 남음</div>
         </div>
       </div>
 
-      <Card className="u2" style={{padding:"18px",marginBottom:10,overflow:"hidden",position:"relative"}}>
-        <div style={{position:"absolute",top:-50,right:-50,width:180,height:180,borderRadius:"50%",background:"radial-gradient(circle,var(--goldD) 0%,transparent 70%)",pointerEvents:"none"}}/>
-        <div style={{display:"flex",gap:18,alignItems:"center",marginBottom:16}}>
-          <Ring pct={pct} size={100} stroke={7}>
-            <div style={{fontSize:20,fontWeight:700,color:"var(--gold)"}}>{pct}%</div>
-            <div style={{fontSize:9,color:"var(--text2)",letterSpacing:".05em",marginTop:1}}>집행률</div>
-          </Ring>
+      <Card className="u2" style={{padding:"20px", marginBottom:10, overflow:"hidden", position:"relative"}}>
+        <div style={{position:"absolute", top:-40, right:-40, width:160, height:160, borderRadius:"50%", background:isTotalMode?"radial-gradient(circle,var(--goldD) 0%,transparent 70%)":"radial-gradient(circle,var(--blueD) 0%,transparent 70%)", pointerEvents:"none", opacity:0.6}}/>
+        <div style={{display:"flex", gap:20, alignItems:"center", marginBottom:16}}>
+          <div style={{position:"relative", width:110, height:110, display:"flex", alignItems:"center", justifyContent:"center"}}>
+            {/* 레이어드 링: 바깥쪽(종합), 안쪽(생활비) */}
+            <Ring pct={pct} size={110} stroke={8} color="var(--gold)" />
+            <div style={{position:"absolute", width:80, height:80, pointerEvents:"none"}}>
+              <Ring pct={totalBudget>0?Math.round(variableSpent/totalBudget*100):0} size={80} stroke={6} color="var(--blue)" />
+            </div>
+            <div style={{position:"absolute", textAlign:"center"}}>
+              <div style={{fontSize:20, fontWeight:800, color:isTotalMode?"var(--gold)":"var(--blue)"}}>{isTotalMode ? pct : (totalBudget>0?Math.round(variableSpent/totalBudget*100):0)}%</div>
+              <div style={{fontSize:8, color:"var(--text3)", textTransform:"uppercase"}}>{isTotalMode ? "Total" : "Life"}</div>
+            </div>
+          </div>
           <div style={{flex:1}}>
-            <div style={{fontSize:11,color:"var(--text2)",marginBottom:2}}>누적 지출</div>
-            <div style={{fontSize:21,fontWeight:700,letterSpacing:"-.02em"}}>{fmtS(totalSpent)}<span style={{fontSize:13,color:"var(--text2)",marginLeft:2}}>원</span></div>
-            <div style={{fontSize:12,color:"var(--text2)",marginTop:1}}>/ {fmtS(totalBudgetAll)}원</div>
-            <div style={{display:"flex",gap:16,marginTop:12}}>
-              <div style={{flex:1}}><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>📌 고정 지출</div><div style={{fontSize:12,fontWeight:700,color:"var(--blue)"}}>{fmtS(fixedTotal)}원</div></div>
-              <div style={{flex:1}}><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>💳 카드 할부</div><div style={{fontSize:12,fontWeight:700,color:"var(--pink)"}}>{fmtS(installTotal)}원</div></div>
-              <div style={{flex:1.2}}><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>💰 가용 생활비</div><div style={{fontSize:12,fontWeight:700,color:remaining>=0?"var(--green)":"var(--red)"}}>{fmtS(remaining)}원</div></div>
+            <div style={{fontSize:11,color:"var(--text2)",marginBottom:2}}>{isTotalMode ? "총 누적 지출" : "순수 생활비 지출"}</div>
+            <div style={{fontSize:22,fontWeight:800,letterSpacing:"-.02em", color:isTotalMode?"var(--gold)":"var(--blue)"}}>{fmtS(isTotalMode ? totalSpent : variableSpent)}<span style={{fontSize:13,color:"var(--text3)",marginLeft:2}}>원</span></div>
+            <div style={{fontSize:11,color:"var(--text3)",marginTop:1}}>/ {fmtS(isTotalMode ? totalBudgetAll : totalBudget)}원</div>
+          </div>
+        </div>
+        
+        <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:10, marginTop:4, borderTop:"1px solid var(--border)", paddingTop:12}}>
+          <div><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>📌 고정비</div><div style={{fontSize:12,fontWeight:700,color:"var(--text2)"}}>{fmtS(fixedTotal)}원</div></div>
+          <div><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>💳 할부</div><div style={{fontSize:12,fontWeight:700,color:"var(--text2)"}}>{fmtS(installTotal)}원</div></div>
+          <div><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>🛒 생활비</div><div style={{fontSize:12,fontWeight:700,color:"var(--text2)"}}>{fmtS(variableSpent)}원</div></div>
+        </div>
+      </Card>
+
+      {/* ── 이 속도면 월말에? ── */}
+      <Card style={{padding:"16px", marginBottom:10, border:isOnTrack?"1px solid rgba(60,180,100,.25)":"1px solid rgba(200,50,50,.25)", background:isOnTrack?"rgba(60,180,100,.04)":"rgba(200,50,50,.04)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div>
+            <div style={{fontSize:10,color:"var(--text2)",marginBottom:4,letterSpacing:".04em"}}>이 속도면 월말에</div>
+            <div style={{fontSize:28,fontWeight:700,lineHeight:1,color:isOnTrack?"var(--green)":"var(--red)",letterSpacing:"-.02em"}}>
+              {isOnTrack ? "+" : "-"}{fmtS(Math.abs(remainingAtPace))}<span style={{fontSize:14,marginLeft:3}}>원</span>
             </div>
+            <div style={{fontSize:11,color:isOnTrack?"var(--green)":"var(--red)",marginTop:5}}>
+              {isOnTrack ? `예산 ${fmtS(Math.abs(remainingAtPace))}원 남아요 ✓` : `예산 ${fmtS(Math.abs(remainingAtPace))}원 초과 ⚠`}
+            </div>
+          </div>
+          <div style={{textAlign:"right",flexShrink:0}}>
+            <div style={{fontSize:10,color:"var(--text2)",marginBottom:3}}>일평균 지출</div>
+            <div style={{fontSize:18,fontWeight:700,color:"var(--text)"}}>{fmtS(currentPaceDaily)}<span style={{fontSize:10,color:"var(--text2)",marginLeft:2}}>원/일</span></div>
+            <div style={{fontSize:10,color:"var(--text2)",marginTop:2}}>잔여 {daysLeft}일</div>
+          </div>
+        </div>
+        {/* 진행 게이지 */}
+        <div style={{marginTop:12,background:"var(--bg3)",borderRadius:99,height:5,overflow:"hidden"}}>
+          <div style={{
+            height:"100%", borderRadius:99, transition:"width .5s ease",
+            width:`${Math.min(paceProgressPct, 100)}%`,
+            background: isOnTrack
+              ? "linear-gradient(90deg,var(--green),#5cba84)"
+              : "linear-gradient(90deg,var(--gold),var(--red))"
+          }}/>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:9,color:"var(--text3)"}}>
+          <span>현재 {fmtS(variableSpent)}원</span>
+          <span>월말 예상 {paceProgressPct}% 집행</span>
+          <span>예산 {fmtS(totalBudget)}원</span>
+        </div>
+      </Card>
+
+      <Card style={{padding:"16px", marginBottom:10, background:"var(--bg4)", border:"1px solid var(--border2)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+          <div>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--gold)"}}>🎛 시나리오 조정</div>
+            <div style={{fontSize:10,color:"var(--text2)",marginTop:3}}>슬라이더로 일 지출 조정 → 월말 예상 변화</div>
+          </div>
+          <div style={{textAlign:"right",flexShrink:0}}>
+            <div style={{fontSize:10,color:"var(--text2)"}}>조정 시 월말</div>
+            <div style={{fontSize:16,fontWeight:700,color:projOver?"var(--red)":"var(--green)"}}>{fmtS(projected)}원</div>
+            <div style={{fontSize:10,color:projOver?"var(--red)":"var(--green)",marginTop:1}}>{projOver?"▲ 예산 초과":"✓ 예산 내"}</div>
           </div>
         </div>
 
-        {/* ── 이 속도면 월말에? ── */}
-        <div style={{
-          background: isOnTrack ? "rgba(60,180,100,.1)" : "rgba(200,50,50,.1)",
-          border: `1px solid ${isOnTrack ? "rgba(60,180,100,.25)" : "rgba(200,50,50,.25)"}`,
-          borderRadius: 14, padding: "14px 16px", marginBottom: 10
-        }}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-            <div>
-              <div style={{fontSize:10,color:"var(--text2)",marginBottom:4,letterSpacing:".04em"}}>이 속도면 월말에</div>
-              <div style={{fontSize:28,fontWeight:700,lineHeight:1,color:isOnTrack?"var(--green)":"var(--red)",letterSpacing:"-.02em"}}>
-                {isOnTrack ? "+" : "-"}{fmtS(Math.abs(remainingAtPace))}<span style={{fontSize:14,marginLeft:3}}>원</span>
-              </div>
-              <div style={{fontSize:11,color:isOnTrack?"var(--green)":"var(--red)",marginTop:5}}>
-                {isOnTrack ? `예산 ${fmtS(Math.abs(remainingAtPace))}원 남아요 ✓` : `예산 ${fmtS(Math.abs(remainingAtPace))}원 초과 ⚠`}
-              </div>
-            </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              <div style={{fontSize:10,color:"var(--text2)",marginBottom:3}}>일평균 지출</div>
-              <div style={{fontSize:18,fontWeight:700,color:"var(--text)"}}>{fmtS(currentPaceDaily)}<span style={{fontSize:10,color:"var(--text2)",marginLeft:2}}>원/일</span></div>
-              <div style={{fontSize:10,color:"var(--text2)",marginTop:2}}>잔여 {daysLeft}일</div>
-            </div>
-          </div>
-          {/* 진행 게이지 */}
-          <div style={{marginTop:12,background:"var(--bg3)",borderRadius:99,height:5,overflow:"hidden"}}>
-            <div style={{
-              height:"100%", borderRadius:99, transition:"width .5s ease",
-              width:`${Math.min(paceProgressPct, 100)}%`,
-              background: isOnTrack
-                ? "linear-gradient(90deg,var(--green),#5cba84)"
-                : "linear-gradient(90deg,var(--gold),var(--red))"
-            }}/>
-          </div>
-          <div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:9,color:"var(--text3)"}}>
-            <span>현재 {fmtS(totalSpent)}원</span>
-            <span>월말 예상 {paceProgressPct}% 집행</span>
-            <span>예산 {fmtS(totalBudget)}원</span>
-          </div>
-        </div>
+        <SliderRow
+          label="일평균 목표 지출"
+          value={paceDaily}
+          min={0}
+          max={paceMax}
+          step={5000}
+          onChange={setPaceDaily}
+          fillColor={fillColor}
+          formatVal={v => fmtS(v)+"원/일"}
+          showReset
+          onReset={() => setPaceDaily(Math.max(0, defaultPaceVal))}
+        />
 
-        <div style={{background:"var(--bg4)",borderRadius:14,padding:"16px",border:"1px solid var(--border2)"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
-            <div>
-              <div style={{fontSize:12,fontWeight:700,color:"var(--gold)"}}>🎛 시나리오 조정</div>
-              <div style={{fontSize:10,color:"var(--text2)",marginTop:3}}>슬라이더로 일 지출 조정 → 월말 예상 변화</div>
+        <div style={{display:"flex",gap:8}}>
+          {[{label:"지금 페이스",val:currentPaceDaily,c:"var(--text2)"},{label:"조정 후",val:paceDaily,c:fillColor}].map(b=>(
+            <div key={b.label} style={{flex:1,background:"var(--bg3)",borderRadius:10,padding:"9px 12px"}}>
+              <div style={{fontSize:10,color:"var(--text2)",marginBottom:3}}>{b.label}</div>
+              <div style={{fontSize:14,fontWeight:700,color:b.c}}>{fmtS(b.val)}<span style={{fontSize:10,color:"var(--text2)",marginLeft:2}}>원/일</span></div>
             </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              <div style={{fontSize:10,color:"var(--text2)"}}>조정 시 월말</div>
-              <div style={{fontSize:16,fontWeight:700,color:projOver?"var(--red)":"var(--green)"}}>{fmtS(projected)}원</div>
-              <div style={{fontSize:10,color:projOver?"var(--red)":"var(--green)",marginTop:1}}>{projOver?"▲ 예산 초과":"✓ 예산 내"}</div>
-            </div>
-          </div>
-
-          <SliderRow
-            label="일평균 목표 지출"
-            value={paceDaily}
-            min={0}
-            max={paceMax}
-            step={5000}
-            onChange={setPaceDaily}
-            fillColor={fillColor}
-            formatVal={v => fmtS(v)+"원/일"}
-            showReset
-            onReset={() => setPaceDaily(Math.max(0, defaultPaceVal))}
-          />
-
-          <div style={{display:"flex",gap:8}}>
-            {[{label:"지금 페이스",val:currentPaceDaily,c:"var(--text2)"},{label:"조정 후",val:paceDaily,c:fillColor}].map(b=>(
-              <div key={b.label} style={{flex:1,background:"var(--bg3)",borderRadius:10,padding:"9px 12px"}}>
-                <div style={{fontSize:10,color:"var(--text2)",marginBottom:3}}>{b.label}</div>
-                <div style={{fontSize:14,fontWeight:700,color:b.c}}>{fmtS(b.val)}<span style={{fontSize:10,color:"var(--text2)",marginLeft:2}}>원/일</span></div>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       </Card>
 
@@ -225,7 +237,7 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
                   <div style={{fontSize:10,color:"var(--text2)",marginBottom:3,letterSpacing:".04em"}}>💳 이번달 카드 사용 한도</div>
                   <div style={{display:"flex",alignItems:"baseline",gap:5}}>
                     <span style={{fontSize:22,fontWeight:700,color:cardLimitOk?"var(--text)":"var(--red)",letterSpacing:"-.02em"}}>
-                      {fmtS(totalSpent)}
+                      {fmtS(variableSpent)}
                     </span>
                     <span style={{fontSize:12,color:"var(--text3)"}}>/ {fmtS(cardLimit)}원</span>
                   </div>

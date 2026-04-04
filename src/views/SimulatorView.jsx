@@ -16,36 +16,66 @@ const simTooltip=({active,payload,label})=>{
 };
 
 export function SimulatorView({sliderCfg,onUpdateSimCfg}){
-  const [init,   setInit]   = useState(sliderCfg?.simInitAmt || 10000000);
-  const [monthly,setMonthly]= useState(sliderCfg?.simMonthly || 500000);
-  const [rate,   setRate]   = useState(sliderCfg?.simRate || 5);
-  const [years,  setYears]  = useState(sliderCfg?.simYears || 20);
-  const [goal,   setGoal]   = useState(sliderCfg?.simGoal || 300000000);
+  // 1단계: 안전한 초기값 설정 (sliderCfg가 없거나 누락된 속성이 있을 경우 대비)
+  const [init,   setInit]   = useState(Number(sliderCfg?.simInitAmt) || 10000000);
+  const [monthly,setMonthly]= useState(Number(sliderCfg?.simMonthly) || 500000);
+  const [rate,   setRate]   = useState(Number(sliderCfg?.simRate) || 5);
+  const [years,  setYears]  = useState(Number(sliderCfg?.simYears) || 20);
+  const [goal,   setGoal]   = useState(Number(sliderCfg?.simGoal) || 300000000);
 
   const reset=()=>{
-    setInit(sliderCfg?.simInitAmt || 10000000);
-    setMonthly(sliderCfg?.simMonthly || 500000);
-    setRate(sliderCfg?.simRate || 5);
-    setYears(sliderCfg?.simYears || 20);
-    setGoal(sliderCfg?.simGoal || 300000000);
+    setInit(Number(sliderCfg?.simInitAmt) || 10000000);
+    setMonthly(Number(sliderCfg?.simMonthly) || 500000);
+    setRate(Number(sliderCfg?.simRate) || 5);
+    setYears(Number(sliderCfg?.simYears) || 20);
+    setGoal(Number(sliderCfg?.simGoal) || 300000000);
   };
 
+  // 2단계: 연산 안전장치 강화
   const data=useMemo(()=>{
-    const r=rate/100;
-    return Array.from({length:years+1},(_,y)=>({
-      year:y,
-      복리성장:Math.round(init*Math.pow(1+r,y)+monthly*12*(r>0?(Math.pow(1+r,y)-1)/r:y)),
-      단순저축:Math.round(init+monthly*12*y),
-      원금:init,
-    }));
-  },[init,monthly,rate,years]);
+    try {
+      const r = (Number(rate) || 0) / 100;
+      const initialAmt = Number(init) || 0;
+      const monthlyAmt = Number(monthly) || 0;
+      const yearsLimit = Math.min(Math.max(Number(years) || 1, 1), 50); // 최대 50년 제한으로 연산 부하 방지
+      
+      return Array.from({length: yearsLimit + 1}, (_, y) => {
+        let compound = 0;
+        if (r > 0) {
+          compound = initialAmt * Math.pow(1 + r, y) + monthlyAmt * 12 * ((Math.pow(1 + r, y) - 1) / r);
+        } else {
+          compound = initialAmt + (monthlyAmt * 12 * y);
+        }
+        
+        return {
+          year: y,
+          복리성장: Math.round(compound) || 0,
+          단순저축: Math.round(initialAmt + (monthlyAmt * 12 * y)) || 0,
+          원금: initialAmt,
+        };
+      });
+    } catch (e) {
+      console.error("[Simulator] 연산 에러:", e);
+      return [];
+    }
+  }, [init, monthly, rate, years]);
 
-  const final = data.length > 0 ? data[data.length - 1] : { 복리성장: 0, 단순저축: 0, 원금: 0 };
+  // 3단계: 렌더링 전 최종 방어
+  if (!data || data.length === 0) {
+    return (
+      <div style={{padding:"40px 20px", textAlign:"center", color:"var(--text2)"}}>
+        시뮬레이션 데이터를 유효하게 불러오지 못했습니다. <br/> 초기화 버튼을 눌러주세요.
+        <button onClick={reset} style={{display:"block", margin:"20px auto", padding:"10px 20px", borderRadius:10, border:"1px solid var(--border)", background:"var(--bg3)", color:"var(--text)"}}>초기화</button>
+      </div>
+    );
+  }
+
+  const final = data[data.length - 1];
   const multiple = final.원금 > 0 ? (final.복리성장 / final.원금).toFixed(1) : "0.0";
   const goalYear = data.findIndex(d => d.복리성장 >= goal);
 
   return(
-    <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>
+    <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%", background:"var(--bg)"}}>
       <div className="u1">
         <div style={{padding:"22px 0 4px",display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
           <SectionHeader sub="Finance Simulator" title="재무 시뮬레이터"/>
@@ -55,25 +85,25 @@ export function SimulatorView({sliderCfg,onUpdateSimCfg}){
 
       <Card className="u2" style={{padding:"20px",marginBottom:10}}>
         <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".06em",marginBottom:16}}>■ 변수 조정</div>
-        <SliderRow label="초기 투자금" value={init} min={1000000} max={100000000} step={1000000}
+        <SliderRow label="초기 투자금" value={init} min={1000000} max={200000000} step={1000000}
           onChange={setInit} fillColor="var(--gold)"
-          showReset onReset={()=>setInit(sliderCfg.simInitAmt)}/>
-        <SliderRow label="월 저축액" value={monthly} min={100000} max={3000000} step={50000}
+          showReset onReset={()=>setInit(sliderCfg?.simInitAmt || 10000000)}/>
+        <SliderRow label="월 저축액" value={monthly} min={100000} max={5000000} step={50000}
           onChange={setMonthly} fillColor="var(--blue)"
-          showReset onReset={()=>setMonthly(sliderCfg.simMonthly)}/>
-        <SliderRow label="연 수익률" value={rate} min={1} max={20} step={0.5}
+          showReset onReset={()=>setMonthly(sliderCfg?.simMonthly || 500000)}/>
+        <SliderRow label="연 수익률" value={rate} min={0} max={20} step={0.5}
           onChange={setRate} fillColor="var(--green)"
           formatVal={v=>v.toFixed(1)+"%"}
-          showReset onReset={()=>setRate(sliderCfg.simRate)}/>
-        <SliderRow label="투자 기간" value={years} min={1} max={40} step={1}
+          showReset onReset={()=>setRate(sliderCfg?.simRate || 5)}/>
+        <SliderRow label="투자 기간" value={years} min={1} max={50} step={1}
           onChange={setYears} fillColor="var(--pink)"
           formatVal={v=>v+"년"}
-          showReset onReset={()=>setYears(sliderCfg.simYears)}/>
+          showReset onReset={()=>setYears(sliderCfg?.simYears || 20)}/>
         <div style={{borderTop:"1px solid var(--border)",paddingTop:16,marginTop:4}}>
-          <SliderRow label="🎯 목표 금액" value={goal} min={10000000} max={1000000000} step={10000000}
+          <SliderRow label="🎯 목표 금액" value={goal} min={10000000} max={2000000000} step={10000000}
             onChange={setGoal} fillColor="var(--purple)"
             formatVal={v=>fmtS(v)+"원"}
-            showReset onReset={()=>setGoal(sliderCfg.simGoal)}/>
+            showReset onReset={()=>setGoal(sliderCfg?.simGoal || 300000000)}/>
           <div style={{
             background:goalYear>0?"var(--greenD)":"var(--redD)",
             border:`1px solid ${goalYear>0?"rgba(77,171,135,.3)":"rgba(217,95,95,.3)"}`,
