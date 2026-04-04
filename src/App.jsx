@@ -10,7 +10,6 @@ import {
 import { HomeView } from "./views/HomeView.jsx";
 import { EntryView } from "./views/EntryView.jsx";
 import { ReportView } from "./views/ReportView.jsx";
-import { FixedView } from "./views/FixedView.jsx";
 import { SettingsView } from "./views/SettingsView.jsx";
 import { AssetView } from "./views/AssetView.jsx";
 import { SyncSetup } from "./views/SyncSetup.jsx";
@@ -239,7 +238,7 @@ export default function App() {
 
   // 공유 데이터 저장 도우미 (Supabase 전송) — validate + 지수 백오프 재시도 포함
   const setShared = useCallback(async (key, value, rawSetter) => {
-    const newValue = typeof value === 'function' ? value(rawSetter === setNamesRaw ? names : rawSetter === setBudgetsRaw ? budgets : null) : value;
+    const newValue = value;
     validate(key, newValue); // 스키마 불일치 경고 (Task 2-4)
     rawSetter(newValue);     // 낙관적 UI 업데이트 (즉시 반영)
     
@@ -565,9 +564,9 @@ export default function App() {
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
           {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} />}
-          {view === "entry" && <EntryView names={names} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
-          {view === "budget" && <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} names={names} />}
-          {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} />}
+          {view === "entry" && <EntryView names={names} plan={plan} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
+          {view === "budget" && <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />}
+          {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />}
           {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} />}
           {view === "admin" && isAdmin && <AdminView onClose={handleAdminLogout} addToast={addToast} />}
         </div>

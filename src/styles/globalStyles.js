@@ -4,6 +4,7 @@ export const G = `
 
 /* ── 다크 모드 (기본) ── */
 :root{
+  color-scheme: dark;
   --bg:#09090f;--bg2:#0f1018;--bg3:#15161f;--bg4:#1c1d28;
   --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
   --gold:#c8a84b;--goldL:#e2c97e;--goldD:rgba(200,168,75,0.13);
@@ -22,6 +23,7 @@ export const G = `
 
 /* ── 라이트 모드 ── */
 .light{
+  color-scheme: light;
   --bg:#f0ede8;--bg2:#ffffff;--bg3:#e6e2dc;--bg4:#d8d4cc;
   --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.16);
   --gold:#8a6a00;--goldL:#6a5000;--goldD:rgba(138,106,0,0.1);
@@ -156,4 +158,5 @@ input[type=range]::-moz-range-track{height:6px;border-radius:99px;background:var
 .u3{animation:up .35s .14s ease both}
 .u4{animation:up .35s .21s ease both}
 .u5{animation:up .35s .28s ease both}
+.u6{animation:up .35s .35s ease both}
 `;

@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { CATS, getYear, getMonth } from "../constants";
-import { toDateStr } from "../utils/helpers";
+import { toDateStr, getContrastText } from "../utils/helpers";
 import { NumPad } from "./NumPad";
 
 export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
@@ -213,7 +213,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
                     flexShrink: 0, padding: "7px 14px",
                     borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: "pointer",
                     background: cardId === c.id ? c.color : "var(--bg3)",
-                    color: cardId === c.id ? "#fff" : "var(--text2)",
+                    color: cardId === c.id ? getContrastText(c.color) : "var(--text2)",
                     border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
                     boxShadow: cardId === c.id ? `0 4px 12px ${c.color}44` : "none",
                     transition: "all 0.2s"
@@ -255,7 +255,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
                 style={{
                   background: "none", border: "none",
                   color: "var(--text)", fontSize: 14,
-                  outline: "none", flex: 1, colorScheme: "dark",
+                  outline: "none", flex: 1,
                 }}
               />
             </div>

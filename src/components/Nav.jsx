@@ -57,6 +57,7 @@ export function Nav({ view, setView, syncStatus }) {
       {/* FAB */}
       <div style={{ position: "absolute", top: -28, left: "50%", transform: "translateX(-50%)", zIndex: 101 }}>
         <button
+          className="fab"
           onClick={() => setView("quickEntry")}
           style={{
             width: 60, height: 60, borderRadius: "50%",

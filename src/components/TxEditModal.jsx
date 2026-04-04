@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "./UI";
 import { CAT, CATS } from "../constants";
-import { toDateStr } from "../utils/helpers";
+import { toDateStr, getContrastText } from "../utils/helpers";
 
 /**
  * 기존 지출 내역 수정/삭제 바텀 시트 모달
@@ -66,7 +66,7 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete }
           <span>📅</span>
           <input
             type="date" value={date} onChange={e => setDate(e.target.value)}
-            style={{ background: "none", border: "none", color: "var(--text)", fontSize: 14, outline: "none", flex: 1, colorScheme: "dark", cursor: "pointer" }}
+            style={{ background: "none", border: "none", color: "var(--text)", fontSize: 14, outline: "none", flex: 1, cursor: "pointer" }}
           />
         </div>
 
@@ -145,7 +145,7 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete }
               <button key={c.id} onClick={(e) => { e.stopPropagation(); setCardId(cardId === c.id ? "" : c.id); }} style={{
                 flexShrink: 0, padding: "6px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
                 background: cardId === c.id ? c.color : "var(--bg3)",
-                color: cardId === c.id ? "#fff" : "var(--text3)",
+                color: cardId === c.id ? getContrastText(c.color) : "var(--text3)",
                 border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
               }}>{c.icon} {c.label}</button>
             ))}

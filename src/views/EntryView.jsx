@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Card, Chip } from "../components/UI";
 import { TxEditModal } from "../components/TxEditModal";
 import { CAT, CATS } from "../constants";
-import { fmtS, toDateStr } from "../utils/helpers";
+import { fmtS, toDateStr, getContrastText } from "../utils/helpers";
 import { runOCR } from "../utils/ocr";
 
 const nowStr = () => toDateStr(new Date());
 
-export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
+export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) {
   const [who,       setWho]       = useState("husband");
   const [amount,    setAmount]    = useState("");
   const [cat,       setCat]       = useState("");
@@ -73,23 +73,25 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
           style={{
             background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 9,
             color: "var(--text)", fontSize: 12, padding: "5px 10px", outline: "none",
-            colorScheme: "dark", cursor: "pointer",
+            cursor: "pointer",
           }}
         />
       </div>
 
-      {/* 누가 */}
-      <div className="u2" style={{ display: "flex", gap: 4, marginBottom: 12 }}>
-        {["husband", "wife"].map(r => (
-          <button key={r} onClick={() => setWho(r)} style={{
-            flex: 1, padding: "12px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 13,
-            background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--bg2)",
-            border: `1px solid ${who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--border)"}`,
-            color: who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--text2)",
-            transition: "all .2s",
-          }}>{r === "husband" ? names.husband : names.wife}</button>
-        ))}
-      </div>
+      {/* 누가 (솔로 모드에서는 미표시) */}
+      {!plan?.isSolo && (
+        <div className="u2" style={{ display: "flex", gap: 4, marginBottom: 12 }}>
+          {["husband", "wife"].map(r => (
+            <button key={r} onClick={() => setWho(r)} style={{
+              flex: 1, padding: "12px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 13,
+              background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--bg2)",
+              border: `1px solid ${who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--border)"}`,
+              color: who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--text2)",
+              transition: "all .2s",
+            }}>{r === "husband" ? names.husband : names.wife}</button>
+          ))}
+        </div>
+      )}
 
       {/* 금액 키패드 */}
       <Card className="u2" style={{ padding: "14px", marginBottom: 12 }}>
@@ -137,7 +139,7 @@ export function EntryView({ names, onSave, onDelete, onEdit, tx, cards }) {
               <button key={c.id} onClick={() => setCardId(cardId === c.id ? "" : c.id)} style={{
                 flexShrink: 0, padding: "6px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
                 background: cardId === c.id ? c.color : "var(--bg3)",
-                color: cardId === c.id ? "#fff" : "var(--text3)",
+                color: cardId === c.id ? getContrastText(c.color) : "var(--text3)",
                 border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
               }}>{c.icon} {c.label}</button>
             ))}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, Chip } from "../components/UI";
 import { CAT, CATS } from "../constants";
-import { toDateStr } from "../utils/helpers";
+import { toDateStr, getContrastText } from "../utils/helpers";
 import { runOCR } from "../utils/ocr";
 
 const nowStr = () => toDateStr(new Date());
@@ -97,7 +97,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) 
             type="date"
             value={date}
             onChange={e => { e.stopPropagation(); setDate(e.target.value); }}
-            style={{ background: "none", border: "none", color: "var(--text)", fontSize: 14, outline: "none", flex: 1, colorScheme: "dark", cursor: "pointer" }}
+            style={{ background: "none", border: "none", color: "var(--text)", fontSize: 14, outline: "none", flex: 1, cursor: "pointer" }}
           />
         </div>
 
@@ -207,7 +207,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) 
                   style={{
                     flexShrink: 0, padding: "8px 14px", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer",
                     background: cardId === c.id ? c.color : "var(--bg3)",
-                    color: cardId === c.id ? "#fff" : "var(--text2)",
+                    color: cardId === c.id ? getContrastText(c.color) : "var(--text2)",
                     border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
                     boxShadow: cardId === c.id ? `0 4px 12px ${c.color}44` : "none",
                     transition: "all 0.2s"

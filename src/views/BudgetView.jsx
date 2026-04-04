@@ -2,14 +2,18 @@ import { useState, useMemo } from "react";
 import { Card, Bar } from "../components/UI";
 import { CAT, CATS, getYear, getMonth, getDay, MONTH_NAMES } from "../constants";
 import { fmtS } from "../utils/helpers";
+import { CardView } from "./CardView";
+import { SimulatorView } from "./SimulatorView";
 
 const TABS = [
-  { id: "income",   icon: "💰", label: "수입/저축"  },
-  { id: "fixed",    icon: "📌", label: "고정비/할부" },
-  { id: "budget",   icon: "📋", label: "카테고리 예산" },
-  { id: "events",   icon: "🗓️", label: "연간 이벤트" },
-  { id: "baseline", icon: "📊", label: "분석 데이터" },
-  { id: "summary",  icon: "🔍", label: "플랜 요약"  },
+  { id: "income",    icon: "💰", label: "수입/저축"    },
+  { id: "fixed",     icon: "📌", label: "고정비/할부"  },
+  { id: "cards",     icon: "💳", label: "카드 관리"    },
+  { id: "budget",    icon: "📋", label: "카테고리 예산" },
+  { id: "events",    icon: "🗓️", label: "연간 이벤트" },
+  { id: "baseline",  icon: "📊", label: "분석 데이터"  },
+  { id: "simulator", icon: "📈", label: "시뮬레이터"   },
+  { id: "summary",   icon: "🔍", label: "플랜 요약"   },
 ];
 
 const iStyle = {
@@ -43,9 +47,20 @@ const runLocalAI = (totalSalary, fixedTotal, installTotal, savingsTarget, catHis
     }
     suggested[cat.id] = Math.round((monthlyAvail * weight) / 1000) * 1000; // 1,000원 단위 절사
     
-    if (cat.id === "food") reasons[cat.id] = "과거 지출 및 표준 데이터를 기반으로 가장 높은 비중을 할당했습니다.";
-    else if (catHistory[cat.id] > 0) reasons[cat.id] = "최근 3개월 지출 패턴을 반영하여 조정했습니다.";
-    else reasons[cat.id] = "표준 재무 가이드를 기준으로 초기값을 설정했습니다.";
+    const REASON_TEMPLATES = {
+      food:      "식비는 생활비에서 가장 큰 비중을 차지합니다.",
+      housing:   "주거/관리비는 고정적으로 발생하는 필수 지출입니다.",
+      transport: "교통비는 출퇴근 패턴을 기반으로 추정했습니다.",
+      medical:   "의료비는 예비비 성격으로 여유있게 배분했습니다.",
+      education: "교육비는 현재 지출 패턴을 우선 반영했습니다.",
+      culture:   "문화/여가는 삶의 질을 위한 적정 비중입니다.",
+      clothing:  "의류는 계절 지출을 고려한 평균치입니다.",
+      sub:       "구독서비스는 현재 이용 중인 서비스를 기준으로 했습니다.",
+      etc:       "기타는 예측 불가 지출을 위한 버퍼입니다.",
+    };
+    reasons[cat.id] = catHistory[cat.id] > 0
+      ? `최근 3개월 평균 ${fmtS(catHistory[cat.id])}원을 기반으로 조정했습니다.`
+      : (REASON_TEMPLATES[cat.id] || "표준 재무 가이드 기준입니다.");
   });
 
   return {
@@ -431,7 +446,7 @@ function EventsTab({ plan, setPlan }) {
   );
 }
 
-export function BudgetView({ plan, setPlan, budgets, setBudgets, tx, fixed, setFixed, install, setInstall, cards, names }) {
+export function BudgetView({ plan, setPlan, budgets, setBudgets, tx, fixed, setFixed, install, setInstall, cards, setCards, names, sliderCfg, setSliderCfg }) {
   const [tab, setTab] = useState("income");
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -451,12 +466,14 @@ export function BudgetView({ plan, setPlan, budgets, setBudgets, tx, fixed, setF
             <div style={{ fontSize: 11, color: "var(--text2)", letterSpacing: ".08em", marginBottom: 2 }}>{getYear()}년 재무 마스터 플랜</div>
             <div className="serif" style={{ fontSize: 20 }}>{TABS.find(t => t.id === tab)?.label}</div>
           </div>
-          {tab === "income" && <IncomeTab plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}
-          {tab === "fixed" && <FixedTab fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} tx={tx} names={names} />}
-          {tab === "budget" && <BudgetTab budgets={budgets} setBudgets={setBudgets} tx={tx} plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}
-          {tab === "events" && <EventsTab plan={plan} setPlan={setPlan} />}
-          {tab === "baseline" && <BaselineTab plan={plan} />}
-          {tab === "summary" && <IncomeTab plan={plan} setPlan={setPlan} fixed={fixed} install={install} />} {/* TODO: Summary 합치기 */}
+          {tab === "income"    && <IncomeTab plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}
+          {tab === "fixed"     && <FixedTab fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} tx={tx} names={names} />}
+          {tab === "cards"     && <CardView cards={cards} setCards={setCards} />}
+          {tab === "budget"    && <BudgetTab budgets={budgets} setBudgets={setBudgets} tx={tx} plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}
+          {tab === "events"    && <EventsTab plan={plan} setPlan={setPlan} />}
+          {tab === "baseline"  && <BaselineTab plan={plan} />}
+          {tab === "simulator" && <SimulatorView sliderCfg={sliderCfg ?? {}} onUpdateSimCfg={setSliderCfg} />}
+          {tab === "summary"   && <IncomeTab plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}
         </div>
       </div>
     </div>

@@ -138,7 +138,7 @@ function ReportContent({tx,budgets,fixed,install,names,plan}){
   );
 }
 
-export function ReportView({tx, budgets, setBudgets, fixed, install, names, cards, plan, setPlan, taxConfig, setTaxConfig, onEdit, onDelete, loadTxYear, assets, setAssets}) {
+export function ReportView({tx, budgets, setBudgets, fixed, install, names, cards, plan, setPlan, taxConfig, setTaxConfig, onEdit, onDelete, loadTxYear, assets, setAssets, onGoToBudget}) {
   const [tab, setTab] = useState("report");
   return (
     <div style={{height:"100%",display:"flex",flexDirection:"column"}}>
@@ -164,7 +164,7 @@ export function ReportView({tx, budgets, setBudgets, fixed, install, names, card
       <div style={{flex:1,overflow:"hidden"}}>
         {tab==="report"   && <ReportContent tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} plan={plan}/>}
         {tab==="calendar" && <CalendarView tx={tx} cards={cards} names={names} budgets={budgets} onEdit={onEdit} onDelete={onDelete} loadTxYear={loadTxYear} />}
-        {tab==="import"   && <DataImportView plan={plan} setPlan={setPlan} onGoToPlan={() => {}}/>}
+        {tab==="import"   && <DataImportView plan={plan} setPlan={setPlan} onGoToPlan={onGoToBudget ?? (() => {})}/>}
         {tab==="tax"      && <TaxOptimizerView tx={tx} names={names} taxConfig={taxConfig} setTaxConfig={setTaxConfig}/>}
         {tab==="pred"     && <PredictionView tx={tx} fixed={fixed}/>}
         {tab==="asset"    && <AssetView assets={assets} setAssets={setAssets}/>}
