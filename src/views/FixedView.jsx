@@ -8,8 +8,8 @@ import { SimulatorView } from "./SimulatorView";
 export function FixedView({ fixed, setFixed, install, setInstall, cards, setCards, tx, names }) {
   const [tab, setTab] = useState("fixed");
   const [showAdd, setShowAdd] = useState(false);
-  const [newF, setNewF] = useState({ name: "", amount: "", cat: "housing", day: 1 });
-  const [newI, setNewI] = useState({ name: "", total: "", months: 3, cardId: cards[0]?.id || "", date: "" });
+  const [newF, setNewF] = useState({ name: "", amount: "", cat: "housing", day: "" });
+  const [newI, setNewI] = useState({ name: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
 
   // 화폐 포맷팅 헬퍼 (Task 14-1)
   const formatInput = (val) => {
@@ -19,17 +19,18 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
   const parseInput = (val) => String(val).replace(/[^0-9]/g, "");
 
   const addF = () => {
-    if (!newF.name || !newF.amount) return;
-    setFixed(p => [...p, { ...newF, id: Date.now(), amount: parseInt(parseInput(newF.amount)) }]);
-    setShowAdd(false); setNewF({ name: "", amount: "", cat: "housing", day: 1 });
+    if (!newF.name || !newF.amount || !newF.day) return;
+    setFixed(p => [...p, { ...newF, id: Date.now(), amount: parseInt(parseInput(newF.amount)), day: parseInt(newF.day) }]);
+    setShowAdd(false); setNewF({ name: "", amount: "", cat: "housing", day: "" });
   };
   const delF = id => setFixed(p => p.filter(f => f.id !== id));
 
   const addI = () => {
     const totalNum = parseInt(parseInput(newI.total));
-    if (!newI.name || !totalNum || !newI.months || !newI.date) return;
-    setInstall(p => [...p, { ...newI, id: Date.now(), total: totalNum, monthly: Math.round(totalNum / newI.months) }]);
-    setShowAdd(false); setNewI({ name: "", total: "", months: 3, cardId: cards[0]?.id || "", date: "" });
+    const monthsNum = parseInt(newI.months);
+    if (!newI.name || !totalNum || !monthsNum || !newI.date) return;
+    setInstall(p => [...p, { ...newI, id: Date.now(), total: totalNum, months: monthsNum, monthly: Math.round(totalNum / monthsNum) }]);
+    setShowAdd(false); setNewI({ name: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
   };
   const delI = id => setInstall(p => p.filter(i => i.id !== id));
 
@@ -80,7 +81,7 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
                     <div style={{ marginBottom: 14 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>항목명</div><input value={newF.name} onChange={e => setNewF({ ...newF, name: e.target.value })} placeholder="예: 아파트 관리비" style={iStyle} /></div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
                       <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>월 금액</div><input type="text" value={formatInput(newF.amount)} onChange={e => setNewF({ ...newF, amount: parseInput(e.target.value) })} placeholder="0" style={{ ...iStyle, textAlign: "right" }} /></div>
-                      <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>출금일</div><input type="number" value={newF.day} onChange={e => setNewF({ ...newF, day: parseInt(e.target.value) || 1 })} style={{ ...iStyle, textAlign: "right" }} /></div>
+                      <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>출금일</div><input type="number" value={newF.day} onChange={e => setNewF({ ...newF, day: e.target.value })} placeholder="일(1-31)" style={{ ...iStyle, textAlign: "right" }} /></div>
                     </div>
                     <button onClick={addF} style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: "var(--blue)", color: "#fff", fontWeight: 700, fontSize: 14 }}>고정비 등록</button>
                   </div>
@@ -91,17 +92,19 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
                       <div style={{ flex: 1 }}>
                         <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>할부 원금</div><input type="text" value={formatInput(newI.total)} onChange={e => setNewI({ ...newI, total: parseInput(e.target.value) })} placeholder="0" style={iStyle} /></div>
                       </div>
-                      <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>개월 수</div><input type="number" value={newI.months} onChange={e => setNewI({ ...newI, months: parseInt(e.target.value) || 1 })} style={{ ...iStyle, textAlign: "right" }} /></div>
+                      <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>개월 수</div><input type="number" value={newI.months} onChange={e => setNewI({ ...newI, months: e.target.value })} placeholder="개월" style={{ ...iStyle, textAlign: "right" }} /></div>
                     </div>
                     {/* 개월 수 퀵 선택 */}
                     <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
                       {[3, 6, 12, 24].map(m => (
-                        <button key={m} onClick={() => setNewI({ ...newI, months: m })} style={{ flex: 1, padding: "5px 0", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer", background: newI.months === m ? "var(--blueD)" : "var(--bg3)", color: newI.months === m ? "var(--blue)" : "var(--text3)", border: `1px solid ${newI.months === m ? "var(--blue)" : "var(--border)"}` }}>{m}개월</button>
+                        <button key={m} onClick={() => setNewI({ ...newI, months: m })} style={{ flex: 1, padding: "5px 0", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer", background: newI.months == m ? "var(--blueD)" : "var(--bg3)", color: newI.months == m ? "var(--blue)" : "var(--text3)", border: `1px solid ${newI.months == m ? "var(--blue)" : "var(--border)"}` }}>{m}개월</button>
                       ))}
                     </div>
 
-                    <div style={{ marginBottom: 12 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>결제 카드</div><select value={newI.cardId} onChange={e => setNewI({ ...newI, cardId: e.target.value })} style={iStyle}>{cards.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
-                    <div style={{ marginBottom: 16 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>최초 결제일</div><input type="date" value={newI.date} onChange={e => setNewI({ ...newI, date: e.target.value })} style={iStyle} /></div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
+                      <div style={{ flex: 1, minWidth: "45%" }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>결제 카드</div><select value={newI.cardId} onChange={e => setNewI({ ...newI, cardId: e.target.value })} style={iStyle}>{cards.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
+                      <div style={{ flex: 1, minWidth: "45%" }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>최초 결제일</div><input type="date" value={newI.date} onChange={e => setNewI({ ...newI, date: e.target.value })} style={{...iStyle, appearance:"none", WebkitAppearance:"none"}} /></div>
+                    </div>
 
                     {/* 실시간 계산 프리뷰 카드 (Task 13-2) */}
                     {newI.months > 0 && !!parseInput(newI.total) && (

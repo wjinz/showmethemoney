@@ -16,13 +16,19 @@ const simTooltip=({active,payload,label})=>{
 };
 
 export function SimulatorView({sliderCfg,onUpdateSimCfg}){
-  const [init,   setInit]   = useState(sliderCfg.simInitAmt);
-  const [monthly,setMonthly]= useState(sliderCfg.simMonthly);
-  const [rate,   setRate]   = useState(sliderCfg.simRate);
-  const [years,  setYears]  = useState(sliderCfg.simYears);
-  const [goal,   setGoal]   = useState(sliderCfg.simGoal);
+  const [init,   setInit]   = useState(sliderCfg?.simInitAmt || 10000000);
+  const [monthly,setMonthly]= useState(sliderCfg?.simMonthly || 500000);
+  const [rate,   setRate]   = useState(sliderCfg?.simRate || 5);
+  const [years,  setYears]  = useState(sliderCfg?.simYears || 20);
+  const [goal,   setGoal]   = useState(sliderCfg?.simGoal || 300000000);
 
-  const reset=()=>{setInit(sliderCfg.simInitAmt);setMonthly(sliderCfg.simMonthly);setRate(sliderCfg.simRate);setYears(sliderCfg.simYears);setGoal(sliderCfg.simGoal);};
+  const reset=()=>{
+    setInit(sliderCfg?.simInitAmt || 10000000);
+    setMonthly(sliderCfg?.simMonthly || 500000);
+    setRate(sliderCfg?.simRate || 5);
+    setYears(sliderCfg?.simYears || 20);
+    setGoal(sliderCfg?.simGoal || 300000000);
+  };
 
   const data=useMemo(()=>{
     const r=rate/100;
@@ -34,9 +40,9 @@ export function SimulatorView({sliderCfg,onUpdateSimCfg}){
     }));
   },[init,monthly,rate,years]);
 
-  const final=data[data.length-1];
-  const multiple=(final.복리성장/Math.max(init,1)).toFixed(1);
-  const goalYear=data.findIndex(d=>d.복리성장>=goal);
+  const final = data.length > 0 ? data[data.length - 1] : { 복리성장: 0, 단순저축: 0, 원금: 0 };
+  const multiple = final.원금 > 0 ? (final.복리성장 / final.원금).toFixed(1) : "0.0";
+  const goalYear = data.findIndex(d => d.복리성장 >= goal);
 
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>

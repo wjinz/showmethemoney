@@ -3,11 +3,11 @@ export function Nav({ view, setView, syncStatus }) {
 
   const LEFT_ITEMS = [
     { id: "home",   icon: "⌂",  l: "홈" },
-    { id: "report", icon: "◈",  l: "리포트" },
+    { id: "budget", icon: "⚖️", l: "예산" },
   ];
   const RIGHT_ITEMS = [
-    { id: "fixed",    icon: "📌", l: "고정비" },
-    { id: "settings", icon: "⊙", l: "설정" },
+    { id: "report", icon: "◈",  l: "리포트" },
+    { id: "fixed",  icon: "📌", l: "고정비" },
   ];
 
   const NavBtn = ({ item }) => (

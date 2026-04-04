@@ -135,7 +135,6 @@ export function ReportView({tx, budgets, setBudgets, fixed, install, names, card
           {id:"report",l:"📊 리포트"},
           {id:"calendar",l:"📅 캘린더"},
           {id:"import",l:"📁 데이터"},
-          {id:"plan",l:"🎯 계획"},
           {id:"tax",l:"💸 연말정산"},
           {id:"pred",l:"🔮 예측"},
           {id:"asset",l:"💰 자산"}
@@ -153,8 +152,7 @@ export function ReportView({tx, budgets, setBudgets, fixed, install, names, card
       <div style={{flex:1,overflow:"hidden"}}>
         {tab==="report"   && <ReportContent tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} plan={plan}/>}
         {tab==="calendar" && <CalendarView tx={tx} cards={cards} names={names} budgets={budgets} onEdit={onEdit} onDelete={onDelete} loadTxYear={loadTxYear} />}
-        {tab==="import"   && <DataImportView plan={plan} setPlan={setPlan} onGoToPlan={()=>setTab("plan")}/>}
-        {tab==="plan"     && <PlanView      plan={plan} setPlan={setPlan} tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} onGoToImport={()=>setTab("import")}/>}
+        {tab==="import"   && <DataImportView plan={plan} setPlan={setPlan} onGoToPlan={() => {}}/>}
         {tab==="tax"      && <TaxOptimizerView tx={tx} names={names} taxConfig={taxConfig} setTaxConfig={setTaxConfig}/>}
         {tab==="pred"     && <PredictionView tx={tx} fixed={fixed}/>}
         {tab==="asset"    && <AssetView assets={assets} setAssets={setAssets}/>}

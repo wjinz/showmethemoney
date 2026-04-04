@@ -5,7 +5,7 @@ import { CAT, CATS, getYear, getMonth, getDay, getDaysInMonth } from "../constan
 import { fmtS } from "../utils/helpers";
 import { TxEditModal } from "../components/TxEditModal";
 
-export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,plan,setPlan,cards,onEdit,onDelete}){
+export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,plan,setPlan,cards,onEdit,onDelete,onSettings}){
   const YEAR  = getYear();
   const MONTH = getMonth();
   const DAY   = getDay();
@@ -90,14 +90,17 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
 
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>
-      <div className="u1" style={{padding:"22px 0 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
-        <div>
-          <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:4}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
-          <div className="serif" style={{fontSize:22}}>{plan?.isSolo ? "나의 지출 요약" : "가정 경영현황"}</div>
+      <div className="u1" style={{padding:"22px 0 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex", gap:10, alignItems:"center"}}>
+          <div onClick={onSettings} style={{width:38, height:38, borderRadius:12, background:"var(--bg3)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, cursor:"pointer", border:"1px solid var(--border)"}}>⚙️</div>
+          <div>
+            <div style={{fontSize:10,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:2}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
+            <div className="serif" style={{fontSize:18}}>{plan?.isSolo ? "나의 지출 요약" : "가정 경영현황"}</div>
+          </div>
         </div>
         <div style={{textAlign: "right"}}>
-          <div style={{fontSize:10, color:"var(--text3)", marginBottom:4}}>남은 생활비</div>
-          <div style={{fontSize:15, fontWeight:800, color: remaining >= 0 ? "var(--green)" : "var(--red)"}}>{fmtS(remaining)}원</div>
+          <div style={{fontSize:10, color:"var(--text3)", marginBottom:4}}>순수 생활비 잔액</div>
+          <div style={{fontSize:17, fontWeight:800, color: remaining >= 0 ? "var(--green)" : "var(--red)"}}>{fmtS(remaining)}원</div>
         </div>
       </div>
 
@@ -112,9 +115,10 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
             <div style={{fontSize:11,color:"var(--text2)",marginBottom:2}}>누적 지출</div>
             <div style={{fontSize:21,fontWeight:700,letterSpacing:"-.02em"}}>{fmtS(totalSpent)}<span style={{fontSize:13,color:"var(--text2)",marginLeft:2}}>원</span></div>
             <div style={{fontSize:12,color:"var(--text2)",marginTop:1}}>/ {fmtS(totalBudget)}원</div>
-            <div style={{display:"flex",gap:14,marginTop:10}}>
-              <div><div style={{fontSize:10,color:"var(--text2)"}}>잔여</div><div style={{fontSize:12,fontWeight:700,color:remaining>=0?"var(--green)":"var(--red)"}}>{fmtS(remaining)}원</div></div>
-              <div><div style={{fontSize:10,color:"var(--text2)"}}>고정+할부</div><div style={{fontSize:12,fontWeight:700,color:"var(--gold)"}}>{fmtS(fixedTotal+installTotal)}원</div></div>
+            <div style={{display:"flex",gap:16,marginTop:12}}>
+              <div style={{flex:1}}><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>📌 고정 지출</div><div style={{fontSize:12,fontWeight:700,color:"var(--blue)"}}>{fmtS(fixedTotal)}원</div></div>
+              <div style={{flex:1}}><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>💳 카드 할부</div><div style={{fontSize:12,fontWeight:700,color:"var(--pink)"}}>{fmtS(installTotal)}원</div></div>
+              <div style={{flex:1.2}}><div style={{fontSize:9,color:"var(--text3)",marginBottom:2}}>💰 가용 생활비</div><div style={{fontSize:12,fontWeight:700,color:remaining>=0?"var(--green)":"var(--red)"}}>{fmtS(remaining)}원</div></div>
             </div>
           </div>
         </div>
