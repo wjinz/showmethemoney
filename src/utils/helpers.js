@@ -61,3 +61,15 @@ export function getBillingPeriod(card, today = new Date()) {
 
   return { cycleStart, cycleEnd, payDate, daysUntilPay };
 }
+
+/**
+ * 특정 구매일과 카드의 정산 규칙에 따른 1회차 결제일을 반환합니다.
+ * @param {object} card - 카드 객체
+ * @param {Date|string} purchaseDate - 구매일
+ * @returns {Date} 1회차 결제일
+ */
+export function getInstallmentFirstPayment(card, purchaseDate) {
+  const d = typeof purchaseDate === "string" ? new Date(purchaseDate) : purchaseDate;
+  const { payDate } = getBillingPeriod(card, d);
+  return payDate;
+}

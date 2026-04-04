@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, SectionHeader, Bar, Chip } from "../components/UI";
 import { CAT, CATS } from "../constants";
-import { fmt, fmtS } from "../utils/helpers";
+import { fmt, fmtS, getInstallmentFirstPayment } from "../utils/helpers";
 import { CardView } from "./CardView";
 import { SimulatorView } from "./SimulatorView";
 
@@ -103,23 +103,40 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
                     <div style={{ marginBottom: 12 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>결제 카드</div><select value={newI.cardId} onChange={e => setNewI({ ...newI, cardId: e.target.value })} style={iStyle}>{cards.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
                     <div style={{ marginBottom: 16 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>최초 결제일</div><input type="date" value={newI.date} onChange={e => setNewI({ ...newI, date: e.target.value })} style={iStyle} /></div>
 
-                    {/* 실시간 계산 프리뷰 카드 (Task 13-1) */}
+                    {/* 실시간 계산 프리뷰 카드 (Task 13-2) */}
                     {newI.months > 0 && !!parseInput(newI.total) && (
                       <div style={{ background: "var(--bg3)", borderRadius: 14, padding: "14px", border: "1px solid var(--border)", marginBottom: 16 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                           <span style={{ fontSize: 11, color: "var(--text2)" }}>예상 월 납입금</span>
                           <span style={{ fontSize: 16, fontWeight: 800, color: "var(--blue)" }}>{fmtS(Math.round(parseInt(parseInput(newI.total)) / newI.months))}원</span>
                         </div>
+                        
                         {newI.date && (
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontSize: 11, color: "var(--text2)" }}>할부 종료 시점</span>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
-                              {(() => {
-                                const d = new Date(newI.date);
-                                d.setMonth(d.getMonth() + (newI.months - 1));
-                                return `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
-                              })()} 종료 예정
-                            </span>
+                          <div style={{ paddingTop: 10, borderTop: "1px dashed var(--border)" }}>
+                            {(() => {
+                              const selectedCard = cards.find(c => c.id === newI.cardId);
+                              if (!selectedCard) return null;
+                              
+                              const firstPayDate = getInstallmentFirstPayment(selectedCard, newI.date);
+                              const lastPayDate = new Date(firstPayDate);
+                              lastPayDate.setMonth(lastPayDate.getMonth() + (newI.months - 1));
+                              
+                              return (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+                                    <span style={{ color: "var(--text3)" }}>1회차 결제일</span>
+                                    <span style={{ color: "var(--green)", fontWeight: 700 }}>{firstPayDate.getFullYear()}.{firstPayDate.getMonth()+1}.{firstPayDate.getDate()}</span>
+                                  </div>
+                                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+                                    <span style={{ color: "var(--text3)" }}>마지막 결제일</span>
+                                    <span style={{ color: "var(--goldL)", fontWeight: 700 }}>{lastPayDate.getFullYear()}.{lastPayDate.getMonth()+1}.{lastPayDate.getDate()}</span>
+                                  </div>
+                                  <div style={{ marginTop: 4, textAlign: "center", fontSize: 10, color: "var(--blue)", background: "var(--blueD)", padding: "4px", borderRadius: 6, fontWeight: 700 }}>
+                                    총 {newI.months}회 분납 타임라인 확정
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                       </div>
