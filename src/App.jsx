@@ -524,6 +524,20 @@ export default function App() {
           animation: syncStatus === "syncing" ? "pulse 1s infinite" : "none"
         }} />
         <span>{syncStatus === "error" ? "연결 끊김" : syncStatus === "syncing" ? "데이터 전송 중" : "실시간 클라우드 연결됨"}</span>
+        <button 
+          onClick={() => window.location.reload()}
+          style={{
+            background: "none", border: "none", color: "inherit", 
+            cursor: "pointer", fontSize: 13, marginLeft: 4, 
+            display: "flex", alignItems: "center", padding: 0,
+            opacity: 0.6, transition: "opacity .2s"
+          }}
+          onMouseOver={e => e.currentTarget.style.opacity = 1}
+          onMouseOut={e => e.currentTarget.style.opacity = 0.6}
+          title="새로고침"
+        >
+          ⟳
+        </button>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ letterSpacing: ".08em", fontWeight: 700, color: "var(--gold)" }}>{householdId}</span>
