@@ -13,14 +13,16 @@ function StackedBar({data,total,height=24,showLegend=false}){
     <div>
       <div style={{display:"flex",height,borderRadius:10,overflow:"hidden"}}>
         {data.filter(d=>d.amount>0).map(d=>{
-          const c=CAT[d.cat]; const w=total>0?d.amount/total*100:0;
+          const c=d.cat.endsWith("_internal") ? d : CAT[d.cat]; 
+          const w=total>0?d.amount/total*100:0;
           return <div key={d.cat} style={{width:`${w}%`,background:c?.color||"#888",transition:"width .7s ease",minWidth:w>1?1:0}} title={`${c?.label} ${Math.round(w)}%`}/>;
         })}
       </div>
       {showLegend&&(
         <div style={{display:"flex",flexWrap:"wrap",gap:"5px 12px",marginTop:8}}>
-          {data.filter(d=>d.amount>0&&total>0&&d.amount/total>.03).map(d=>{
-            const c=CAT[d.cat]; const p=Math.round(d.amount/total*100);
+          {data.filter(d=>d.amount>0&&total>0&&d.amount/total>.01).map(d=>{
+            const c=d.cat.endsWith("_internal") ? d : CAT[d.cat]; 
+            const p=Math.round(d.amount/total*100);
             return(<div key={d.cat} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:1,background:c?.color}}/><span style={{fontSize:10,color:"var(--text2)"}}>{c?.label} {p}%</span></div>);
           })}
         </div>
@@ -35,7 +37,10 @@ function ReportContent({tx,budgets,fixed,install,names,plan}){
   const DAY   = getDay();
   const DAYS  = getDaysInMonth(YEAR, MONTH);
 
-  const totalBudget = Object.values(budgets).reduce((s,v)=>s+v,0);
+  const variableBudget = Object.values(budgets).reduce((s,v)=>s+v,0);
+  const fixedTotal     = (fixed || []).reduce((s,f)=>s+f.amount,0);
+  const installTotal   = (install || []).reduce((s,i)=>s+i.monthly,0);
+  const totalBudgetAll = variableBudget + fixedTotal + installTotal;
 
   // Task 4-1: tx 배열 연산 useMemo 최적화
   const curMonthStr  = `${YEAR}-${String(MONTH).padStart(2,"0")}`;
@@ -48,18 +53,24 @@ function ReportContent({tx,budgets,fixed,install,names,plan}){
   const wSpent     = useMemo(() => tx.filter(t=>t.who==="wife").reduce((s,t)=>s+t.amount, 0), [tx]);
 
   const curTx    = useMemo(() => tx.filter(t=>t.date.startsWith(curMonthStr)), [tx, curMonthStr]);
-  const curTotal = useMemo(() => curTx.reduce((s,t)=>s+t.amount, 0), [curTx]);
-  const catData  = useMemo(
-    () => CATS.map(c=>({cat:c.id,amount:curTx.filter(t=>t.cat===c.id).reduce((s,t)=>s+t.amount,0)})),
-    [curTx]
-  );
+  const curVariableTotal = useMemo(() => curTx.reduce((s,t)=>s+t.amount, 0), [curTx]);
+  const curTotalAll = curVariableTotal + fixedTotal + installTotal;
+  
+  const catData  = useMemo(() => {
+    const list = CATS.map(c=>({cat:c.id,amount:curTx.filter(t=>t.cat===c.id).reduce((s,t)=>s+t.amount,0)}));
+    // 고정비와 할부를 가상 카테고리로 추가 (시각화용)
+    if(fixedTotal > 0) list.push({cat:"fixed_internal", amount:fixedTotal, label:"고정비", color:"#5c8de8", icon:"📌"});
+    if(installTotal > 0) list.push({cat:"install_internal", amount:installTotal, label:"할부", color:"#d97fa8", icon:"💳"});
+    return list;
+  }, [curTx, fixedTotal, installTotal]);
 
   const prevTx    = useMemo(() => tx.filter(t=>t.date.startsWith(prevMonthStr)), [tx, prevMonthStr]);
-  const prevTotal = useMemo(() => prevTx.reduce((s,t)=>s+t.amount, 0), [prevTx]);
-  const hasPrev   = prevTotal > 0;
+  const prevVariableTotal = useMemo(() => prevTx.reduce((s,t)=>s+t.amount, 0), [prevTx]);
+  const prevTotalAll = prevVariableTotal + fixedTotal + installTotal;
+  const hasPrev   = prevTotalAll > 0;
   const prevLabel = `${prevYear}년 ${prevMonth}월`;
 
-  const projected = DAY > 0 ? Math.round(totalSpent / DAY * DAYS) : 0;
+  const projected = DAY > 0 ? Math.round(curTotalAll / DAY * DAYS) : 0;
 
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>
@@ -69,10 +80,10 @@ function ReportContent({tx,budgets,fixed,install,names,plan}){
         <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".06em",marginBottom:14}}>■ 지출 구조 분석</div>
         <div style={{marginBottom:16}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-            <span style={{fontSize:12,fontWeight:600}}>이번 달 지출 구조 ({fmtS(curTotal)}원)</span>
+            <span style={{fontSize:12,fontWeight:600}}>이번 달 지출 구조 ({fmtS(curTotalAll)}원)</span>
           </div>
-          {curTotal > 0
-            ? <StackedBar data={catData} total={curTotal} height={24} showLegend/>
+          {curTotalAll > 0
+            ? <StackedBar data={catData} total={curTotalAll} height={24} showLegend/>
             : <div style={{height:24,borderRadius:10,background:"var(--track)",display:"flex",alignItems:"center",paddingLeft:12}}><span style={{fontSize:11,color:"var(--text3)"}}>이번 달 지출 내역 없음</span></div>
           }
         </div>
@@ -80,9 +91,9 @@ function ReportContent({tx,budgets,fixed,install,names,plan}){
           <div>
             <div style={{fontSize:11,color:"var(--text3)",marginBottom:8}}>전월 대비 ({prevLabel})</div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div style={{flex:1,marginRight:14}}><Bar pct={prevTotal>0?curTotal/prevTotal*100:0} color="var(--gold)" h={6}/></div>
-              <div style={{fontSize:12,fontWeight:700,color:curTotal>prevTotal?"var(--red)":"var(--green)"}}>
-                {curTotal > prevTotal ? `▲ ${fmtS(curTotal-prevTotal)}원` : `▼ ${fmtS(prevTotal-curTotal)}원`}
+              <div style={{flex:1,marginRight:14}}><Bar pct={prevTotalAll>0?curTotalAll/prevTotalAll*100:0} color="var(--gold)" h={6}/></div>
+              <div style={{fontSize:12,fontWeight:700,color:curTotalAll>prevTotalAll?"var(--red)":"var(--green)"}}>
+                {curTotalAll > prevTotalAll ? `▲ ${fmtS(curTotalAll-prevTotalAll)}원` : `▼ ${fmtS(prevTotalAll-curTotalAll)}원`}
               </div>
             </div>
           </div>
