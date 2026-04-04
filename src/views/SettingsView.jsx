@@ -5,8 +5,8 @@ import { fmtS } from "../utils/helpers";
 import { exportTransactions } from "../utils/export";
 
 export function SettingsView({names,setNames,budgets,setBudgets,sliderCfg,setSliderCfg,theme,setTheme,resetAll,resetTx,resetFixed,resetBudgets,resetSetup,householdId,myRole,leaveHousehold,tx,plan}){
-  const updateName=(role,v)=>setNames({...names,[role]:v});
-  const updateBudget=(id,v)=>setBudgets({...budgets,[id]:v});
+  const updateName=(role,v)=>setNames(prev=>({...prev,[role]:v}));
+  const updateBudget=(id,v)=>setBudgets(prev=>({...prev,[id]:v}));
 
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>

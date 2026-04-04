@@ -42,6 +42,9 @@ export default function App() {
   const [names, setNamesRaw] = useState({ husband: "남편", wife: "와이프" });
   const [taxConfig, setTaxConfigRaw] = useState(DEFAULT_TAX_CONFIG);
 
+  // -- 입력 지연(Debounce) 타이머 관리 (Task 15-1) --
+  const saveTimers = useRef({});
+
   // 개인 설정 필드들
   const [sliderCfg, setSliderCfgRaw] = useState({ ...DEFAULT_SLIDER_CFG });
   const [theme, setThemeRaw] = useState("dark");
@@ -225,12 +228,33 @@ export default function App() {
 
   // 공유 데이터 저장 도우미 (Supabase 전송) — validate + 지수 백오프 재시도 포함
   const setShared = useCallback(async (key, value, rawSetter) => {
-    validate(key, value); // 스키마 불일치 경고 (Task 2-4)
-    rawSetter(value);     // 낙관적 UI 업데이트
+    const newValue = typeof value === 'function' ? value(rawSetter === setNamesRaw ? names : rawSetter === setBudgetsRaw ? budgets : null) : value;
+    validate(key, newValue); // 스키마 불일치 경고 (Task 2-4)
+    rawSetter(newValue);     // 낙관적 UI 업데이트 (즉시 반영)
+    
+    // -- 입력 지연(Debounce) 대상 필드 처리 (Task 15-2) --
+    const isDebounced = ["names", "budgets", "taxConfig"].includes(key);
+    
+    if (isDebounced) {
+      if (saveTimers.current[key]) clearTimeout(saveTimers.current[key]);
+      
+      saveTimers.current[key] = setTimeout(async () => {
+        setSyncStatus("syncing");
+        try {
+          await db.save(householdId, key, newValue);
+          setSyncStatus("ok");
+        } catch (e) {
+          console.error("Save error:", e);
+          setSyncStatus("error");
+          addToast(`${key} 저장 중 오류가 발생했습니다.`);
+        }
+      }, 800); // 800ms 지연 후 저장
+      return;
+    }
 
-    // 오프라인 상태 시 큐에 저장 후 즉시 반환 (Task 5-3)
+    // -- 비-지연 필드 (즉시 저장) --
     if (!navigator.onLine) {
-      enqueueOffline(key, value);
+      enqueueOffline(key, newValue);
       setSyncStatus("error");
       return;
     }
@@ -239,14 +263,14 @@ export default function App() {
     let retries = 0;
     while (retries < 3) {
       try {
-        await db.save(householdId, key, value);
+        await db.save(householdId, key, newValue);
         setSyncStatus("ok");
         return;
       } catch (e) {
         retries++;
         if (retries === 3) {
           // 저장 실패 시 큐에 보관 (Task 5-3)
-          enqueueOffline(key, value);
+          enqueueOffline(key, newValue);
           console.error(`[sync] 저장 실패 (3회 시도) key=${key}:`, e);
           setSyncStatus("error");
         } else {
@@ -332,7 +356,7 @@ export default function App() {
   const setTaxConfig = useCallback(v => setShared("taxConfig", typeof v === 'function' ? v(taxConfig) : v, setTaxConfigRaw), [taxConfig, setShared]);
   const setPlan = useCallback(v => setShared("plan", typeof v === 'function' ? v(plan) : v, setPlanRaw), [plan, setShared]);
   const setBudgets = useCallback(v => setShared("budgets", typeof v === 'function' ? v(budgets) : v, setBudgetsRaw), [budgets, setShared]);
-  const setNames = useCallback(v => setShared("names", v, setNamesRaw), [setShared]);
+  const setNames = useCallback(v => setShared("names", typeof v === 'function' ? v(names) : v, setNamesRaw), [names, setShared]);
 
   const setSliderCfg = useCallback(v => { setSliderCfgRaw(v); savePrivate("sliderCfg", v); }, [savePrivate]);
   const setTheme = useCallback(v => { setThemeRaw(v); savePrivate("theme", v); }, [savePrivate]);
