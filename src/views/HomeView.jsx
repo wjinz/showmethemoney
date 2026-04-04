@@ -118,30 +118,32 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
           <div style={{position:"relative", width:200, height:130, display:"flex", alignItems:"center", justifyContent:"flex-end", flexShrink:0}}>
             
             <div style={{position:"relative", width:130, height:130, display:"flex", alignItems:"center", justifyContent:"center"}}>
-              {/* 링 본체 (크기 및 두께 확대) */}
-              <Ring pct={pct} size={130} stroke={12} color="var(--gold)" />
-              <div style={{position:"absolute", width:96, height:96, pointerEvents:"none"}}>
-                <Ring pct={totalBudget>0?Math.round(variableSpent/totalBudget*100):0} size={96} stroke={10} color="var(--blue)" />
-              </div>
-              <div style={{position:"absolute", textAlign:"center"}}>
-                <div style={{fontSize:22, fontWeight:800, color:isTotalMode?"var(--gold)":"var(--blue)"}}>{isTotalMode ? pct : (totalBudget>0?Math.round(variableSpent/totalBudget*100):0)}%</div>
-                <div style={{fontSize:9, color:"var(--text3)", textTransform:"uppercase"}}>{isTotalMode ? "Total" : "Life"}</div>
-              </div>
+              {/* 링 본체 (선택된 모드에 따라 단일 링 렌더링) */}
+              {isTotalMode ? (
+                <>
+                  <Ring pct={pct} size={120} stroke={12} color="var(--gold)" />
+                  {/* 가계 전체 지시선 */}
+                  <div style={{position:"absolute", top:25, right:112, transform:"translateY(-50%)", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap", pointerEvents:"none"}}>
+                    <div style={{fontSize:10, fontWeight:800, color:"var(--gold)", letterSpacing:"-.02em"}}>가계 전체</div>
+                    <div style={{width:20, height:1, background:"var(--gold)", opacity:0.5}} />
+                    <div style={{width:5, height:5, borderRadius:"50%", background:"var(--gold)", boxShadow:"0 0 4px var(--gold)"}} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Ring pct={totalBudget>0?Math.round(variableSpent/totalBudget*100):0} size={120} stroke={12} color="var(--blue)" />
+                  {/* 생활비 전용 지시선 */}
+                  <div style={{position:"absolute", top:105, right:104, transform:"translateY(-50%)", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap", pointerEvents:"none"}}>
+                    <div style={{fontSize:10, fontWeight:800, color:"var(--blue)", letterSpacing:"-.02em"}}>생활비 전용</div>
+                    <div style={{width:14, height:1, background:"var(--blue)", opacity:0.5}} />
+                    <div style={{width:5, height:5, borderRadius:"50%", background:"var(--blue)", boxShadow:"0 0 4px var(--blue)"}} />
+                  </div>
+                </>
+              )}
               
-              {/* === 깔끔한 가로형 지시선 1: 가계 종합 (좌상단) === */}
-              {/* x 좌표 정밀 계산: r=65, y_rel=-40 -> x_rel=-51.23 -> x_pos=13.77 -> right=116.23 */}
-              <div style={{position:"absolute", top:25, right:116.2, transform:"translateY(-50%)", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap", pointerEvents:"none"}}>
-                <div style={{fontSize:10, fontWeight:800, color:"var(--gold)", letterSpacing:"-.02em"}}>가계 전체</div>
-                <div style={{width:20, height:1, background:"var(--gold)", opacity:0.5}} />
-                <div style={{width:5, height:5, borderRadius:"50%", background:"var(--gold)", boxShadow:"0 0 4px var(--gold)"}} />
-              </div>
-
-              {/* === 깔끔한 가로형 지시선 2: 생활비 (좌하단) === */}
-              {/* x 좌표 정밀 계산: r=48, y_rel=40 -> x_rel=-26.53 -> x_pos=38.47 -> right=91.53 */}
-              <div style={{position:"absolute", top:105, right:91.5, transform:"translateY(-50%)", display:"flex", alignItems:"center", gap:4, whiteSpace:"nowrap", pointerEvents:"none"}}>
-                <div style={{fontSize:10, fontWeight:800, color:"var(--blue)", letterSpacing:"-.02em"}}>생활비 전용</div>
-                <div style={{width:14, height:1, background:"var(--blue)", opacity:0.5}} />
-                <div style={{width:5, height:5, borderRadius:"50%", background:"var(--blue)", boxShadow:"0 0 4px var(--blue)"}} />
+              <div style={{position:"absolute", textAlign:"center"}}>
+                <div style={{fontSize:24, fontWeight:800, color:isTotalMode?"var(--gold)":"var(--blue)"}}>{isTotalMode ? pct : (totalBudget>0?Math.round(variableSpent/totalBudget*100):0)}%</div>
+                <div style={{fontSize:9, color:"var(--text3)", textTransform:"uppercase"}}>{isTotalMode ? "Total" : "Life"}</div>
               </div>
             </div>
           </div>

@@ -179,19 +179,64 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
           ))}
         </div>
 
+        {/* 결제 수단 & 카드 선택 (상시 노출로 변경) */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+            {[
+              { id: "credit", l: "신용", i: "💳" },
+              { id: "debit",  l: "체크", i: "🏦" },
+              { id: "cash",   l: "현금", i: "💵" },
+            ].map(m => (
+              <button
+                key={m.id}
+                onClick={() => { setPayMethod(m.id); if(m.id==="cash") setCardId(""); }}
+                style={{
+                  flex: 1, padding: "9px", borderRadius: 11,
+                  cursor: "pointer", fontSize: 12, fontWeight: 700,
+                  background: payMethod === m.id ? "var(--goldD)" : "var(--bg3)",
+                  border: `1px solid ${payMethod === m.id ? "var(--gold)" : "var(--border)"}`,
+                  color: payMethod === m.id ? "var(--gold)" : "var(--text2)",
+                  display: "flex", alignItems: "center",
+                  justifyContent: "center", gap: 5,
+                }}
+              ><span>{m.i}</span>{m.l}</button>
+            ))}
+          </div>
+
+          {payMethod !== "cash" && (cards || []).length > 0 && (
+            <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none" }}>
+              {(cards || []).map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => setCardId(cardId === c.id ? "" : c.id)}
+                  style={{
+                    flexShrink: 0, padding: "7px 14px",
+                    borderRadius: 10, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                    background: cardId === c.id ? c.color : "var(--bg3)",
+                    color: cardId === c.id ? "#fff" : "var(--text2)",
+                    border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
+                    boxShadow: cardId === c.id ? `0 4px 12px ${c.color}44` : "none",
+                    transition: "all 0.2s"
+                  }}
+                >{c.icon} {c.label ?? c.name}</button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <button
           onClick={() => setExpanded(v => !v)}
           style={{
             width: "100%", background: "var(--bg3)",
             border: "1px solid var(--border)", borderRadius: 12,
-            padding: "10px", fontSize: 12, color: "var(--text2)",
-            cursor: "pointer", marginBottom: 12,
+            padding: "10px", fontSize: 11, color: "var(--text2)",
+            cursor: "pointer", marginBottom: 16,
             display: "flex", alignItems: "center",
             justifyContent: "center", gap: 6,
+            opacity: 0.8
           }}
         >
-          <span>📝</span>
-          <span>{expanded ? "▲ 닫기" : "메모 · 날짜 · 카드 추가"}</span>
+          <span>{expanded ? "▲ 상세 입력 닫기" : "▼ 날짜 · 메모 추가"}</span>
         </button>
 
         {expanded && (
@@ -232,48 +277,6 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
                 }}
               />
             </div>
-
-            {/* 결제 수단 */}
-            <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-              {[
-                { id: "credit", l: "신용", i: "💳" },
-                { id: "debit",  l: "체크", i: "🏦" },
-                { id: "cash",   l: "현금", i: "💵" },
-              ].map(m => (
-                <button
-                  key={m.id}
-                  onClick={() => setPayMethod(m.id)}
-                  style={{
-                    flex: 1, padding: "9px", borderRadius: 11,
-                    cursor: "pointer", fontSize: 12, fontWeight: 700,
-                    background: payMethod === m.id ? "var(--goldD)" : "var(--bg3)",
-                    border: `1px solid ${payMethod === m.id ? "var(--gold)" : "var(--border)"}`,
-                    color: payMethod === m.id ? "var(--gold)" : "var(--text2)",
-                    display: "flex", alignItems: "center",
-                    justifyContent: "center", gap: 5,
-                  }}
-                ><span>{m.i}</span>{m.l}</button>
-              ))}
-            </div>
-
-            {/* 카드 선택 */}
-            {cards.length > 0 && (
-              <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 2 }}>
-                {cards.map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => setCardId(cardId === c.id ? "" : c.id)}
-                    style={{
-                      flexShrink: 0, padding: "6px 12px",
-                      borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
-                      background: cardId === c.id ? c.color : "var(--bg3)",
-                      color: cardId === c.id ? "#fff" : "var(--text3)",
-                      border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
-                    }}
-                  >{c.icon} {c.label ?? c.name}</button>
-                ))}
-              </div>
-            )}
           </div>
         )}
 

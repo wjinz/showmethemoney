@@ -572,7 +572,7 @@ export default function App() {
           {view === "admin" && isAdmin && <AdminView onClose={handleAdminLogout} addToast={addToast} />}
         </div>
         <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} />
-        {modal && <InputModal defaultWho={modal} names={names} plan={plan} onClose={() => setModal(null)} onSave={addTx} />}
+        {modal && <InputModal defaultWho={modal} names={names} plan={plan} cards={cards} onClose={() => setModal(null)} onSave={addTx} />}
         {showWidget && <WidgetView tx={tx} budgets={budgets} names={names} onClose={() => setShowWidget(false)} />}
         {showQuickEntry && <QuickEntrySheet names={names} plan={plan} cards={cards} tx={tx} onSave={addTx} onClose={() => setShowQuickEntry(false)} />}
         {showBugReport && <BugReportModal householdId={householdId} onClose={() => setShowBugReport(false)} addToast={addToast} />}

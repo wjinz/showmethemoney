@@ -7,12 +7,13 @@ import { runOCR } from "../utils/ocr";
 const nowStr = () => toDateStr(new Date());
 
 // OCR 결과 상태: null | "loading" | "success" | "error"
-export function InputModal({ defaultWho, names, plan, onClose, onSave }) {
+export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) {
   const [who, setWho] = useState(defaultWho);
   const [amount, setAmount] = useState("");
   const [cat, setCat] = useState("");
   const [memo, setMemo] = useState("");
   const [payMethod, setPayMethod] = useState("credit");
+  const [cardId, setCardId] = useState("");
   const [date, setDate] = useState(nowStr());
   const [ocrStatus, setOcrStatus] = useState(null); // null | "loading" | "success" | "error"
   const [ocrMsg, setOcrMsg] = useState("");
@@ -25,7 +26,7 @@ export function InputModal({ defaultWho, names, plan, onClose, onSave }) {
 
   const save = () => {
     if (!amount || !cat) return;
-    onSave({ who, amount: parseInt(amount), cat, memo, payMethod, date });
+    onSave({ who, amount: parseInt(amount), cat, memo, payMethod, date, cardId });
     onClose();
   };
 
@@ -169,27 +170,51 @@ export function InputModal({ defaultWho, names, plan, onClose, onSave }) {
           />
         </div>
 
-        {/* 결제 수단 */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 24, marginTop: -10 }}>
-          {[
-            { id: "credit", l: "신용", i: "💳" },
-            { id: "debit",  l: "체크", i: "🏦" },
-            { id: "cash",   l: "현금", i: "💵" },
-          ].map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setPayMethod(m.id)}
-              style={{
-                flex: 1, padding: "10px", borderRadius: 12, cursor: "pointer", fontSize: 12, fontWeight: 700,
-                background: payMethod === m.id ? "var(--goldD)" : "var(--bg3)",
-                border: `1px solid ${payMethod === m.id ? "var(--gold)" : "var(--border)"}`,
-                color: payMethod === m.id ? "var(--gold)" : "var(--text2)",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              }}
-            >
-              <span>{m.i}</span>{m.l}
-            </button>
-          ))}
+        {/* 결제 수단 & 카드 선택 */}
+        <div style={{ marginBottom: 24, marginTop: -10 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+            {[
+              { id: "credit", l: "신용", i: "💳" },
+              { id: "debit",  l: "체크", i: "🏦" },
+              { id: "cash",   l: "현금", i: "💵" },
+            ].map((m) => (
+              <button
+                key={m.id}
+                onClick={() => { setPayMethod(m.id); if(m.id==="cash") setCardId(""); }}
+                style={{
+                  flex: 1, padding: "10px", borderRadius: 12, cursor: "pointer", fontSize: 12, fontWeight: 700,
+                  background: payMethod === m.id ? "var(--goldD)" : "var(--bg3)",
+                  border: `1px solid ${payMethod === m.id ? "var(--gold)" : "var(--border)"}`,
+                  color: payMethod === m.id ? "var(--gold)" : "var(--text2)",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                }}
+              >
+                <span>{m.i}</span>{m.l}
+              </button>
+            ))}
+          </div>
+
+          {/* 카드 목록 (신용/체크일 때만 표시) */}
+          {payMethod !== "cash" && (cards || []).length > 0 && (
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "4px 0", scrollbarWidth: "none" }}>
+              {(cards || []).map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => setCardId(cardId === c.id ? "" : c.id)}
+                  style={{
+                    flexShrink: 0, padding: "8px 14px", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    background: cardId === c.id ? c.color : "var(--bg3)",
+                    color: cardId === c.id ? "#fff" : "var(--text2)",
+                    border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
+                    boxShadow: cardId === c.id ? `0 4px 12px ${c.color}44` : "none",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  {c.icon} {c.label || c.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* OCR 피드백 메시지 */}
