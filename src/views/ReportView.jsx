@@ -3,7 +3,6 @@ import { Card, SectionHeader, Bar } from "../components/UI";
 import { CAT, CATS, getYear, getMonth, getDay, getDaysInMonth } from "../constants";
 import { fmtS } from "../utils/helpers";
 import { CalendarView } from "./CalendarView";
-import { PlanView } from "./PlanView";
 import { TaxOptimizerView } from "./TaxOptimizerView";
 import { PredictionView } from "./PredictionView";
 import { DataImportView } from "./DataImportView";
