@@ -4,7 +4,7 @@
 /** @type {string} */
 const GEMINI_MODEL = 'gemini-1.5-flash';
 /** @type {string} */
-const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
+const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 /**
  * @param {import('http').IncomingMessage & {body: Record<string, number|object>}} req
