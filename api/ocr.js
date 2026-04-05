@@ -2,8 +2,8 @@
 // API 키를 서버 사이드에서만 사용 (브라우저 번들에 포함되지 않음)
 // Vercel 환경 변수: GOOGLE_API_KEY (VITE_ 접두사 없이 설정)
 
-/** @type {string} Gemini 모델 ID — v1beta에서만 -latest alias 지원 */
-const GEMINI_MODEL = 'gemini-1.5-flash';
+/** @type {string} Gemini 모델 ID */
+const GEMINI_MODEL = 'gemini-2.0-flash-lite';
 /** @type {string} Gemini generateContent 엔드포인트 베이스 URL */
 const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 

@@ -2,7 +2,7 @@
 // Gemini를 사용해 급여 기반 카테고리별 예산을 추천
 
 /** @type {string} */
-const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_MODEL = 'gemini-2.0-flash-lite';
 /** @type {string} */
 const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
