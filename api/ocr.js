@@ -3,7 +3,7 @@
 // Vercel 환경 변수: GOOGLE_API_KEY (VITE_ 접두사 없이 설정)
 
 /** @type {string} Gemini 모델 ID */
-const GEMINI_MODEL = 'gemini-2.0-flash-lite';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 /** @type {string} Gemini generateContent 엔드포인트 베이스 URL */
 const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
