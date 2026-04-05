@@ -89,7 +89,13 @@ export default async function handler(req, res) {
     if (!anthropicRes.ok) {
       const errText = await anthropicRes.text();
       console.error('Anthropic API 오류:', errText);
-      return res.status(anthropicRes.status).json({ error: `Anthropic API 오류: ${anthropicRes.status}` });
+      try {
+        const errJson = JSON.parse(errText);
+        const detail = errJson.error?.message || 'Unknown error';
+        return res.status(anthropicRes.status).json({ error: `Anthropic API 오류: ${detail} (Code: ${anthropicRes.status})` });
+      } catch (e) {
+        return res.status(anthropicRes.status).json({ error: `Anthropic API 오류: ${anthropicRes.status}` });
+      }
     }
 
     const data = await anthropicRes.json();
