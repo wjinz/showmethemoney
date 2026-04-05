@@ -27,37 +27,25 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API 키가 서버에 설정되지 않았습니다. Vercel 환경 변수 ANTHROPIC_API_KEY를 설정해 주세요.' });
   }
 
-  const { image, mediaType } = req.body;
+  const { image, mediaType, mode = 'single' } = req.body;
   if (!image || !mediaType) {
     return res.status(400).json({ error: 'image와 mediaType 필드가 필요합니다.' });
   }
 
-  try {
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 512,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: mediaType,
-                  data: image,
-                },
-              },
-              {
-                type: 'text',
-                text: `이 영수증 이미지를 분석해서 지출 정보를 추출해주세요.
+  const today = new Date().toISOString().slice(0, 10);
+  const CAT_GUIDE = `food, housing, education, transport, medical, culture, clothing, sub, etc`;
+
+  const promptText = mode === 'bulk'
+    ? `이 이미지는 카드 앱의 이용내역 화면 캡처입니다.
+화면에 보이는 모든 결제 내역을 추출하세요.
+
+아래 JSON 배열 형식으로만 응답하세요 (코드블록, 설명 없이):
+[{"date":"YYYY-MM-DD","amount":숫자,"cat":"카테고리","memo":"가맹점명"},...]
+
+날짜가 없는 항목은 오늘(${today})을 사용하세요. 연도가 없으면 ${today.slice(0,4)}년으로 가정하세요.
+취소/환불 내역은 제외하세요. 금액은 양수 숫자만(원 기호, 콤마 제거).
+카테고리: ${CAT_GUIDE}`
+    : `이 영수증 이미지를 분석해서 지출 정보를 추출해주세요.
 
 아래 JSON 형식으로만 응답하세요 (코드블록, 설명 없이 JSON만):
 {"amount": 숫자, "cat": "카테고리", "memo": "가게명 또는 설명"}
@@ -73,8 +61,25 @@ export default async function handler(req, res) {
 - sub: 구독서비스, 앱, 멤버십
 - etc: 위 항목에 해당하지 않는 기타 지출
 
-영수증에서 총액(합계)을 amount로 추출하세요. 금액은 숫자만(원 기호, 콤마 제거).`,
-              },
+영수증에서 총액(합계)을 amount로 추출하세요. 금액은 숫자만(원 기호, 콤마 제거).`;
+
+  try {
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: mode === 'bulk' ? 1024 : 512,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
+              { type: 'text', text: promptText },
             ],
           },
         ],
@@ -90,22 +95,23 @@ export default async function handler(req, res) {
     const data = await anthropicRes.json();
     const text = data.content?.[0]?.text ?? '';
 
-    // JSON 파싱 (코드블록이나 여분의 텍스트가 포함된 경우도 처리)
+    if (mode === 'bulk') {
+      const arrMatch = text.match(/\[[\s\S]*\]/);
+      if (!arrMatch) return res.status(422).json({ error: '거래 내역을 인식하지 못했습니다.' });
+      /** @type {Array<{date:string,amount:number,cat:string,memo:string}>} */
+      const items = JSON.parse(arrMatch[0]);
+      const valid = items.filter(i => typeof i.amount === 'number' && i.amount > 0);
+      return res.status(200).json({ items: valid });
+    }
+
     const match = text.match(/\{[\s\S]*\}/);
-    if (!match) {
-      return res.status(422).json({ error: '영수증에서 정보를 인식하지 못했습니다.' });
-    }
-
+    if (!match) return res.status(422).json({ error: '영수증에서 정보를 인식하지 못했습니다.' });
     const result = JSON.parse(match[0]);
-
-    // amount 유효성 검사
-    if (typeof result.amount !== 'number' || result.amount <= 0) {
-      result.amount = null;
-    }
-
+    if (typeof result.amount !== 'number' || result.amount <= 0) result.amount = null;
     return res.status(200).json(result);
+
   } catch (err) {
     console.error('OCR 처리 오류:', err);
-    return res.status(500).json({ error: err.message ?? 'OCR 처리 중 오류가 발생했습니다.' });
+    return res.status(500).json({ error: err instanceof Error ? err.message : 'OCR 처리 중 오류가 발생했습니다.' });
   }
 }
