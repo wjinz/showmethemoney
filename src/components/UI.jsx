@@ -29,7 +29,15 @@ export function Chip({who,names}){
 }
 
 export function Card({children,style={},className=""}){
-  return <div className={className} style={{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:18,...style}}>{children}</div>;
+  const cls = ["card", className].filter(Boolean).join(" ");
+  return (
+    <div
+      className={cls}
+      style={{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:"var(--card-radius)",...style}}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function SectionHeader({sub,title}){

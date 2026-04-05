@@ -1,10 +1,11 @@
 export const G = `
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 
 /* ── 다크 모드 (기본) ── */
 :root{
   color-scheme: dark;
+  --card-radius:18px;
   --bg:#09090f;--bg2:#0f1018;--bg3:#15161f;--bg4:#1c1d28;
   --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
   --gold:#c8a84b;--goldL:#e2c97e;--goldD:rgba(200,168,75,0.13);
@@ -24,6 +25,7 @@ export const G = `
 /* ── 라이트 모드 ── */
 .light{
   color-scheme: light;
+  --card-radius:18px;
   --bg:#f0ede8;--bg2:#ffffff;--bg3:#e6e2dc;--bg4:#d8d4cc;
   --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.16);
   --gold:#8a6a00;--goldL:#6a5000;--goldD:rgba(138,106,0,0.1);
@@ -43,68 +45,101 @@ export const G = `
   --dim:rgba(0,0,0,0.04);
 }
 
-/* ── 올드스쿨 (Win 3.1 / DOS 에디션) ── */
+/* ── 레트로 터미널 (Retro Terminal) ── */
 .oldschool{
-  --bg:#008080; /* 클래식 틸 */
-  --bg2:#c0c0c0; /* 실버 윈도우 */
-  --bg3:#dfdfdf; /* 밝은 회색 */
-  --bg4:#808080; /* 어두운 회색 */
-  --border:#000000;
-  --border2:#808080;
-  --gold:#808000;
-  --goldL:#ffff00;
-  --goldD:rgba(128,128,0,0.1);
-  --red:#ff0000;
-  --redD:rgba(255,0,0,0.1);
-  --green:#008000;
-  --greenD:rgba(0,128,0,0.1);
-  --blue:#000080;
-  --blueD:rgba(0,0,128,0.1);
-  --pink:#800080;
-  --pinkD:rgba(128,0,128,0.1);
-  --purple:#800000;
-  --purpleD:rgba(128,0,0,0.1);
-  --text:#000000;
-  --text2:#333333;
-  --text3:#555555;
+  --bg:#080a06;
+  --bg2:#0f120c;
+  --bg3:#161a12;
+  --bg4:#1e2418;
+  --border:rgba(180,220,80,0.25);
+  --border2:rgba(180,220,80,0.45);
+  --gold:#b4dc50;
+  --goldL:#d4f070;
+  --goldD:rgba(180,220,80,0.10);
+  --red:#d95f5f;
+  --redD:rgba(217,95,95,0.12);
+  --green:#4dab87;
+  --greenD:rgba(77,171,135,0.12);
+  --blue:#5c8de8;
+  --blueD:rgba(92,141,232,0.12);
+  --pink:#d97fa8;
+  --pinkD:rgba(217,127,168,0.12);
+  --purple:#9b7ee0;
+  --purpleD:rgba(155,126,224,0.12);
+  --text:#c8e89a;
+  --text2:#7a9a50;
+  --text3:#3a5a28;
   --h:var(--blue);--hD:var(--blueD);
   --w:var(--pink);--wD:var(--pinkD);
-  --nav-bg:#c0c0c0;
-  --track:#808080;
-  --dim:rgba(0,0,0,0.05);
+  --nav-bg:rgba(8,10,6,0.97);
+  --track:rgba(180,220,80,0.15);
+  --dim:rgba(180,220,80,0.04);
+  --card-radius:2px;
 }
 
-.oldschool, .oldschool * {
-  font-family: "Courier New", Courier, monospace !important;
-  letter-spacing: -0.5px;
+/* 폰트: 라틴/숫자 → Space Mono, 한글 → Noto Sans KR 자동 폴백 */
+.oldschool,
+.oldschool input,
+.oldschool button,
+.oldschool textarea,
+.oldschool select {
+  font-family: 'Space Mono','Noto Sans KR',monospace !important;
+  letter-spacing:0.01em;
 }
 
-.oldschool .card{
-  border: 2px outset #fff !important;
-  box-shadow: 1px 1px 0 #000 !important;
-  border-radius: 0 !important;
-  background: var(--bg2) !important;
+/* serif 헤더도 Space Mono로 */
+.oldschool .serif {
+  font-family: 'Space Mono','Noto Sans KR',monospace !important;
+  font-style:normal !important;
 }
 
-.oldschool button:not(.fab){
-  border: 2px outset #fff !important;
-  border-radius: 0 !important;
-  background: #c0c0c0 !important;
-  color: #000 !important;
-  box-shadow: 1px 1px 0 #000 !important;
+/* 카드: 각진 2px 테두리, flat */
+.oldschool .card {
+  border-radius:var(--card-radius) !important;
+  border:1px solid rgba(180,220,80,0.30) !important;
+  background:var(--bg2) !important;
+  box-shadow:0 0 0 1px rgba(180,220,80,0.06) !important;
 }
 
-.oldschool button:active:not(.fab){
-  border: 2px inset #fff !important;
-  box-shadow: none !important;
-  transform: translate(1px, 1px);
+/* 버튼: flat + 테두리만, outset/inset 제거 */
+.oldschool button:not(.fab) {
+  border-radius:var(--card-radius) !important;
+  border:1px solid rgba(180,220,80,0.35) !important;
+  background:var(--bg3) !important;
+  color:var(--text) !important;
+  box-shadow:none !important;
+}
+.oldschool button:not(.fab):active {
+  background:rgba(180,220,80,0.12) !important;
+  border-color:var(--gold) !important;
+  transform:none !important;
 }
 
-.oldschool .input, .oldschool input[type=text], .oldschool input[type=number]{
-  border: 2px inset #fff !important;
-  border-radius: 0 !important;
-  background: #fff !important;
-  color: #000 !important;
+/* input / select: 각진, 내부 미세하게 밝게 */
+.oldschool input[type=text],
+.oldschool input[type=number],
+.oldschool input[type=date],
+.oldschool input[type=range],
+.oldschool select,
+.oldschool textarea {
+  border-radius:var(--card-radius) !important;
+  border:1px solid rgba(180,220,80,0.35) !important;
+  background:rgba(180,220,80,0.05) !important;
+  color:var(--text) !important;
+  caret-color:var(--gold);
+}
+
+/* scanline 오버레이 */
+.oldschool::after {
+  content:'';
+  position:fixed;inset:0;
+  pointer-events:none;
+  z-index:9999;
+  background:repeating-linear-gradient(
+    to bottom,
+    transparent 0px,transparent 3px,
+    rgba(0,0,0,0.07) 3px,rgba(0,0,0,0.07) 4px
+  );
 }
 
 /* 라이트 슬라이더 thumb */

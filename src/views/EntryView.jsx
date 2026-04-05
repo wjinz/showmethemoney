@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, Chip } from "../components/UI";
 import { TxEditModal } from "../components/TxEditModal";
+import { CardScanSheet } from "../components/CardScanSheet";
 import { CAT, CATS } from "../constants";
 import { fmtS, toDateStr, getContrastText } from "../utils/helpers";
 import { runOCR } from "../utils/ocr";
@@ -16,9 +17,10 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
   const [payMethod, setPayMethod] = useState("credit");
   const [date,      setDate]      = useState(nowStr());
   const [saved,     setSaved]     = useState(false);
-  const [isOCR,     setIsOCR]     = useState(false);
-  const [ocrStatus, setOcrStatus] = useState(null);
-  const [ocrMsg,    setOcrMsg]    = useState("");
+  const [isOCR,        setIsOCR]        = useState(false);
+  const [ocrStatus,    setOcrStatus]    = useState(/** @type {'success'|'error'|null} */ (null));
+  const [ocrMsg,       setOcrMsg]       = useState('');
+  const [showCardScan, setShowCardScan] = useState(false);
 
   // 수정 모달: null 이면 닫힘, tx 객체면 해당 항목 편집 중
   const [editingTx, setEditingTx] = useState(null);
@@ -176,8 +178,9 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
         </div>
       )}
 
-      {/* 카메라 + 저장 */}
+      {/* 카메라 + 카드스캔 + 저장 */}
       <div className="u5" style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        {/* 단일 영수증 OCR */}
         <label style={{
           width: 52, height: 52, borderRadius: 13, background: "var(--bg3)", border: "1px solid var(--border)",
           display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 20, flexShrink: 0,
@@ -185,6 +188,18 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
           <input type="file" accept="image/*" capture="environment" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
           {isOCR ? <OCRSpinner /> : "📷"}
         </label>
+        {/* 카드 이용내역 스크린샷 일괄 입력 */}
+        <button
+          onClick={() => setShowCardScan(true)}
+          style={{
+            width: 52, height: 52, borderRadius: 13, flexShrink: 0, cursor: "pointer",
+            background: "var(--bg3)", border: "1px solid var(--border)",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+          }}
+        >
+          <span style={{ fontSize: 17, lineHeight: 1 }}>🪪</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--text2)" }}>카드</span>
+        </button>
         <button onClick={save} disabled={!amount || !cat} style={{
           flex: 1, padding: "15px",
           background: saved ? "var(--greenD)" : (!amount || !cat) ? "var(--bg3)" : "var(--gold)",
@@ -255,6 +270,15 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
           );
         })}
       </Card>
+
+      {/* 카드 이용내역 스캔 시트 */}
+      {showCardScan && (
+        <CardScanSheet
+          who={who}
+          onSave={onSave}
+          onClose={() => setShowCardScan(false)}
+        />
+      )}
 
       {/* 수정 모달 */}
       {editingTx && (

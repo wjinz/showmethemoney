@@ -17,13 +17,15 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API 키가 서버에 설정되지 않았습니다.' });
 
-  const { totalSalary, fixedTotal, installTotal, savingsTarget, catHistory } = req.body;
+  const { totalSalary, fixedTotal, installTotal, savingsTarget, catHistory, utilizationTarget } = req.body;
 
   if (!totalSalary || totalSalary <= 0) {
     return res.status(400).json({ error: '급여 정보가 없습니다. 먼저 급여를 입력해주세요.' });
   }
 
-  const available = Math.max(totalSalary - (fixedTotal || 0) - (installTotal || 0) - (savingsTarget || 0), 0);
+  const utilPct = Math.min(Math.max(utilizationTarget || 100, 50), 100) / 100;
+  const rawAvailable = Math.max(totalSalary - (fixedTotal || 0) - (installTotal || 0) - (savingsTarget || 0), 0);
+  const available = Math.round(rawAvailable * utilPct);
 
   // 최근 지출 패턴 컨텍스트 구성
   let historyCtx = '';
