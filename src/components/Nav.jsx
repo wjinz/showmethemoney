@@ -3,11 +3,11 @@ export function Nav({ view, setView, syncStatus }) {
 
   const LEFT_ITEMS = [
     { id: "home",   icon: "⌂",  l: "홈" },
-    { id: "budget", icon: "⚖️", l: "예산" },
+    { id: "entry",  icon: "✎",  l: "기록" },
   ];
   const RIGHT_ITEMS = [
+    { id: "budget", icon: "⚖️", l: "예산" },
     { id: "report", icon: "◈",  l: "리포트" },
-    { id: "settings", icon: "⊙", l: "설정" },
   ];
 
   const NavBtn = ({ item }) => (
@@ -38,7 +38,7 @@ export function Nav({ view, setView, syncStatus }) {
           {item.l}
         </span>
       </button>
-      {item.id === "settings" && syncStatus && syncStatus !== "ok" && (
+      {(item.id === "report") && syncStatus && syncStatus !== "ok" && (
         <div style={{
           position: "absolute", top: 2, right: "calc(50% - 14px)",
           width: 7, height: 7, borderRadius: "50%",

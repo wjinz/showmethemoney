@@ -2,6 +2,9 @@ import { useState, useCallback, useMemo } from "react";
 import { CATS, getYear, getMonth } from "../constants";
 import { toDateStr, getContrastText } from "../utils/helpers";
 import { NumPad } from "./NumPad";
+import { runOCR } from "../utils/ocr";
+import { CardScanSheet } from "./CardScanSheet";
+import { CAT } from "../constants";
 
 export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
   const [who,       setWho]       = useState("husband");
@@ -13,6 +16,30 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
   const [cardId,    setCardId]    = useState("");
   const [expanded,  setExpanded]  = useState(false);
   const [saved,     setSaved]     = useState(false);
+  const [isOCR,        setIsOCR]        = useState(false);
+  const [ocrStatus,    setOcrStatus]    = useState(/** @type {'success'|'error'|null} */ (null));
+  const [ocrMsg,       setOcrMsg]       = useState('');
+  const [showCardScan, setShowCardScan] = useState(false);
+
+  const handleOCR = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsOCR(true); setOcrStatus(null);
+    try {
+      const res = await runOCR(file);
+      let filled = 0;
+      if (res.amount && res.amount > 0) { setAmount(String(res.amount)); filled++; }
+      if (res.cat && CAT[res.cat])      { setCat(res.cat);              filled++; }
+      if (res.memo)                     { setMemo(res.memo);            filled++; }
+      setOcrStatus(filled > 0 ? "success" : "error");
+      setOcrMsg(filled > 0 ? `${filled}개 항목 자동 입력` : "인식 실패");
+    } catch (err) {
+      setOcrStatus("error"); setOcrMsg(err.message ?? "OCR 오류");
+    } finally {
+      setIsOCR(false);
+      setTimeout(() => { setOcrStatus(null); setOcrMsg(""); }, 2500);
+    }
+  };
 
   const handleSave = () => {
     if (!amount || !cat) return;
@@ -280,41 +307,90 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
           </div>
         )}
 
-        {/* 저장 버튼 */}
-        <button
-          onClick={handleSave}
-          disabled={!amount || !cat || saved}
-          style={{
-            width: "100%", padding: "17px",
-            borderRadius: 16,
-            fontSize: 16, fontWeight: 700,
-            cursor: (!amount || !cat) ? "default" : "pointer",
-            background: saved
-              ? "var(--greenD)"
+        {/* OCR 피드백 */}
+        {ocrStatus && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 14px", marginBottom: 12, fontSize: 12,
+            background: ocrStatus === "success" ? "#1a3a1a" : "#3a1a1a",
+            border: `1px solid ${ocrStatus === "success" ? "#4dab87" : "#d97f7f"}`,
+          }}>
+            <span>{ocrStatus === "success" ? "✓" : "!"}</span>
+            <span>{ocrMsg}</span>
+          </div>
+        )}
+
+        {/* 카메라 + 카드스캔 + 저장 */}
+        <div style={{ display: "flex", gap: 8 }}>
+          <label style={{
+            width: 58, height: 58, borderRadius: 16, background: "var(--bg3)", border: "1px solid var(--border)",
+            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 22, flexShrink: 0,
+          }}>
+            <input type="file" accept="image/*" capture="environment" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
+            {isOCR ? <OCRSpinner /> : "📷"}
+          </label>
+          <button
+            onClick={() => setShowCardScan(true)}
+            style={{
+              width: 58, height: 58, borderRadius: 16, flexShrink: 0, cursor: "pointer",
+              background: "var(--bg3)", border: "1px solid var(--border)",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1,
+            }}
+          >
+            <span style={{ fontSize: 18, lineHeight: 1 }}>🪪</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: "var(--text2)" }}>카드</span>
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!amount || !cat || saved}
+            style={{
+              flex: 1, padding: "17px",
+              borderRadius: 16,
+              fontSize: 16, fontWeight: 700,
+              cursor: (!amount || !cat) ? "default" : "pointer",
+              background: saved
+                ? "var(--greenD)"
+                : (!amount || !cat)
+                ? "var(--bg3)"
+                : "var(--gold)",
+              color: saved
+                ? "var(--green)"
+                : (!amount || !cat)
+                ? "var(--text3)"
+                : "#fff",
+              border: saved
+                ? "1px solid var(--green)"
+                : "none",
+              boxShadow: (!amount || !cat) || saved
+                ? "none"
+                : "0 8px 28px rgba(200,168,75,.35)",
+              transition: "all .2s ease",
+            }}
+          >
+            {saved
+              ? "✓ 저장 완료"
               : (!amount || !cat)
-              ? "var(--bg3)"
-              : "var(--gold)",
-            color: saved
-              ? "var(--green)"
-              : (!amount || !cat)
-              ? "var(--text3)"
-              : "#fff",
-            border: saved
-              ? "1px solid var(--green)"
-              : "none",
-            boxShadow: (!amount || !cat) || saved
-              ? "none"
-              : "0 8px 28px rgba(200,168,75,.35)",
-            transition: "all .2s ease",
-          }}
-        >
-          {saved
-            ? "✓ 저장 완료"
-            : (!amount || !cat)
-            ? "금액과 카테고리를 선택해주세요"
-            : `${parseInt(amount).toLocaleString()}원 저장하기`}
-        </button>
+              ? "금액/카테고리 선택"
+              : `${parseInt(amount).toLocaleString()}원 저장`}
+          </button>
+        </div>
       </div>
+
+      {/* 카드 이용내역 스캔 시트 */}
+      {showCardScan && (
+        <CardScanSheet
+          who={who}
+          onSave={onSave}
+          onClose={() => setShowCardScan(false)}
+        />
+      )}
     </div>
+  );
+}
+
+function OCRSpinner() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" style={{ animation: "spin 0.8s linear infinite" }}>
+      <circle cx="12" cy="12" r="9" fill="none" stroke="var(--gold)" strokeWidth="2.5" strokeDasharray="40 20" strokeLinecap="round" />
+    </svg>
   );
 }
