@@ -79,6 +79,7 @@ const analyze = (txs) => {
 };
 
 // recharts 툴팁 포맷
+/** @param {{ active?: boolean, payload?: any[], label?: any }} props */
 const KrTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -96,11 +97,11 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
   const [stage, setStage]         = useState("idle");    // idle | mapping | result
   const [rawRows, setRawRows]     = useState([]);
   const [headers, setHeaders]     = useState([]);
-  const [colMap, setColMap]       = useState({});
+  const [colMap, setColMap]       = useState(/** @type {{dateIdx?:number,amtIdx?:number,merchantIdx?:number,cancelIdx?:number}} */ ({}));
   const [txs, setTxs]             = useState([]);
   const [analysis, setAnalysis]   = useState(null);
   const [dragOver, setDragOver]   = useState(false);
-  const fileRef = useRef();
+  const fileRef = useRef(/** @type {HTMLInputElement|null} */ (null));
 
   // ── 파일 파싱 ──
   const handleFile = (file) => {
@@ -108,7 +109,9 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+        const raw = e.target?.result;
+        if (!raw || typeof raw === 'string') return;
+        const wb = XLSX.read(new Uint8Array(raw), { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
         if (rows.length < 2) { alert("데이터가 없는 파일이에요."); return; }
@@ -362,7 +365,7 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
   }));
 
   const catChartData = CATS
-    .map(c => ({ id: c.id, name: c.label, icon: c.icon, color: c.color, amount: analysis.byCat[c.id] || 0 }))
+    .map(c => ({ id: c.id, label: c.label, icon: c.icon, color: c.color, amount: analysis.byCat[c.id] || 0 }))
     .filter(c => c.amount > 0)
     .sort((a, b) => b.amount - a.amount);
 

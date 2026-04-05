@@ -12,6 +12,7 @@ export const supabase = isSupabaseConfigured
 export const db = {
   // 특정 가계부 아이디(hid)의 모든 데이터를 불러옵니다.
   // tx는 연도별 키(tx_YYYY)로 저장되므로 여기서는 제외됩니다.
+  /** @param {string} hid @returns {Promise<Record<string,any>>} */
   async loadAll(hid) {
     const { data, error } = await supabase
       .from('household_data')
@@ -22,10 +23,10 @@ export const db = {
 
     // [{key: 'tx', value: [...]}, ...] 형태를 {tx: [...], ...} 형태로 변환
     // tx_YYYY 키들은 별도로 처리되므로 그대로 반환
-    return data.reduce((acc, curr) => {
-      acc[curr.key] = curr.value;
-      return acc;
-    }, {});
+    /** @type {Record<string,any>} */
+    const result = {};
+    for (const row of data) result[row.key] = row.value;
+    return result;
   },
 
   /**
@@ -119,24 +120,47 @@ export const db = {
     if (error) throw error;
   },
 
-  // 실시간 구독 설정 — tx_YYYY 키 변경도 처리
+  // B10: 채널 중복 방지 — 이미 구독 중인 채널 재사용
+  /** @type {Map<string, ReturnType<NonNullable<typeof supabase>['channel']>>} */
+  _channels: new Map(),
+
+  // B5: DELETE 이벤트 포함 — 실시간 구독 설정
+  /**
+   * @param {string} hid
+   * @param {(key: string, value: any, deleted?: boolean) => void} onUpdate
+   */
   subscribe(hid, onUpdate) {
-    return supabase
-      .channel(`realtime:household:${hid}`)
+    const channelName = `realtime:household:${hid}`;
+    // B10: 중복 채널 방지
+    if (this._channels.has(channelName)) {
+      return this._channels.get(channelName);
+    }
+    const ch = supabase
+      .channel(channelName)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'household_data', filter: `id=eq.${hid}` },
-        (payload) => {
-          onUpdate(payload.new.key, payload.new.value);
-        }
+        (payload) => { onUpdate(payload.new.key, payload.new.value); }
       )
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'household_data', filter: `id=eq.${hid}` },
-        (payload) => {
-          onUpdate(payload.new.key, payload.new.value);
-        }
+        (payload) => { onUpdate(payload.new.key, payload.new.value); }
+      )
+      .on(
+        'postgres_changes',
+        // B5: DELETE 이벤트 — key를 빈 배열로 처리해 UI 반영
+        { event: 'DELETE', schema: 'public', table: 'household_data', filter: `id=eq.${hid}` },
+        (payload) => { if (payload.old?.key) onUpdate(payload.old.key, [], true); }
       )
       .subscribe();
+    this._channels.set(channelName, ch);
+    return ch;
+  },
+
+  unsubscribe(hid) {
+    const channelName = `realtime:household:${hid}`;
+    const ch = this._channels.get(channelName);
+    if (ch) { supabase.removeChannel(ch); this._channels.delete(channelName); }
   }
 };

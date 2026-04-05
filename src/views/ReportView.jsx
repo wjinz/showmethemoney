@@ -57,7 +57,7 @@ function ReportContent({tx,budgets,fixed,install,names,plan}){
   const curTotalAll = curVariableTotal + fixedTotal + installTotal;
   
   const catData  = useMemo(() => {
-    const list = CATS.map(c=>({cat:c.id,amount:curTx.filter(t=>t.cat===c.id).reduce((s,t)=>s+t.amount,0)}));
+    const list = CATS.map(c=>({cat:c.id, label:c.label, icon:c.icon, color:c.color, amount:curTx.filter(t=>t.cat===c.id).reduce((s,t)=>s+t.amount,0)}));
     // 고정비와 할부를 가상 카테고리로 추가 (시각화용)
     if(fixedTotal > 0) list.push({cat:"fixed_internal", amount:fixedTotal, label:"고정비", color:"#5c8de8", icon:"📌"});
     if(installTotal > 0) list.push({cat:"install_internal", amount:installTotal, label:"할부", color:"#d97fa8", icon:"💳"});

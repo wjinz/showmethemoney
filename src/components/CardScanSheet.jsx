@@ -15,11 +15,10 @@ const today = () => toDateStr(new Date());
 const CAT_IDS = CATS.map(c => c.id);
 
 /**
- * @param {{ who: string, onSave: (tx: object) => void, onClose: () => void }} props
+ * @param {{ who: string, onSave: (tx: object) => void, onSaveAll?: (txList: object[]) => void, onClose: () => void }} props
  */
-export function CardScanSheet({ who, onSave, onClose }) {
-  /** @type {['idle'|'scanning'|'review', (v: 'idle'|'scanning'|'review') => void]} */
-  const [phase, setPhase] = useState('idle');
+export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
+  const [phase, setPhase] = useState(/** @type {'idle'|'scanning'|'review'} */ ('idle'));
   /** @type {[ScannedItem[], (v: ScannedItem[] | ((prev: ScannedItem[]) => ScannedItem[])) => void]} */
   const [items, setItems] = useState([]);
   const [errMsg, setErrMsg] = useState('');
@@ -73,28 +72,35 @@ export function CardScanSheet({ who, onSave, onClose }) {
 
   const handleSaveAll = () => {
     const selectedItems = items.filter(i => i.selected);
-    selectedItems.forEach(i => onSave({ 
-      who, 
-      amount: i.amount, 
-      cat: i.cat, 
-      memo: i.memo, 
-      date: i.date, 
+    if (selectedItems.length === 0) return;
+    const txList = selectedItems.map(i => ({
+      who,
+      amount: i.amount,
+      cat: i.cat,
+      memo: i.memo,
+      date: i.date,
       payMethod: 'credit',
-      type: 'expense'
+      type: 'expense',
     }));
+    // B1: onSaveAll이 있으면 배치 저장 (race condition 방지), 없으면 개별 저장 fallback
+    if (onSaveAll) {
+      onSaveAll(txList);
+    } else {
+      txList.forEach(t => onSave(t));
+    }
     onClose();
   };
 
   const selectedCount = items.filter(i => i.selected).length;
   const allSelected = items.length > 0 && items.every(i => i.selected);
 
-  const overlayStyle = /** @type {React.CSSProperties} */ ({
+  const overlayStyle = /** @type {import('react').CSSProperties} */ ({
     position: 'fixed', inset: 0, zIndex: 1100,
     display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
     background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)',
   });
 
-  const sheetStyle = /** @type {React.CSSProperties} */ ({
+  const sheetStyle = /** @type {import('react').CSSProperties} */ ({
     width: '100%', maxWidth: 480,
     background: 'var(--bg2)', borderRadius: '20px 20px 0 0',
     borderTop: '1px solid var(--border)',

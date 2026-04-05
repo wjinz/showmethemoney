@@ -77,6 +77,16 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
   const [showFull, setShowFull] = useState(false);
   const [editItem, setEditItem] = useState(null);
 
+  // B8: 검색 결과 memoize — 검색어 없을 때는 이번달만, 있을 때는 전체 검색
+  const filteredTx = useMemo(() => {
+    const pool = searchTerm ? tx : thisMonthTx;
+    return pool.filter(t => {
+      if (!searchTerm) return true;
+      const label = CAT[t.cat]?.label || "";
+      return (t.memo && t.memo.includes(searchTerm)) || label.includes(searchTerm);
+    }).sort((a, b) => b.id - a.id);
+  }, [tx, thisMonthTx, searchTerm]);
+
   return(
     <div style={{padding:"0 16px 96px",overflowY:"auto",height:"100%"}}>
       <div className="u1" style={{padding:"20px 0 10px", display:"flex", flexDirection:"column", gap:14}}>
@@ -218,6 +228,7 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
           formatVal={v => fmtS(v)+"원/일"}
           showReset
           onReset={() => setPaceDaily(Math.max(0, defaultPaceVal))}
+          defaultValue={defaultPaceVal}
         />
         <div style={{display:"flex",gap:8}}>
           {[{label:"지금 페이스",val:currentPaceDaily,c:"var(--text2)"},{label:"조정 후",val:paceDaily,c:paceColor}].map(b=>(
@@ -353,12 +364,7 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
         </div>
 
         {(() => {
-          const filtered = tx.filter(t => {
-            if(!searchTerm) return true;
-            const label = CAT[t.cat]?.label || "";
-            return (t.memo && t.memo.includes(searchTerm)) || label.includes(searchTerm);
-          }).sort((a,b)=>b.id-a.id);
-          const displayList = showFull ? filtered : filtered.slice(0, 5);
+          const displayList = showFull ? filteredTx : filteredTx.slice(0, 5);
           if (displayList.length === 0) return <div style={{padding:"24px 14px",textAlign:"center",borderTop:"1px solid var(--border)"}}><div style={{fontSize:13,color:"var(--text2)"}}>내역이 없습니다.</div></div>;
 
           return displayList.map(t => {

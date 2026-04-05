@@ -8,10 +8,10 @@ export function TaxOptimizerView({tx, names, taxConfig, setTaxConfig}){
 
   const totalSpent = tx.reduce((s,t) => s + t.amount, 0);
   
-  const byMethod = PAY_METHODS.reduce((acc, m) => {
+  const byMethod = /** @type {{credit:number,debit:number,cash:number}} */ (PAY_METHODS.reduce((/** @type {Record<string,number>} */ acc, m) => {
     acc[m.id] = tx.filter(t => (t.payMethod || "credit") === m.id).reduce((s,t) => s + t.amount, 0);
     return acc;
-  }, {});
+  }, {}));
 
   const reachedThreshold = totalSpent >= threshold;
   const thresholdPct = Math.min(100, Math.round((totalSpent / threshold) * 100));

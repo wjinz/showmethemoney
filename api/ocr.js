@@ -1,7 +1,16 @@
 // Vercel Serverless Function — OCR 프록시
 // API 키를 서버 사이드에서만 사용 (브라우저 번들에 포함되지 않음)
-// Vercel 환경 변수: ANTHROPIC_API_KEY (VITE_ 접두사 없이 설정)
+// Vercel 환경 변수: GOOGLE_API_KEY (VITE_ 접두사 없이 설정)
 
+/** @type {string} Gemini 모델 ID — v1beta에서만 -latest alias 지원 */
+const GEMINI_MODEL = 'gemini-2.0-flash-lite';
+/** @type {string} Gemini generateContent 엔드포인트 베이스 URL */
+const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+/**
+ * @param {import('http').IncomingMessage & {body: {image?: string, mediaType?: string, mode?: string}}} req
+ * @param {import('http').ServerResponse & {status: (code: number) => {json: (body: object) => void, end: () => void}}} res
+ */
 export default async function handler(req, res) {
   // CORS 헤더 설정 (같은 도메인 배포지만 명시적으로 허용)
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -56,8 +65,9 @@ export default async function handler(req, res) {
 영수증에서 총액(합계)을 amount로 추출하세요. 금액은 숫자만(원 기호, 콤마 제거).`;
 
   try {
-    // Gemini 1.5 Flash API 호출 (최신 모델명 사용)
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+    // Gemini API 호출 (v1beta + gemini-2.0-flash-lite)
+    // 주의: v1(정식) 엔드포인트는 -latest alias를 지원하지 않아 404 발생
+    const geminiRes = await fetch(`${GEMINI_BASE_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -81,7 +91,7 @@ export default async function handler(req, res) {
         const errJson = JSON.parse(errText);
         const detail = errJson.error?.message || 'Unknown Gemini error';
         return res.status(geminiRes.status).json({ error: `Gemini API 오류: ${detail} (Code: ${geminiRes.status})` });
-      } catch (e) {
+      } catch {
         return res.status(geminiRes.status).json({ error: `Gemini API 오류: ${geminiRes.status}` });
       }
     }
@@ -92,7 +102,7 @@ export default async function handler(req, res) {
     if (mode === 'bulk') {
       const arrMatch = text.match(/\[[\s\S]*\]/);
       if (!arrMatch) return res.status(422).json({ error: '거래 내역을 인식하지 못했습니다.' });
-      /** @type {Array<{date:string,amount:number,cat:string,memo:string}>} */
+      /** @type {Array<{date:string, amount:number, cat:string, memo:string}>} */
       const items = JSON.parse(arrMatch[0]);
       const valid = items.filter(i => typeof i.amount === 'number' && i.amount > 0);
       return res.status(200).json({ items: valid });
@@ -100,8 +110,9 @@ export default async function handler(req, res) {
 
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) return res.status(422).json({ error: '영수증에서 정보를 인식하지 못했습니다.' });
+    /** @type {{amount?: number, cat?: string, memo?: string}} */
     const result = JSON.parse(match[0]);
-    if (typeof result.amount !== 'number' || result.amount <= 0) result.amount = null;
+    if (typeof result.amount !== 'number' || result.amount <= 0) result.amount = 0;
     return res.status(200).json(result);
 
   } catch (err) {

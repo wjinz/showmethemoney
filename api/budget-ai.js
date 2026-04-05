@@ -1,6 +1,15 @@
 // Vercel Serverless Function — AI 예산 자동 배분
-// Claude Haiku를 사용해 급여 기반 카테고리별 예산을 추천
+// Gemini를 사용해 급여 기반 카테고리별 예산을 추천
 
+/** @type {string} */
+const GEMINI_MODEL = 'gemini-2.0-flash-lite';
+/** @type {string} */
+const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+/**
+ * @param {import('http').IncomingMessage & {body: Record<string, number|object>}} req
+ * @param {import('http').ServerResponse & {status: (code: number) => {json: (body: object) => void, end: () => void}}} res
+ */
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -61,7 +70,7 @@ food(식비), housing(주거/관리비), education(교육), transport(교통), m
 {"budgets":{"food":숫자,"housing":숫자,"education":숫자,"transport":숫자,"medical":숫자,"culture":숫자,"clothing":숫자,"sub":숫자,"etc":숫자},"reasons":{"food":"이유","housing":"이유","education":"이유","transport":"이유","medical":"이유","culture":"이유","clothing":"이유","sub":"이유","etc":"이유"},"tip":"전체 조언 한마디"}`;
 
   try {
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+    const resp = await fetch(`${GEMINI_BASE_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

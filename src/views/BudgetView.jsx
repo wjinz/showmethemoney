@@ -81,33 +81,34 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
   const [showAdd, setShowAdd] = useState(false);
   const [editFId, setEditFId] = useState(null);
   const [editIId, setEditIId] = useState(null);
-  const [newF, setNewF] = useState({ name: "", amount: "", cat: "housing", day: "" });
-  const [newI, setNewI] = useState({ name: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
+  // B3 fix: name → label (스키마 통일), type 필드 초기값 추가 (UI 탭 전환용)
+  const [newF, setNewF] = useState({ label: "", amount: "", cat: "housing", day: "", type: "f" });
+  const [newI, setNewI] = useState({ label: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
 
   const addF = () => {
-    if (!newF.name || !newF.amount || !newF.day) return;
+    if (!newF.label || !newF.amount || !newF.day) return;
     const amount = parseInt(parseInput(newF.amount));
     const day = parseInt(newF.day);
     if (editFId) {
-      setFixed(p => p.map(f => f.id === editFId ? { ...f, ...newF, amount, day } : f));
+      setFixed(p => p.map(f => f.id === editFId ? { ...f, label: newF.label, amount, day, cat: newF.cat } : f));
     } else {
-      setFixed(p => [...p, { ...newF, id: Date.now(), amount, day }]);
+      setFixed(p => [...p, { label: newF.label, cat: newF.cat, id: Date.now(), amount, day }]);
     }
-    setShowAdd(false); setEditFId(null); setNewF({ name: "", amount: "", cat: "housing", day: "" });
+    setShowAdd(false); setEditFId(null); setNewF({ label: "", amount: "", cat: "housing", day: "", type: "f" });
   };
   const delF = id => setFixed(p => p.filter(f => f.id !== id));
 
   const addI = () => {
     const totalNum = parseInt(parseInput(newI.total));
     const monthsNum = parseInt(newI.months);
-    if (!newI.name || !totalNum || !monthsNum || !newI.date) return;
+    if (!newI.label || !totalNum || !monthsNum || !newI.date) return;
     const monthly = Math.round(totalNum / monthsNum);
     if (editIId) {
-      setInstall(p => p.map(i => i.id === editIId ? { ...i, ...newI, total: totalNum, months: monthsNum, monthly } : i));
+      setInstall(p => p.map(i => i.id === editIId ? { ...i, label: newI.label, totalAmount: totalNum, months: monthsNum, monthly, cardId: newI.cardId, date: newI.date } : i));
     } else {
-      setInstall(p => [...p, { ...newI, id: Date.now(), total: totalNum, months: monthsNum, monthly }]);
+      setInstall(p => [...p, { label: newI.label, id: Date.now(), totalAmount: totalNum, months: monthsNum, monthly, cardId: newI.cardId, date: newI.date }]);
     }
-    setShowAdd(false); setEditIId(null); setNewI({ name: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
+    setShowAdd(false); setEditIId(null); setNewI({ label: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
   };
   const delI = id => setInstall(p => p.filter(i => i.id !== id));
 
@@ -136,7 +137,7 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
 
           {(newF.type || "f") === "f" ? (
             <div>
-              <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>항목명</div><input value={newF.name} onChange={e => setNewF({ ...newF, name: e.target.value })} placeholder="예: 아파트 관리비" style={iStyle} /></div>
+              <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>항목명</div><input value={newF.label} onChange={e => setNewF({ ...newF, label: e.target.value })} placeholder="예: 아파트 관리비" style={iStyle} /></div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
                 <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>월 금액</div><input type="text" value={formatInput(newF.amount)} onChange={e => setNewF({ ...newF, amount: parseInput(e.target.value) })} placeholder="0" style={{ ...iStyle, textAlign: "right" }} /></div>
                 <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>출금일</div><input type="number" value={newF.day} onChange={e => setNewF({ ...newF, day: e.target.value })} placeholder="일(1-31)" style={{ ...iStyle, textAlign: "right" }} /></div>
@@ -145,14 +146,14 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
             </div>
           ) : (
             <div>
-              <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>할부 항목</div><input value={newI.name} onChange={e => setNewI({ ...newI, name: e.target.value })} placeholder="예: 가전제품" style={iStyle} /></div>
+              <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>할부 항목</div><input value={newI.label} onChange={e => setNewI({ ...newI, label: e.target.value })} placeholder="예: 가전제품" style={iStyle} /></div>
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 10, marginBottom: 10 }}>
                 <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>할부 원금</div><input type="text" value={formatInput(newI.total)} onChange={e => setNewI({ ...newI, total: parseInput(e.target.value) })} placeholder="0" style={iStyle} /></div>
                 <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>개월 수</div><input type="number" value={newI.months} onChange={e => setNewI({ ...newI, months: e.target.value })} placeholder="개월" style={{ ...iStyle, textAlign: "right" }} /></div>
               </div>
               <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
                 {[3, 6, 12, 24].map(m => (
-                  <button key={m} onClick={() => setNewI({ ...newI, months: m })} style={{ flex: 1, padding: "5px 0", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer", background: newI.months == m ? "var(--blueD)" : "var(--bg3)", color: newI.months == m ? "var(--blue)" : "var(--text3)", border: `1px solid ${newI.months == m ? "var(--blue)" : "var(--border)"}` }}>{m}개월</button>
+                  <button key={m} onClick={() => setNewI({ ...newI, months: String(m) })} style={{ flex: 1, padding: "5px 0", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer", background: newI.months === String(m) ? "var(--blueD)" : "var(--bg3)", color: newI.months === String(m) ? "var(--blue)" : "var(--text3)", border: `1px solid ${newI.months === String(m) ? "var(--blue)" : "var(--border)"}` }}>{m}개월</button>
                 ))}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
@@ -206,7 +207,7 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
   );
 }
 
-function BaselineTab({ plan, onGoToImport }) {
+function BaselineTab({ plan, onGoToImport=undefined }) {
   const imp = plan.importedAnalysis;
   if (!imp) return (
     <div style={{ padding: "24px 0" }}>
@@ -596,7 +597,7 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
     );
   }
 
-  const FlowRow = ({ label, value, color = "var(--text)", sub }) => (
+  const FlowRow = ({ label, value, color = "var(--text)", sub = "" }) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid var(--border)" }}>
       <span style={{ fontSize: 12, color: "var(--text2)" }}>{label}</span>
       <div style={{ textAlign: "right" }}>

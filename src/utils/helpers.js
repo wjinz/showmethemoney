@@ -67,7 +67,7 @@ export function getBillingPeriod(card, today = new Date()) {
   const payDate   = new Date(pY, pM, paymentDay);
 
   const msDay = 1000*60*60*24;
-  const daysUntilPay = Math.ceil((payDate - today) / msDay);
+  const daysUntilPay = Math.ceil((payDate.getTime() - today.getTime()) / msDay);
 
   return { cycleStart, cycleEnd, payDate, daysUntilPay };
 }

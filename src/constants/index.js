@@ -1,3 +1,10 @@
+/**
+ * @typedef {{ id: number, date: string, amount: number, cat: string, memo: string, who: string, payMethod: string, type?: string, cardId?: string }} TxItem
+ * @typedef {{ id: string|number, label: string, amount: number, cat?: string, day?: number, cardId?: string }} FixedItem
+ * @typedef {{ id: string|number, label: string, totalAmount: number, months: number, monthly: number, cardId?: string, date?: string }} InstallItem
+ * @typedef {{ id: string|number, label: string, type: string, color?: string, icon?: string }} CardItem
+ */
+
 export const CATS = [
   {id:"food",     label:"식비",      icon:"🍽", color:"#d4845a"},
   {id:"housing",  label:"주거/관리",  icon:"🏠", color:"#d4b84a"},
@@ -27,24 +34,30 @@ export const DEFAULT_SLIDER_CFG = {
   budgetSliderMax: 2000000,
 };
 
+/** @type {TxItem[]} */
 export const EMPTY_TX      = [];
+/** @type {FixedItem[]} */
 export const EMPTY_FIXED   = [];
+/** @type {InstallItem[]} */
 export const EMPTY_INSTALL = [];
+/** @type {CardItem[]} */
 export const EMPTY_CARDS   = [];
+/** @type {object[]} */
 export const EMPTY_ASSETS  = [];
-export const EMPTY_PLAN    = { 
+export const EMPTY_PLAN    = {
   salary: { husband: 0, wife: 0, savingsTarget: 0 },
   utilizationTarget: 100,
-  events: []
+  events: /** @type {object[]} */ ([])
 };
 
 export const getNow  = () => new Date();
 export const getYear = () => getNow().getFullYear();
 export const getMonth= () => getNow().getMonth() + 1;
 export const getDay  = () => getNow().getDate();
+/** @param {number} y @param {number} m */
 export const getDaysInMonth = (y, m) => new Date(y, m, 0).getDate();
 
-// 레거시 호환용 (모듈 로드 시점 고정 - 주의 필요)
+// @deprecated 모듈 로드 시점에 고정됩니다. 날짜 계산에는 getYear/getMonth/getDay/getDaysInMonth를 사용하세요.
 export const NOW   = new Date();
 export const DAYS  = new Date(NOW.getFullYear(),NOW.getMonth()+1,0).getDate();
 export const DAY   = NOW.getDate();

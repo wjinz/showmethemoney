@@ -13,7 +13,7 @@ import { toDateStr, getContrastText } from "../utils/helpers";
  *   onEdit   - (id, updates) => void
  *   onDelete - (id) => void
  */
-export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete }) {
+export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete, plan: _plan=undefined }) {
   const [who,       setWho]       = useState(tx.who);
   const [amount,    setAmount]    = useState(String(tx.amount));
   const [cat,       setCat]       = useState(tx.cat);

@@ -1,4 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+
+/**
+ * @typedef {import('./constants/index.js').TxItem} TxItem
+ * @typedef {import('./constants/index.js').FixedItem} FixedItem
+ * @typedef {import('./constants/index.js').InstallItem} InstallItem
+ * @typedef {import('./constants/index.js').CardItem} CardItem
+ */
 import { G } from "./styles/globalStyles.js";
 import { validate } from "./utils/validate.js";
 import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued } from "./utils/offlineQueue.js";
@@ -69,6 +76,10 @@ export default function App() {
 
   // 로드된 연도 추적 (tx Lazy Loading용)
   const loadedTxYears = useRef(/** @type {Set<number>} */ (new Set()));
+  // tx가 로컬에서 변경됐는지 추적 (서버 로드 시 false, 로컬 변경 시 true)
+  const txDirty = useRef(false);
+  // 디바운스 저장 타이머
+  const txSaveTimerRef = useRef(/** @type {ReturnType<typeof setTimeout>|null} */ (null));
 
   // 공유 데이터 상태 업데이트 핸들러 (실시간 반영용)
   const updateSharedState = useCallback((key, value) => {
@@ -133,6 +144,7 @@ export default function App() {
       // 2단계: 현재 연도 tx만 로드 (성능 최적화)
       const currentYear = getYear();
       const curTx = await db.loadTx(hid, currentYear);
+      txDirty.current = false; // 서버에서 로드 — 저장 트리거 방지
       setTxRaw(curTx);
       loadedTxYears.current.add(currentYear);
 
@@ -238,6 +250,58 @@ export default function App() {
     return () => { window.removeEventListener('online', handleOnline); };
   }, [setupDone, householdId, loadShared, addToast]);
 
+  // B1/B2/B7: tx 디바운스 저장 effect
+  // - B1: setTx가 functional update를 사용하므로 상태는 항상 올바름, 여기서 최종 값을 저장
+  // - B2: navigator.onLine 체크 후 오프라인 시 큐 등록
+  // - B7: loadedTxYears에 있는 연도만 저장 (불필요한 연도 저장 방지)
+  useEffect(() => {
+    if (!setupDone || !householdId || !txDirty.current) return;
+    clearTimeout(txSaveTimerRef.current ?? undefined);
+    txSaveTimerRef.current = setTimeout(async () => {
+      if (!txDirty.current) return;
+      txDirty.current = false;
+
+      /** @type {Record<number, TxItem[]>} */
+      const byYear = {};
+      tx.forEach(/** @param {TxItem} t */ t => {
+        const year = Number(String(t.date ?? '').slice(0, 4));
+        if (!isNaN(year) && year > 2000) {
+          if (!byYear[year]) byYear[year] = [];
+          byYear[year].push(t);
+        }
+      });
+
+      // B7: 로드된 연도만 저장 (미로드 연도는 건드리지 않음)
+      const yearsToSave = Array.from(loadedTxYears.current);
+
+      // B2: 오프라인 시 큐 등록 후 리턴
+      if (!navigator.onLine) {
+        yearsToSave.forEach(y => enqueueOffline(`tx_${y}`, byYear[y] ?? []));
+        setSyncStatus("error");
+        return;
+      }
+
+      let retries = 0;
+      while (retries < 3) {
+        try {
+          await Promise.all(yearsToSave.map(y => db.saveTx(householdId, y, byYear[y] ?? [])));
+          setSyncStatus("ok");
+          return;
+        } catch (e) {
+          retries++;
+          if (retries === 3) {
+            console.error('[tx-save] 저장 실패 (3회 시도):', e);
+            yearsToSave.forEach(y => enqueueOffline(`tx_${y}`, byYear[y] ?? []));
+            setSyncStatus("error");
+          } else {
+            await new Promise(r => setTimeout(r, 1000 * retries));
+          }
+        }
+      }
+    }, 300);
+    return () => { clearTimeout(txSaveTimerRef.current ?? undefined); };
+  }, [tx, householdId, setupDone]);
+
   // 공유 데이터 저장 도우미 (Supabase 전송) — validate + 지수 백오프 재시도 포함
   const setShared = useCallback(async (key, value, rawSetter) => {
     const newValue = value;
@@ -290,53 +354,19 @@ export default function App() {
         }
       }
     }
-  }, [householdId]);
+  }, [householdId, addToast]);
 
-  // Task 4-2: tx 저장 시 연도별 키(tx_YYYY)로 분리 저장
-  const setTx = useCallback(v => {
-    const newTx = typeof v === 'function' ? v(tx) : v;
-    // 연도별로 그룹핑하여 각 연도 키로 저장
-    /** @type {Object.<number, Array>} */
-    const byYear = {};
-    newTx.forEach(t => {
-      const year = Number(String(t.date ?? '').slice(0, 4));
-      if (!isNaN(year) && year > 2000) {
-        if (!byYear[year]) byYear[year] = [];
-        byYear[year].push(t);
-      }
-    });
-    // 로드된 연도 중 변경된 것만 저장 (각 연도별 upsert)
-    const currentYear = getYear();
-    const yearsToSave = Object.keys(byYear).map(Number);
-    // 낙관적 UI 업데이트
-    validate('tx', newTx);
-    setTxRaw(newTx);
+  // B1 fix: setTx를 functional update로 변경 — 빠른 연속 호출 시 stale closure 방지
+  // 저장 로직은 아래 txSave useEffect에서 처리 (B2 offline, B7 최적화 포함)
+  const setTx = useCallback(/** @param {((prev: TxItem[]) => TxItem[]) | TxItem[]} v */ (v) => {
+    txDirty.current = true;
     setSyncStatus("syncing");
-    // 비동기 저장 (각 연도별)
-    const saveAll = async () => {
-      let retries = 0;
-      while (retries < 3) {
-        try {
-          // Task 8-2: 로드된 모든 연도에 대해 동기화 수행 (삭제로 인해 빈 연도가 된 경우 포함)
-          const allLoadedYears = Array.from(loadedTxYears.current);
-          await Promise.all(
-            allLoadedYears.map(y => db.saveTx(householdId, y, byYear[y] ?? []))
-          );
-          setSyncStatus("ok");
-          return;
-        } catch (e) {
-          retries++;
-          if (retries === 3) {
-            console.error(`[sync] tx 저장 실패 (3회 시도):`, e);
-            setSyncStatus("error");
-          } else {
-            await new Promise(r => setTimeout(r, 1000 * retries));
-          }
-        }
-      }
-    };
-    saveAll();
-  }, [tx, householdId]);
+    setTxRaw(/** @param {TxItem[]} prev */ prev => {
+      const newTx = typeof v === 'function' ? v(prev) : v;
+      validate('tx', newTx);
+      return newTx;
+    });
+  }, []); // deps 불필요: tx 클로저 제거됨
 
   /**
    * 특정 과거 연도의 tx를 lazy 로드합니다.
@@ -373,9 +403,30 @@ export default function App() {
   const setSliderCfg = useCallback(v => { setSliderCfgRaw(v); savePrivate("sliderCfg", v); }, [savePrivate]);
   const setTheme = useCallback(v => { setThemeRaw(v); savePrivate("theme", v); }, [savePrivate]);
 
-  const addTx = useCallback(t => setTx(ts => [...ts, { ...t, id: Date.now() }]), [setTx]);
-  const deleteTx = useCallback(id => setTx(ts => ts.filter(t => t.id !== id)), [setTx]);
-  const editTx = useCallback((id, updates) => setTx(ts => ts.map(t => t.id === id ? { ...t, ...updates } : t)), [setTx]);
+  // B4: id = ms * 1000 + 난수 → 동시 다건 추가 시 충돌 방지
+  // setTx가 functional update이므로 연속 호출 시 prev가 항상 최신 상태 (B1 fix)
+  const addTx = useCallback(/** @param {Omit<TxItem, 'id'>} t */ t =>
+    setTx(/** @param {TxItem[]} ts */ ts => [
+      ...ts,
+      { ...t, id: Date.now() * 1000 + (Math.random() * 1000 | 0) }
+    ]),
+  [setTx]);
+
+  // B1: 벌크 저장용 — 한 번의 상태 업데이트로 여러 건 추가 (race condition 완전 방지)
+  const addTxBatch = useCallback(/** @param {Omit<TxItem, 'id'>[]} items */ items =>
+    setTx(/** @param {TxItem[]} ts */ ts => [
+      ...ts,
+      ...items.map((t, i) => ({ ...t, id: Date.now() * 1000 + i })),
+    ]),
+  [setTx]);
+
+  const deleteTx = useCallback(/** @param {number} id */ id =>
+    setTx(/** @param {TxItem[]} ts */ ts => ts.filter(t => t.id !== id)),
+  [setTx]);
+
+  const editTx = useCallback(/** @param {number} id @param {Partial<TxItem>} updates */ (id, updates) =>
+    setTx(/** @param {TxItem[]} ts */ ts => ts.map(t => t.id === id ? { ...t, ...updates } : t)),
+  [setTx]);
   
   // -- 세분화된 초기화 함수들 (Task 12-1) --
   
@@ -385,6 +436,7 @@ export default function App() {
     await db.clearAllTransactions(householdId);
     // 레거시 'tx' 키도 혹시 모르니 정리
     await db.save(householdId, "tx", EMPTY_TX);
+    txDirty.current = false; // 서버에서 직접 삭제했으므로 saveEffect 불필요
     setTxRaw(EMPTY_TX);
     loadedTxYears.current.clear();
     const curYear = getYear();
@@ -423,7 +475,7 @@ export default function App() {
       db.save(householdId, "names", { husband: "남편", wife: "와이프" }),
       db.save(householdId, "taxConfig", DEFAULT_TAX_CONFIG)
     ]);
-    setPlanRaw({});
+    setPlanRaw(EMPTY_PLAN);
     setNamesRaw({ husband: "남편", wife: "와이프" });
     setTaxConfigRaw(DEFAULT_TAX_CONFIG);
     setSyncStatus("ok");
@@ -576,7 +628,7 @@ export default function App() {
         {modal && <InputModal defaultWho={modal} names={names} plan={plan} cards={cards} onClose={() => setModal(null)} onSave={addTx} />}
         {showWidget && <WidgetView tx={tx} budgets={budgets} names={names} onClose={() => setShowWidget(false)} />}
         {showQuickEntry && <QuickEntrySheet names={names} plan={plan} cards={cards} tx={tx} onSave={addTx} onClose={() => setShowQuickEntry(false)} onCardScan={() => { setShowQuickEntry(false); setShowCardScan(true); }} />}
-        {showCardScan && <CardScanSheet who={myRole} onSave={addTx} onClose={() => setShowCardScan(false)} />}
+        {showCardScan && <CardScanSheet who={myRole} onSave={addTx} onSaveAll={addTxBatch} onClose={() => setShowCardScan(false)} />}
         {showBugReport && <BugReportModal householdId={householdId} onClose={() => setShowBugReport(false)} addToast={addToast} />}
         {showAdminLogin && <AdminLoginModal onLogin={handleAdminLogin} onClose={() => setShowAdminLogin(false)} addToast={addToast} />}
         <ToastContainer toasts={toasts} />

@@ -7,7 +7,7 @@ import { exportTransactions } from "../utils/export";
 export function SettingsView({
   names, setNames, budgets, setBudgets, sliderCfg, setSliderCfg, theme, setTheme,
   resetAll, resetTx, resetFixed, resetBudgets, resetSetup, householdId, myRole,
-  leaveHousehold, tx, plan, onBugReport, onAdminTrigger, isAdmin
+  leaveHousehold, tx, plan, onBugReport, onAdminTrigger, isAdmin, onClose=undefined
 }) {
   const [clickCount, setClickCount] = useState(0);
   const updateName = (role, v) => setNames(prev => ({ ...prev, [role]: v }));

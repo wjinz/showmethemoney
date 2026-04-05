@@ -5,11 +5,11 @@ import { fmt, fmtS, getInstallmentFirstPayment } from "../utils/helpers";
 import { CardView } from "./CardView";
 import { SimulatorView } from "./SimulatorView";
 
-export function FixedView({ fixed, setFixed, install, setInstall, cards, setCards, tx, names }) {
+export function FixedView({ fixed, setFixed, install, setInstall, cards, setCards, tx: _tx, names: _names, sliderCfg=undefined, setSliderCfg=undefined }) {
   const [tab, setTab] = useState("fixed");
   const [showAdd, setShowAdd] = useState(false);
-  const [newF, setNewF] = useState({ name: "", amount: "", cat: "housing", day: "" });
-  const [newI, setNewI] = useState({ name: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
+  const [newF, setNewF] = useState({ label: "", type: "f", amount: "", cat: "housing", day: "" });
+  const [newI, setNewI] = useState({ label: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
 
   // 화폐 포맷팅 헬퍼 (Task 14-1)
   const formatInput = (val) => {
@@ -19,18 +19,18 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
   const parseInput = (val) => String(val).replace(/[^0-9]/g, "");
 
   const addF = () => {
-    if (!newF.name || !newF.amount || !newF.day) return;
-    setFixed(p => [...p, { ...newF, id: Date.now(), amount: parseInt(parseInput(newF.amount)), day: parseInt(newF.day) }]);
-    setShowAdd(false); setNewF({ name: "", amount: "", cat: "housing", day: "" });
+    if (!newF.label || !newF.amount || !newF.day) return;
+    setFixed(p => [...p, { id: Date.now(), label: newF.label, amount: parseInt(parseInput(newF.amount)), cat: newF.cat, day: parseInt(newF.day) }]);
+    setShowAdd(false); setNewF({ label: "", type: "f", amount: "", cat: "housing", day: "" });
   };
   const delF = id => setFixed(p => p.filter(f => f.id !== id));
 
   const addI = () => {
     const totalNum = parseInt(parseInput(newI.total));
     const monthsNum = parseInt(newI.months);
-    if (!newI.name || !totalNum || !monthsNum || !newI.date) return;
-    setInstall(p => [...p, { ...newI, id: Date.now(), total: totalNum, months: monthsNum, monthly: Math.round(totalNum / monthsNum) }]);
-    setShowAdd(false); setNewI({ name: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
+    if (!newI.label || !totalNum || !monthsNum || !newI.date) return;
+    setInstall(p => [...p, { id: Date.now(), label: newI.label, totalAmount: totalNum, months: monthsNum, monthly: Math.round(totalNum / monthsNum), cardId: newI.cardId, date: newI.date }]);
+    setShowAdd(false); setNewI({ label: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
   };
   const delI = id => setInstall(p => p.filter(i => i.id !== id));
 
@@ -78,7 +78,7 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
 
                 {(newF.type || "f") === "f" ? (
                   <div>
-                    <div style={{ marginBottom: 14 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>항목명</div><input value={newF.name} onChange={e => setNewF({ ...newF, name: e.target.value })} placeholder="예: 아파트 관리비" style={iStyle} /></div>
+                    <div style={{ marginBottom: 14 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>항목명</div><input value={newF.label} onChange={e => setNewF({ ...newF, label: e.target.value })} placeholder="예: 아파트 관리비" style={iStyle} /></div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
                       <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>월 금액</div><input type="text" value={formatInput(newF.amount)} onChange={e => setNewF({ ...newF, amount: parseInput(e.target.value) })} placeholder="0" style={{ ...iStyle, textAlign: "right" }} /></div>
                       <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>출금일</div><input type="number" value={newF.day} onChange={e => setNewF({ ...newF, day: e.target.value })} placeholder="일(1-31)" style={{ ...iStyle, textAlign: "right" }} /></div>
@@ -87,7 +87,7 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
                   </div>
                 ) : (
                   <div>
-                    <div style={{ marginBottom: 14 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>할부 항목</div><input value={newI.name} onChange={e => setNewI({ ...newI, name: e.target.value })} placeholder="예: 맥북 프로 맥스" style={iStyle} /></div>
+                    <div style={{ marginBottom: 14 }}><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>할부 항목</div><input value={newI.label} onChange={e => setNewI({ ...newI, label: e.target.value })} placeholder="예: 맥북 프로 맥스" style={iStyle} /></div>
                     <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 12, marginBottom: 10 }}>
                       <div style={{ flex: 1 }}>
                         <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>할부 원금</div><input type="text" value={formatInput(newI.total)} onChange={e => setNewI({ ...newI, total: parseInput(e.target.value) })} placeholder="0" style={iStyle} /></div>
@@ -97,7 +97,7 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
                     {/* 개월 수 퀵 선택 */}
                     <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
                       {[3, 6, 12, 24].map(m => (
-                        <button key={m} onClick={() => setNewI({ ...newI, months: m })} style={{ flex: 1, padding: "5px 0", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer", background: newI.months == m ? "var(--blueD)" : "var(--bg3)", color: newI.months == m ? "var(--blue)" : "var(--text3)", border: `1px solid ${newI.months == m ? "var(--blue)" : "var(--border)"}` }}>{m}개월</button>
+                        <button key={m} onClick={() => setNewI({ ...newI, months: String(m) })} style={{ flex: 1, padding: "5px 0", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer", background: newI.months === String(m) ? "var(--blueD)" : "var(--bg3)", color: newI.months === String(m) ? "var(--blue)" : "var(--text3)", border: `1px solid ${newI.months === String(m) ? "var(--blue)" : "var(--border)"}` }}>{m}개월</button>
                       ))}
                     </div>
 
@@ -107,22 +107,22 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
                     </div>
 
                     {/* 실시간 계산 프리뷰 카드 (Task 13-2) */}
-                    {newI.months > 0 && !!parseInput(newI.total) && (
+                    {parseInt(newI.months) > 0 && !!parseInput(newI.total) && (
                       <div style={{ background: "var(--bg3)", borderRadius: 14, padding: "14px", border: "1px solid var(--border)", marginBottom: 16 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                           <span style={{ fontSize: 11, color: "var(--text2)" }}>예상 월 납입금</span>
-                          <span style={{ fontSize: 16, fontWeight: 800, color: "var(--blue)" }}>{fmtS(Math.round(parseInt(parseInput(newI.total)) / newI.months))}원</span>
+                          <span style={{ fontSize: 16, fontWeight: 800, color: "var(--blue)" }}>{fmtS(Math.round(parseInt(parseInput(newI.total)) / parseInt(newI.months)))}원</span>
                         </div>
-                        
+
                         {newI.date && (
                           <div style={{ paddingTop: 10, borderTop: "1px dashed var(--border)" }}>
                             {(() => {
                               const selectedCard = cards.find(c => c.id === newI.cardId);
                               if (!selectedCard) return null;
-                              
+
                               const firstPayDate = getInstallmentFirstPayment(selectedCard, newI.date);
                               const lastPayDate = new Date(firstPayDate);
-                              lastPayDate.setMonth(lastPayDate.getMonth() + (newI.months - 1));
+                              lastPayDate.setMonth(lastPayDate.getMonth() + (parseInt(newI.months) - 1));
                               
                               return (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -151,7 +151,7 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
             )}
 
             <Card className="u2" style={{ padding: "18px", marginBottom: 14, display: "flex", gap: 18, alignItems: "center" }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--blueD)", color: "var(--blue)", display: "flex", alignItems: "center", justifyCenter: "center", fontSize: 24, justifyContent: "center" }}>📌</div>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--blueD)", color: "var(--blue)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>📌</div>
               <div><div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 2 }}>월 정기 지출 합계</div><div style={{ fontSize: 22, fontWeight: 700, color: "var(--blue)" }}>{fmt(fTotal + iTotal)}</div></div>
             </Card>
 
@@ -160,8 +160,8 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
               const c = CAT[f.cat] || CATS[8];
               return (
                 <Card key={f.id} className="u3" style={{ padding: "11px 15px", marginBottom: 8, display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 9, background: c.color + "1a", display: "flex", alignItems: "center", justifyCenter: "center", fontSize: 16, flexShrink: 0, justifyContent: "center" }}>{c.icon}</div>
-                  <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 600 }}>{f.name}</div><div style={{ fontSize: 10, color: "var(--text2)" }}>매달 {f.day}일 정기 지출</div></div>
+                  <div style={{ width: 34, height: 34, borderRadius: 9, background: c.color + "1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{c.icon}</div>
+                  <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 600 }}>{f.label}</div><div style={{ fontSize: 10, color: "var(--text2)" }}>매달 {f.day}일 정기 지출</div></div>
                   <div style={{ textAlign: "right" }}><div style={{ fontSize: 14, fontWeight: 700 }}>{fmtS(f.amount)}원</div><button onClick={() => delF(f.id)} style={{ fontSize: 10, color: "var(--red)", background: "none", border: "none", cursor: "pointer", padding: "2px 0" }}>삭제</button></div>
                 </Card>
               );
@@ -173,7 +173,7 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
               return (
                 <Card key={i.id} className="u4" style={{ padding: "14px 15px", marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div><div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3 }}>{i.name}</div><div style={{ fontSize: 10, color: "var(--text2)" }}>{card?.label || card?.name || "카드"} · {i.months || i.month}개월 · {i.date} {i.memo ? `· ${i.memo}` : ""}</div></div>
+                    <div><div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3 }}>{i.label}</div><div style={{ fontSize: 10, color: "var(--text2)" }}>{card?.label || card?.name || "카드"} · {i.months || i.month}개월 · {i.date} {i.memo ? `· ${i.memo}` : ""}</div></div>
                     <div style={{ textAlign: "right" }}><div style={{ fontSize: 15, fontWeight: 700, color: "var(--pink)" }}>{fmtS(i.monthly)}원</div><div style={{ fontSize: 9, color: "var(--text3)" }}>총 {fmtS(i.total)}원</div></div>
                   </div>
                   <button onClick={() => delI(i.id)} style={{ width: "100%", fontSize: 10, color: "var(--text3)", background: "var(--track)", border: "none", borderRadius: 6, padding: "4px", cursor: "pointer" }}>항목 삭제</button>
@@ -183,7 +183,7 @@ export function FixedView({ fixed, setFixed, install, setInstall, cards, setCard
           </div>
         )}
         {tab === "cards" && <CardView cards={cards} setCards={setCards} />}
-        {tab === "simulator" && <SimulatorView sliderCfg={sliderCfg || {}} />}
+        {tab === "simulator" && <SimulatorView sliderCfg={sliderCfg || {}} onUpdateSimCfg={setSliderCfg || (() => {})} />}
       </div>
     </div>
   );

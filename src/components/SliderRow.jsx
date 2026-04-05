@@ -1,6 +1,6 @@
 import { fmt, fmtS } from '../utils/helpers';
 
-export function SliderRow({ label, value, min, max, step=1000, onChange, fillColor, formatVal, showReset=false, onReset, defaultValue }) {
+export function SliderRow({ label, value, min, max, step=1000, onChange, fillColor=undefined, formatVal=undefined, showReset=false, onReset, defaultValue: _defaultValue=undefined }) {
   const clamped = Math.min(Math.max(value, min), max);
   const pct     = max > min ? ((clamped - min) / (max - min)) * 100 : 0;
   const fill    = fillColor || "var(--gold)";
