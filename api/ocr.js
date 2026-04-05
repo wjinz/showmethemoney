@@ -56,8 +56,8 @@ export default async function handler(req, res) {
 영수증에서 총액(합계)을 amount로 추출하세요. 금액은 숫자만(원 기호, 콤마 제거).`;
 
   try {
-    // Gemini 1.5 Flash API 호출
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    // Gemini 1.5 Flash API 호출 (v1 정식 버전 사용)
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
