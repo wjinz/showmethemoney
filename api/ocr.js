@@ -22,9 +22,9 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'API 키가 서버에 설정되지 않았습니다. Vercel 환경 변수 ANTHROPIC_API_KEY를 설정해 주세요.' });
+    return res.status(500).json({ error: 'API 키가 서버에 설정되지 않았습니다. Vercel 환경 변수 GOOGLE_API_KEY를 설정해 주세요.' });
   }
 
   const { image, mediaType, mode = 'single' } = req.body;
@@ -51,55 +51,43 @@ export default async function handler(req, res) {
 {"amount": 숫자, "cat": "카테고리", "memo": "가게명 또는 설명"}
 
 카테고리는 아래 중 하나만 선택:
-- food: 식비, 음식점, 카페, 편의점 식품
-- housing: 주거비, 관리비, 인테리어
-- education: 교육, 학원, 도서, 문구
-- transport: 교통, 주유, 주차, 택시
-- medical: 병원, 약국, 의료, 헬스케어
-- culture: 영화, 공연, 스포츠, 여행, 레저
-- clothing: 의류, 신발, 패션 잡화
-- sub: 구독서비스, 앱, 멤버십
-- etc: 위 항목에 해당하지 않는 기타 지출
+- food, housing, education, transport, medical, culture, clothing, sub, etc
 
 영수증에서 총액(합계)을 amount로 추출하세요. 금액은 숫자만(원 기호, 콤마 제거).`;
 
   try {
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+    // Gemini 1.5 Flash API 호출
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: mode === 'bulk' ? 2048 : 1024,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
-              { type: 'text', text: promptText },
-            ],
-          },
-        ],
+        contents: [{
+          parts: [
+            { text: promptText },
+            { inline_data: { mime_type: mediaType, data: image } }
+          ]
+        }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: mode === 'bulk' ? 2048 : 1024,
+        }
       }),
     });
 
-    if (!anthropicRes.ok) {
-      const errText = await anthropicRes.text();
-      console.error('Anthropic API 오류:', errText);
+    if (!geminiRes.ok) {
+      const errText = await geminiRes.text();
+      console.error('Gemini API 오류:', errText);
       try {
         const errJson = JSON.parse(errText);
-        const detail = errJson.error?.message || 'Unknown error';
-        return res.status(anthropicRes.status).json({ error: `Anthropic API 오류: ${detail} (Code: ${anthropicRes.status})` });
+        const detail = errJson.error?.message || 'Unknown Gemini error';
+        return res.status(geminiRes.status).json({ error: `Gemini API 오류: ${detail} (Code: ${geminiRes.status})` });
       } catch (e) {
-        return res.status(anthropicRes.status).json({ error: `Anthropic API 오류: ${anthropicRes.status}` });
+        return res.status(geminiRes.status).json({ error: `Gemini API 오류: ${geminiRes.status}` });
       }
     }
 
-    const data = await anthropicRes.json();
-    const text = data.content?.[0]?.text ?? '';
+    const data = await geminiRes.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 
     if (mode === 'bulk') {
       const arrMatch = text.match(/\[[\s\S]*\]/);

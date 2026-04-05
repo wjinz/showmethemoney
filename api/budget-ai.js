@@ -14,8 +14,8 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'API 키가 서버에 설정되지 않았습니다.' });
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'API 키가 서버에 설정되지 않았습니다. Vercel 환경 변수 GOOGLE_API_KEY를 설정해 주세요.' });
 
   const { totalSalary, fixedTotal, installTotal, savingsTarget, catHistory, utilizationTarget } = req.body;
 
@@ -61,28 +61,29 @@ food(식비), housing(주거/관리비), education(교육), transport(교통), m
 {"budgets":{"food":숫자,"housing":숫자,"education":숫자,"transport":숫자,"medical":숫자,"culture":숫자,"clothing":숫자,"sub":숫자,"etc":숫자},"reasons":{"food":"이유","housing":"이유","education":"이유","transport":"이유","medical":"이유","culture":"이유","clothing":"이유","sub":"이유","etc":"이유"},"tip":"전체 조언 한마디"}`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: prompt }],
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 1024 }
       }),
     });
 
     if (!resp.ok) {
       const errText = await resp.text();
-      console.error('Anthropic API 오류:', errText);
-      return res.status(resp.status).json({ error: `API 오류: ${resp.status}` });
+      console.error('Gemini API 오류:', errText);
+      try {
+        const errJson = JSON.parse(errText);
+        const detail = errJson.error?.message || 'Unknown Gemini error';
+        return res.status(resp.status).json({ error: `Gemini API 오류: ${detail} (Code: ${resp.status})` });
+      } catch (e) {
+        return res.status(resp.status).json({ error: `Gemini API 오류: ${resp.status}` });
+      }
     }
 
     const data = await resp.json();
-    const text = data.content?.[0]?.text ?? '';
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) return res.status(422).json({ error: '응답 파싱 실패' });
 
@@ -92,8 +93,8 @@ food(식비), housing(주거/관리비), education(교육), transport(교통), m
     if (result.budgets) {
       const sum = Object.values(result.budgets).reduce((s, v) => s + (v || 0), 0);
       const diff = available - sum;
-      if (Math.abs(diff) > 0 && Math.abs(diff) <= 50000) {
-        // 오차가 5만원 이내면 etc에 보정
+      if (Math.abs(diff) > 0 && Math.abs(diff) <= 100000) {
+        // 오차가 10만원 이내면 etc에 보정 (Gemini는 가끔 오차가 발생할 수 있음)
         result.budgets.etc = (result.budgets.etc || 0) + diff;
       }
     }
