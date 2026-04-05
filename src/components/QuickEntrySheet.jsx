@@ -6,7 +6,7 @@ import { runOCR } from "../utils/ocr";
 import { CardScanSheet } from "./CardScanSheet";
 import { CAT } from "../constants";
 
-export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
+export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCardScan }) {
   const [who,       setWho]       = useState("husband");
   const [amount,    setAmount]    = useState("");
   const [cat,       setCat]       = useState("");
@@ -19,7 +19,6 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
   const [isOCR,        setIsOCR]        = useState(false);
   const [ocrStatus,    setOcrStatus]    = useState(/** @type {'success'|'error'|null} */ (null));
   const [ocrMsg,       setOcrMsg]       = useState('');
-  const [showCardScan, setShowCardScan] = useState(false);
 
   const handleOCR = async (e) => {
     const file = e.target.files[0];
@@ -329,7 +328,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
             {isOCR ? <OCRSpinner /> : "📷"}
           </label>
           <button
-            onClick={() => setShowCardScan(true)}
+            onClick={onCardScan}
             style={{
               width: 58, height: 58, borderRadius: 16, flexShrink: 0, cursor: "pointer",
               background: "var(--bg3)", border: "1px solid var(--border)",
@@ -374,15 +373,6 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose }) {
           </button>
         </div>
       </div>
-
-      {/* 카드 이용내역 스캔 시트 */}
-      {showCardScan && (
-        <CardScanSheet
-          who={who}
-          onSave={onSave}
-          onClose={() => setShowCardScan(false)}
-        />
-      )}
     </div>
   );
 }

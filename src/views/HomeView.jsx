@@ -5,7 +5,7 @@ import { CAT, CATS, getYear, getMonth, getDay, getDaysInMonth } from "../constan
 import { fmtS } from "../utils/helpers";
 import { TxEditModal } from "../components/TxEditModal";
 
-export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,plan,setPlan,cards,onEdit,onDelete, onSettings}){
+export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidget,onScan,plan,setPlan,cards,onEdit,onDelete, onSettings}){
   const [isTotalMode, setIsTotalMode] = useState(true);
   const YEAR  = getYear();
   const MONTH = getMonth();
@@ -91,6 +91,28 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
           </div>
         </div>
         
+        {/* 인공지능 스캔 트리거 배너 (Task 2-1) */}
+        <div 
+          onClick={onScan}
+          style={{
+            display:"flex", justifyContent:"space-between", alignItems:"center", 
+            background:"linear-gradient(135deg, var(--goldD), var(--gold))", 
+            borderRadius:14, padding:"12px 16px", border:"1px solid rgba(255,255,255,0.1)",
+            cursor:"pointer", boxShadow:"0 4px 15px rgba(200,168,75,0.25)",
+            transition: "transform 0.2s active"
+          }}
+          className="scan-banner"
+        >
+          <div style={{display:"flex", alignItems:"center", gap:10}}>
+            <div style={{fontSize:22}}>📸</div>
+            <div>
+              <div style={{fontSize:12, fontWeight:800, color:"#fff"}}>영수증 & 카드내역 자동 입력</div>
+              <div style={{fontSize:9, color:"rgba(255,255,255,0.8)", marginTop:1}}>사진 한 장으로 여러 내역을 한꺼번에! ✨</div>
+            </div>
+          </div>
+          <div style={{fontSize:16, color:"#fff", opacity:0.8}}>〉</div>
+        </div>
+
         <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", background:"rgba(255,255,255,0.03)", borderRadius:14, padding:"12px 16px", border:"1px solid var(--border)"}}>
           <div style={{fontSize:11, color:"var(--text2)"}}>{isTotalMode ? "🏢 전체 예산 대비 집행률" : "🛒 순수 변동비 집행률"}</div>
           <div style={{fontSize:15, fontWeight:800, color: remaining >= 0 ? "var(--green)" : "var(--red)"}}>{fmtS(isTotalMode ? totalBudgetAll - totalSpent : remaining)}원 남음</div>

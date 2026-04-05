@@ -69,7 +69,7 @@ food(식비), housing(주거/관리비), education(교육), transport(교통), m
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 1024,
         messages: [{ role: 'user', content: prompt }],
       }),

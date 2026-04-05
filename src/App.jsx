@@ -24,6 +24,7 @@ import { db, isSupabaseConfigured } from "./utils/supabase.js";
 import { BudgetContext } from "./context/BudgetContext.jsx";
 import { AdminView } from "./views/AdminView.jsx";
 import { BudgetView } from "./views/BudgetView.jsx";
+import { CardScanSheet } from "./components/CardScanSheet.jsx";
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -57,6 +58,7 @@ export default function App() {
   const [modal, setModal] = useState(null);
   const [showWidget, setShowWidget] = useState(false);
   const [showQuickEntry, setShowQuickEntry] = useState(false);
+  const [showCardScan, setShowCardScan] = useState(false);
   const { toasts, addToast } = useToast();
 
   // 로컬/비공개 데이터 저장소
@@ -563,7 +565,7 @@ export default function App() {
         style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
-          {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} />}
+          {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} />}
           {view === "entry" && <EntryView names={names} plan={plan} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
           {view === "budget" && <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />}
           {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />}
@@ -573,7 +575,8 @@ export default function App() {
         <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} />
         {modal && <InputModal defaultWho={modal} names={names} plan={plan} cards={cards} onClose={() => setModal(null)} onSave={addTx} />}
         {showWidget && <WidgetView tx={tx} budgets={budgets} names={names} onClose={() => setShowWidget(false)} />}
-        {showQuickEntry && <QuickEntrySheet names={names} plan={plan} cards={cards} tx={tx} onSave={addTx} onClose={() => setShowQuickEntry(false)} />}
+        {showQuickEntry && <QuickEntrySheet names={names} plan={plan} cards={cards} tx={tx} onSave={addTx} onClose={() => setShowQuickEntry(false)} onCardScan={() => { setShowQuickEntry(false); setShowCardScan(true); }} />}
+        {showCardScan && <CardScanSheet who={myRole} onSave={addTx} onClose={() => setShowCardScan(false)} />}
         {showBugReport && <BugReportModal householdId={householdId} onClose={() => setShowBugReport(false)} addToast={addToast} />}
         {showAdminLogin && <AdminLoginModal onLogin={handleAdminLogin} onClose={() => setShowAdminLogin(false)} addToast={addToast} />}
         <ToastContainer toasts={toasts} />
