@@ -1,32 +1,44 @@
 /* ── Joint 테마 (Navy & Sage Green) ── */
 [data-theme="joint"] {
-  --theme-bg-primary:   #1C2B4A;
-  --theme-bg-card:      rgba(28, 43, 74, 0.6);
-  --theme-accent:       #7A9E87;
-  --theme-accent-soft:  rgba(122, 158, 135, 0.15);
-  --theme-text1:        #F0F4FF;
-  --theme-text2:        #A8B8D0;
-  --theme-border:       rgba(122, 158, 135, 0.25);
-  --theme-highlight:    #7A9E87;
+  --bg:         #101524;
+  --bg2:        #151F36;
+  --bg3:        #1C2B4A;
+  --bg4:        #253A63;
+  --border:     rgba(122, 158, 135, 0.25);
+  --border2:    rgba(122, 158, 135, 0.4);
+  --gold:       #7A9E87; /* Sage Green */
+  --goldL:      #a1bea9;
+  --goldD:      rgba(122, 158, 135, 0.15);
+  --text:       #F0F4FF;
+  --text2:      #A8B8D0;
+  --nav-bg:     rgba(16, 21, 36, 0.95);
+  --theme-accent: #7A9E87;
+  --theme-accent-soft: rgba(122, 158, 135, 0.15);
 }
 
 /* ── Private 테마 (Coral & Charcoal) ── */
 [data-theme="private"] {
-  --theme-bg-primary:   #1A1A1A;
-  --theme-bg-card:      rgba(42, 42, 42, 0.7);
-  --theme-accent:       #E8715A;
-  --theme-accent-soft:  rgba(232, 113, 90, 0.15);
-  --theme-text1:        #F5F5F5;
-  --theme-text2:        #9A9A9A;
-  --theme-border:       rgba(232, 113, 90, 0.25);
-  --theme-highlight:    #E8715A;
+  --bg:         #0A0A0A;
+  --bg2:        #151515;
+  --bg3:        #1E1E1E;
+  --bg4:        #2A2A2A;
+  --border:     rgba(232, 113, 90, 0.25);
+  --border2:    rgba(232, 113, 90, 0.4);
+  --gold:       #E8715A; /* Coral */
+  --goldL:      #f09b8b;
+  --goldD:      rgba(232, 113, 90, 0.15);
+  --text:       #F5F5F5;
+  --text2:      #9A9A9A;
+  --nav-bg:     rgba(10, 10, 10, 0.95);
+  --theme-accent: #E8715A;
+  --theme-accent-soft: rgba(232, 113, 90, 0.15);
 }
 
-/* ── Glassmorphism 카드 공통 ── */
-.glass-card {
-  background:             var(--theme-bg-card);
+/* ── Glassmorphism 카드 공통 오버라이딩 (선택적 사용) ── */
+.glass-card, .u2, .u3, .u5, .u6, .Card {
+  background:             var(--bg2) !important;
   backdrop-filter:        blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border:                 1px solid var(--theme-border);
-  border-radius:          16px;
+  border:                 1px solid var(--border) !important;
+  border-radius:          16px !important;
 }

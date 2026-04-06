@@ -18,17 +18,18 @@ import { AiNudgeWidget }     from './widgets/AiNudgeWidget.jsx';
 
 /**
  * @param {{
- *   plan: object,
+ *   plan: any,
  *   budgets: Record<string, number>,
  *   tx: TxItem[],
  *   fixed: FixedItem[],
  *   names: Record<string, string>,
  *   widgetLayout: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] },
  *   setWidgetLayout: (v: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }) => void,
- *   onSettings?: () => void
+ *   onSettings?: () => void,
+ *   setPlan: (v: any) => void
  * }} props
  */
-export function DashboardView({ plan, budgets, tx, fixed, names, widgetLayout, setWidgetLayout, onSettings }) {
+export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, widgetLayout, setWidgetLayout, onSettings }) {
   const layouts = widgetLayout ?? DEFAULT_WIDGET_LAYOUT;
   const { containerRef, width } = useContainerWidth({ initialWidth: 480 });
 
@@ -58,7 +59,7 @@ export function DashboardView({ plan, budgets, tx, fixed, names, widgetLayout, s
     [saveLayout, layouts]
   );
 
-  const ctx = useMemo(() => ({ plan, budgets, tx, fixed, names }), [plan, budgets, tx, fixed, names]);
+  const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, names }), [plan, setPlan, budgets, tx, fixed, names]);
 
   /** @type {Array<[string, React.ComponentType<Record<string, unknown>>]>} */
   const WIDGET_ENTRIES = [
@@ -74,6 +75,7 @@ export function DashboardView({ plan, budgets, tx, fixed, names, widgetLayout, s
         <span>Joint Dashboard</span>
         <button onClick={onSettings} style={{background:"none", border:"none", cursor:"pointer", fontSize:18, opacity:0.8}}>⚙️</button>
       </div>
+      {/* @ts-ignore */}
       <ResponsiveGridLayout
         width={width}
         layouts={rglLayouts}

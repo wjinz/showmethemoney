@@ -7,7 +7,7 @@ import { exportTransactions } from "../utils/export";
 export function SettingsView({
   names, setNames, budgets, setBudgets, sliderCfg, setSliderCfg, theme, setTheme,
   resetAll, resetTx, resetFixed, resetBudgets, resetSetup, householdId, myRole,
-  leaveHousehold, tx, plan, onBugReport, onAdminTrigger, isAdmin, onClose=undefined
+  leaveHousehold, tx, plan, onBugReport, onAdminTrigger, isAdmin, onClose=undefined, onNavigate
 }) {
   const [clickCount, setClickCount] = useState(0);
   const updateName = (role, v) => setNames(prev => ({ ...prev, [role]: v }));
@@ -15,7 +15,24 @@ export function SettingsView({
   return (
     <div style={{ padding: "0 16px 96px", overflowY: "auto", height: "100%", background: "var(--bg)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 0 12px" }}>
-        <SectionHeader sub="Preferences" title="환경 설정" />
+        <SectionHeader sub="Control Center" title="메뉴 / 환경 설정" />
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+        <button onClick={() => onNavigate && onNavigate("budget")} style={{
+          padding: "20px", borderRadius: 14, background: "var(--bg2)", border: "1px solid var(--border)",
+          boxShadow: "0 4px 15px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer"
+        }}>
+          <span style={{ fontSize: 24 }}>⚖️</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>예산 및 목표 설정</span>
+        </button>
+        <button onClick={() => onNavigate && onNavigate("report")} style={{
+          padding: "20px", borderRadius: 14, background: "var(--bg2)", border: "1px solid var(--border)",
+          boxShadow: "0 4px 15px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer"
+        }}>
+          <span style={{ fontSize: 24 }}>◈</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>과거 리포트 조회</span>
+        </button>
       </div>
 
       <Card className="u1" style={{ padding: "18px", marginBottom: 12 }}>

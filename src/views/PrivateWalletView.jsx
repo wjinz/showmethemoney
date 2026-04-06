@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { fmtS } from '../utils/helpers.js';
-import { getYear, getMonth } from '../constants/index.js';
+import { getYear, getMonth, CAT, CATS } from '../constants/index.js';
 import { SosRequestSheet } from '../components/SosRequestSheet.jsx';
 
 /**
@@ -135,14 +135,39 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
           onClick={() => setShowSos(true)}
           style={{
             width: '100%', padding: 16, borderRadius: 14, border: 'none',
-            background: 'var(--theme-accent)', color: '#fff',
+            background: 'var(--theme-accent)', color: '#fff', marginBottom: 20,
             fontWeight: 900, fontSize: 15, cursor: 'pointer',
             boxShadow: '0 4px 20px var(--theme-accent-soft)',
           }}
         >
-          SOS Budget Request ({pct}% 소진)
+          🚨 긴급 생활비 가불 요청하기
         </motion.button>
       )}
+
+      {/* 개인 지출 내역 리스트 */}
+      <div style={{ background: 'var(--bg2)', borderRadius: 16, padding: '16px', border: '1px solid var(--border)' }}>
+        <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 12, color: 'var(--text)' }}>📋 내 개인 지출 내역</div>
+        {tx.filter(t => t.who === myRole).slice(0, 30).map(t => {
+          const c = CAT[t.cat] || CATS[8];
+          return (
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: c.color + '1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>
+                  {c.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{c.label}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text3)' }}>{t.date} · {t.memo || "—"}</div>
+                </div>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>-{fmtS(t.amount)}원</div>
+            </div>
+          );
+        })}
+        {tx.filter(t => t.who === myRole).length === 0 && (
+          <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text3)', fontSize: 12 }}>내역이 없습니다.</div>
+        )}
+      </div>
 
       {showSos && (
         <SosRequestSheet

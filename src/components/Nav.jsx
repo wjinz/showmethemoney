@@ -6,11 +6,11 @@ export function Nav({ view, setView, syncStatus }) {
 
   const LEFT_ITEMS = [
     { id: "home",      icon: "⌂",  l: "홈" },
-    { id: "entry",     icon: "✎",  l: "기록" },
+    { id: "dashboard", icon: "⊞",  l: "대시보드" },
   ];
   const RIGHT_ITEMS = [
-    { id: "dashboard", icon: "⊞",  l: "대시보드" },
     { id: "private",   icon: "🔒", l: "내 지갑" },
+    { id: "settings",  icon: "☰",  l: "메뉴" },
   ];
 
   /** @param {{ id: string, icon: string, l: string }} item */

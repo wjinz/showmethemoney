@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { fmtS } from '../../utils/helpers.js';
-import { getYear, getMonth, getDay, getDaysInMonth } from '../../constants/index.js';
+import { getYear, getMonth, getDay, getDaysInMonth, CAT } from '../../constants/index.js';
 
 /**
  * @param {{
@@ -9,36 +9,63 @@ import { getYear, getMonth, getDay, getDaysInMonth } from '../../constants/index
  * }} props
  */
 export function AiNudgeWidget({ budgets, tx }) {
-  const nudge = useMemo(() => {
+  const [nudgeMsg, setNudgeMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { spent, total, pct, dailyLeft, prefix } = useMemo(() => {
     const YEAR = getYear(), MONTH = getMonth(), DAY = getDay();
-    const prefix = `${YEAR}-${String(MONTH).padStart(2, '0')}`;
-    const spent = tx.filter(t => t.date.startsWith(prefix)).reduce((s, t) => s + t.amount, 0);
-    const total = Object.values(budgets).reduce((s, v) => s + v, 0);
-    const pct = total > 0 ? Math.round(spent / total * 100) : 0;
-    const daysLeft = Math.max(getDaysInMonth(YEAR, MONTH) - DAY, 1);
-    const dailyLeft = Math.round((total - spent) / daysLeft);
-
-    // 80% 구간: 행동 지침 메시지 로테이션 (DAY seed — 같은 날 동일 메시지)
-    const actionHints = [
-      '이번 주말엔 냉장고 파먹기 어때요?',
-      '외식 대신 배달 한 번만 줄이면 돼요.',
-      '할인마트 주말 행사 노려보세요.',
-    ];
-    const hint80 = actionHints[DAY % actionHints.length];
-
-    if (pct >= 100) return { icon: '🚨', msg: `예산 초과! ${fmtS(spent - total)}원 넘었어요.`, color: 'var(--red)' };
-    if (pct >= 80)  return { icon: '⚠️', msg: `식비 예산 80% 소진. ${hint80}`, color: 'var(--gold)' };
-    if (pct >= 60)  return { icon: '💡', msg: `이달 ${pct}% 소진. 하루 ${fmtS(dailyLeft)}원 페이스.`, color: 'var(--blue)' };
-    return { icon: '✅', msg: `예산 여유 충분. 하루 ${fmtS(dailyLeft)}원 가능.`, color: 'var(--green)' };
+    const pfx = `${YEAR}-${String(MONTH).padStart(2, '0')}`;
+    const s = tx.filter(t => t.date.startsWith(pfx)).reduce((acc, t) => acc + t.amount, 0);
+    const tot = Object.values(budgets).reduce((acc, v) => acc + v, 0);
+    const p = tot > 0 ? Math.round(s / tot * 100) : 0;
+    const dLeft = Math.max(getDaysInMonth(YEAR, MONTH) - DAY, 1);
+    const dl = Math.round((tot - s) / dLeft);
+    return { spent: s, total: tot, pct: p, dailyLeft: dl, prefix: pfx };
   }, [budgets, tx]);
 
+  const defaultMsg = pct >= 100 
+    ? `예산 초과! ${fmtS(spent - total)}원 넘었어요.` 
+    : pct >= 80 ? `위험! 식비 등 예산 80% 소진.` 
+    : pct >= 60 ? `이달 ${pct}% 소진. 하루 ${fmtS(dailyLeft)}원 페이스.` 
+    : `예산 여유 충분. 하루 ${fmtS(dailyLeft)}원 가능.`;
+  const defaultIcon = pct >= 100 ? '🚨' : pct >= 80 ? '⚠️' : pct >= 60 ? '💡' : '✅';
+  const defaultColor = pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--gold)' : pct >= 60 ? 'var(--blue)' : 'var(--green)';
+
+  const fetchNudge = async () => {
+    setIsLoading(true);
+    try {
+      const recentTx = tx.filter(t => t.date.startsWith(prefix)).slice(0, 10);
+      const txSummary = recentTx.map(t => `${t.date} ${CAT[t.cat]?.label || t.cat}: ${t.amount}원`).join("\n");
+      const res = await fetch('/api/nudge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spent, total, txSummary })
+      });
+      const data = await res.json();
+      if (data.message) setNudgeMsg(data.message);
+      else setNudgeMsg("AI 조언을 생성하지 못했습니다.");
+    } catch (e) {
+      setNudgeMsg("네트워크 오류로 생성 실패");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div style={{ padding: '14px 16px', display: 'flex', gap: 10, alignItems: 'center' }}>
-      <span style={{ fontSize: 24 }}>{nudge.icon}</span>
-      <div>
-        <div style={{ fontSize: 9, color: 'var(--text3)', marginBottom: 3 }}>AI Nudge</div>
-        <span style={{ fontSize: 12, color: nudge.color, fontWeight: 600, lineHeight: 1.5 }}>
-          {nudge.msg}
+    <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 11, color: 'var(--text2)', fontWeight: 700 }}>AI Nudge</div>
+        <button onClick={fetchNudge} disabled={isLoading} style={{
+          background: "none", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text)", cursor: isLoading ? "not-allowed" : "pointer", fontSize: 10, padding: "4px 8px"
+        }}>
+          {isLoading ? "분석 중..." : "새로고침 ↻"}
+        </button>
+      </div>
+      
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4 }}>
+        <span style={{ fontSize: 24 }}>{nudgeMsg ? '🤖' : defaultIcon}</span>
+        <span style={{ fontSize: 12, color: nudgeMsg ? 'var(--gold)' : defaultColor, fontWeight: 600, lineHeight: 1.4 }}>
+          {nudgeMsg || defaultMsg}
         </span>
       </div>
     </div>
