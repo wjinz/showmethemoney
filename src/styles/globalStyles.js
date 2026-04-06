@@ -2,48 +2,35 @@ export const G = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 
-/* ── 다크 모드 (기본) ── */
+/* ── 전역 테마 변수 (기본 다크) ── */
 :root{
   color-scheme: dark;
-  --card-radius:18px;
-  --bg:#09090f;--bg2:#0f1018;--bg3:#15161f;--bg4:#1c1d28;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
-  --gold:#c8a84b;--goldL:#e2c97e;--goldD:rgba(200,168,75,0.13);
-  --red:#d95f5f;--redD:rgba(217,95,95,0.13);
-  --green:#4dab87;--greenD:rgba(77,171,135,0.13);
-  --blue:#5c8de8;--blueD:rgba(92,141,232,0.13);
-  --pink:#d97fa8;--pinkD:rgba(217,127,168,0.13);
-  --purple:#9b7ee0;--purpleD:rgba(155,126,224,0.13);
-  --text:#eeeae0;--text2:#9a9490;--text3:#5a5650;
-  --h:var(--blue);--hD:var(--blueD);
-  --w:var(--pink);--wD:var(--pinkD);
-  --nav-bg:rgba(9,9,15,0.97);
-  --track:rgba(255,255,255,0.08);
-  --dim:rgba(255,255,255,0.04);
+  --card-radius: 20px;
+  --bg: #0F172A; /* theme.css와 동기화 */
+  --text: #F8FAFC;
+  --text2: #94A3B8;
+  --text3: #64748B;
+  --gold: #10B981;
+  --red: #FB7185;
+  --green: #34D399;
+  --blue: #3B82F6;
+  --pink: #F472B6;
+  --purple: #8B5CF6;
+  --h: var(--blue);
+  --w: var(--pink);
+  --dim: rgba(255,255,255,0.03);
 }
 
-/* ── 라이트 모드 ── */
+/* ── 라이트 모드 오버라이드 ── */
 .light{
   color-scheme: light;
-  --card-radius:18px;
-  --bg:#f0ede8;--bg2:#ffffff;--bg3:#e6e2dc;--bg4:#d8d4cc;
-  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.16);
-  --gold:#8a6a00;--goldL:#6a5000;--goldD:rgba(138,106,0,0.1);
-  --red:#aa2020;--redD:rgba(170,32,32,0.1);
-  --green:#0f6e42;--greenD:rgba(15,110,66,0.1);
-  --blue:#1448a8;--blueD:rgba(20,72,168,0.1);
-  --pink:#8c2858;--pinkD:rgba(140,40,88,0.1);
-  --purple:#502896;--purpleD:rgba(80,40,150,0.1);
-  /* 텍스트 — 라이트는 확실히 진하게 */
-  --text:#141210;
-  --text2:#44403c;
-  --text3:#80786e;
-  --h:var(--blue);--hD:var(--blueD);
-  --w:var(--pink);--wD:var(--pinkD);
-  --nav-bg:rgba(240,237,232,0.97);
-  --track:rgba(0,0,0,0.10);
-  --dim:rgba(0,0,0,0.04);
+  --bg: #F8FAFC;
+  --text: #0F172A;
+  --text2: #475569;
+  --text3: #94A3B8;
+  --dim: rgba(0,0,0,0.03);
 }
+
 
 /* ── 레트로 터미널 (Retro Terminal) ── */
 .oldschool{

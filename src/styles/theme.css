@@ -4,68 +4,99 @@
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
 }
 
-/* ── Joint 테마 (Light: Navy & Sage Green) ── */
+/* ── Joint 테마 (Premium Dark Navy & Emerald) ── */
 .app-root[data-theme="joint"] {
-  --bg:           #F4F6F8;
-  --bg2:          #FFFFFF;
-  --bg3:          #F9FAFB;
-  --bg4:          #F1F3F5;
-  --border:       rgba(28, 43, 74, 0.1);
-  --border2:      rgba(28, 43, 74, 0.15);
-  --border-solid: #E5E7EB;   /* 투명도 없는 테두리 (Tailwind E5E7EB) */
+  --bg:           #0F172A;   /* Deep Navy */
+  --bg2:          #1E293B;   /* Navy Surface */
+  --bg3:          #334155;
+  --bg4:          #475569;
+  --border:       rgba(255, 255, 255, 0.06);
+  --border2:      rgba(255, 255, 255, 0.1);
+  --border-solid: #334155;
 
-  --gold:       #7A9E87; /* Sage Green */
-  --goldL:      #A4C3B2;
-  --goldD:      rgba(122, 158, 135, 0.15);
+  --gold:       #10B981; /* Vibrant Emerald */
+  --goldL:      #34D399;
+  --goldD:      rgba(16, 185, 129, 0.15);
 
-  --text:       #1C2B4A; /* Navy */
-  --text2:      #718096;
-  --text3:      #A0AEC0;
+  --text:       #F8FAFC;
+  --text2:      #94A3B8;
+  --text3:      #64748B;
 
-  --nav-bg:     rgba(255, 255, 255, 0.95);
-  --theme-accent: #7A9E87;
-  --theme-accent-soft: rgba(122, 158, 135, 0.15);
+  --nav-bg:     rgba(15, 23, 42, 0.9);
+  --theme-accent: #10B981;
+  --theme-accent-soft: rgba(16, 185, 129, 0.12);
 
-  /* AI 코치 말풍선 전용 */
-  --ai-bubble-from: #EEF2FF;
-  --ai-bubble-to:   #E0E7FF;
-  --ai-bubble-border: rgba(99, 102, 241, 0.2);
-  --ai-bubble-text: #4338CA;
-  --ai-bubble-title: #3730A3;
-  --ai-icon-bg: #ffffff;
-  --ai-icon-color: #6366F1;
+  /* AI 코치 말풍선 전용 (다크 네이비용) */
+  --ai-bubble-from: rgba(30, 41, 59, 0.8);
+  --ai-bubble-to:   rgba(15, 23, 42, 0.9);
+  --ai-bubble-border: rgba(16, 185, 129, 0.2);
+  --ai-bubble-text: #F1F5F9;
+  --ai-bubble-title: #34D399;
+  --ai-icon-bg: #1e293b;
+  --ai-icon-color: #10B981;
 }
 
-/* ── Private 테마 (Dark: Charcoal & Coral) ── */
+/* ── Private 테마 (Deepest Black & Vivid Coral) ── */
 .app-root[data-theme="private"] {
-  --bg:           #121212;
-  --bg2:          #1E1E1E;
-  --bg3:          #2A2A2A;
-  --bg4:          #333333;
-  --border:       rgba(255, 255, 255, 0.08);
-  --border2:      rgba(255, 255, 255, 0.12);
-  --border-solid: #374151;
+  --bg:           #020617;   /* Deepest Black */
+  --bg2:          #0F172A;   /* Slate Surface */
+  --bg3:          #1E293B;
+  --bg4:          #334155;
+  --border:       rgba(251, 113, 133, 0.1);
+  --border2:      rgba(251, 113, 133, 0.2);
+  --border-solid: #1E293B;
 
-  --gold:       #E8715A; /* Coral */
-  --goldL:      #F29D8F;
-  --goldD:      rgba(232, 113, 90, 0.15);
+  --gold:       #FB7185; /* Vivid Rose/Coral */
+  --goldL:      #FDA4AF;
+  --goldD:      rgba(251, 113, 133, 0.15);
 
-  --text:       #F5F5F5;
-  --text2:      #9A9A9A;
-  --text3:      #737373;
+  --text:       #FFFFFF;
+  --text2:      #94A3B8;
+  --text3:      #64748B;
 
-  --nav-bg:     rgba(30, 30, 30, 0.95);
-  --theme-accent: #E8715A;
-  --theme-accent-soft: rgba(232, 113, 90, 0.15);
+  --nav-bg:     rgba(2, 6, 23, 0.9);
+  --theme-accent: #FB7185;
+  --theme-accent-soft: rgba(251, 113, 133, 0.12);
 
-  /* AI 코치 말풍선 전용 (다크) */
-  --ai-bubble-from: rgba(30, 27, 75, 0.6);
-  --ai-bubble-to:   rgba(30, 27, 75, 0.8);
-  --ai-bubble-border: rgba(99, 102, 241, 0.3);
-  --ai-bubble-text: #A5B4FC;
-  --ai-bubble-title: #C7D2FE;
-  --ai-icon-bg: rgba(30, 27, 75, 0.8);
-  --ai-icon-color: #818CF8;
+  /* AI 코치 말풍선 전용 (딥 블랙용) */
+  --ai-bubble-from: rgba(15, 23, 42, 0.8);
+  --ai-bubble-to:   rgba(2, 6, 23, 0.9);
+  --ai-bubble-border: rgba(251, 113, 133, 0.3);
+  --ai-bubble-text: #F1F5F9;
+  --ai-bubble-title: #FDA4AF;
+  --ai-icon-bg: rgba(15, 23, 42, 0.9);
+  --ai-icon-color: #FB7185;
+}
+
+/* ── Light Mode 오버라이드 (Stark Contrast) ── */
+.app-root.light[data-theme="joint"] {
+  --bg:           #F8FAFC;
+  --bg2:          #FFFFFF;
+  --bg3:          #F1F5F9;
+  --bg4:          #E2E8F0;
+  --border:       rgba(0, 0, 0, 0.05);
+  --border2:      rgba(0, 0, 0, 0.1);
+  --border-solid: #E2E8F0;
+  --text:         #0F172A;
+  --text2:        #475569;
+  --text3:        #94A3B8;
+  --nav-bg:       rgba(255, 255, 255, 0.9);
+  --ai-bubble-from: #F1F5F9;
+  --ai-bubble-to:   #FFFFFF;
+}
+
+.app-root.light[data-theme="private"] {
+  --bg:           #FDF2F2;
+  --bg2:          #FFFFFF;
+  --bg3:          #FFF1F2;
+  --bg4:          #FFE4E6;
+  --border:       rgba(251, 113, 133, 0.1);
+  --border2:      rgba(251, 113, 133, 0.2);
+  --border-solid: #FECDD3;
+  --text:         #881337;
+  --text2:        #BE123C;
+  --text3:        #FB7185;
+  --nav-bg:       rgba(255, 255, 255, 0.9);
 }
 
 /* ── Glassmorphism 카드 공통 오버라이딩 ── */
@@ -73,13 +104,17 @@
   background:             var(--bg2);
   border:                 1px solid var(--border);
   border-radius:          16px;
-  box-shadow:             0 2px 10px rgba(0, 0, 0, 0.02);
-}
-[data-theme="private"] .glass-card, 
-[data-theme="private"] .u2, 
-[data-theme="private"] .u3, 
-[data-theme="private"] .u5, 
-[data-theme="private"] .u6, 
-[data-theme="private"] .Card {
   box-shadow:             0 4px 20px rgba(0, 0, 0, 0.2);
+  transition:             all 0.3s ease;
 }
+
+.app-root.light .glass-card,
+.app-root.light .u2,
+.app-root.light .u3,
+.app-root.light .u5,
+.app-root.light .u6,
+.app-root.light .Card {
+  box-shadow:             0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+

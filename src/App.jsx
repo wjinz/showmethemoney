@@ -721,8 +721,9 @@ export default function App() {
   return (
     <BudgetContext.Provider value={budgetContextValue}>
       <style dangerouslySetInnerHTML={{ __html: G }} />
-      <div className={`app-root ${theme !== "dark" ? theme : ""}`.trim()}
+      <div className={`app-root ${theme === "light" ? "light" : ""}`.trim()}
         data-theme={view === "private" ? "private" : "joint"}
+        data-color-scheme={theme}
         style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
