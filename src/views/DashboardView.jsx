@@ -71,7 +71,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
   const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending }), [plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending]);
 
   /** @type {Record<string, React.ComponentType<any>>} */
-  const WIDGET_MAP = {
+  const WIDGET_MAP = useMemo(() => ({
     sos_status:       SosStatusWidget,
     allowance_insight: AllowanceInsightWidget,
     today_status:     TodayStatusWidget,
@@ -80,7 +80,15 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
     goal:             GoalWidget,
     tax_guide:        TaxGuideWidget,
     ai_nudge:         AiNudgeWidget,
-  };
+  }), []);
+
+  // 실제 렌더링할 위젯 키들 (데이터 유무에 따라 필터링)
+  const visibleWidgetKeys = useMemo(() => {
+    return Object.keys(WIDGET_MAP).filter(key => {
+      if (key === 'sos_status') return (mySosPending?.length ?? 0) > 0;
+      return true;
+    });
+  }, [WIDGET_MAP, mySosPending]);
 
   return (
     <div ref={containerRef} style={{ padding: '0 4px 120px', overflowY: 'auto', height: '100%', background: 'var(--bg)' }}>
@@ -128,7 +136,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
         onLayoutChange={onLayoutChange}
         margin={[12, 12]}
       >
-        {Object.keys(WIDGET_MAP).map((key) => {
+        {visibleWidgetKeys.map((key) => {
           const Widget = WIDGET_MAP[key];
           return (
             <div
