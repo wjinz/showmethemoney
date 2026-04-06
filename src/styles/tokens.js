@@ -19,22 +19,27 @@ export const THEME_TOKENS = /** @type {const} */ ({
   },
 
   radius: {
-    sm:   8,
-    md:   12,
-    lg:   16,
-    full: 9999,
+    sm:   8,    // 뱃지, 작은 요소
+    md:   12,   // 버튼, 칩
+    lg:   16,   // 모달 버튼, CTA
+    xl:   24,   // 메인 카드 (rounded-3xl)
+    xxl:  32,   // 바텀시트, 프리미엄 카드 (rounded-[2rem])
+    full: 9999, // FAB, PIN 버튼, 아이콘
   },
 
   shadow: {
-    sm: "0 1px 4px rgba(0,0,0,0.08)",
-    md: "0 4px 12px rgba(0,0,0,0.12)",
-    lg: "0 8px 24px rgba(0,0,0,0.16)",
+    sm:   "0 1px 4px rgba(0,0,0,0.08)",
+    md:   "0 4px 12px rgba(0,0,0,0.12)",
+    lg:   "0 8px 24px rgba(0,0,0,0.16)",
+    fab:  "0 8px 30px rgba(28,43,74,0.4)",
+    glow: "0 0 10px var(--gold)",
   },
 
-  /** CSS 변수 참조 — 실제 값은 globalStyles.jsx의 CSS 변수에서 결정됨 */
+  /** CSS 변수 참조 — 실제 값은 theme.css에서 결정됨 */
   color: {
     surface:    "var(--bg2)",
     surfaceAlt: "var(--bg3)",
+    bg:         "var(--bg)",
     text:       "var(--text)",
     textMuted:  "var(--text2)",
     textFaint:  "var(--text3)",
@@ -43,6 +48,7 @@ export const THEME_TOKENS = /** @type {const} */ ({
     danger:     "var(--red)",
     success:    "var(--green)",
     border:     "var(--border)",
+    borderSolid:"var(--border-solid)",
   },
 
   font: {
@@ -53,5 +59,6 @@ export const THEME_TOKENS = /** @type {const} */ ({
     lg:   16,
     xl:   20,
     xxl:  24,
+    hero: 32,
   },
 });

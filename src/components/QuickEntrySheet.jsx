@@ -5,6 +5,7 @@ import { NumPad } from "./NumPad";
 import { runOCR } from "../utils/ocr";
 import { CardScanSheet } from "./CardScanSheet";
 import { CAT } from "../constants";
+import { BottomSheet } from "./BottomSheet.jsx";
 
 export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCardScan }) {
   const [who,       setWho]       = useState("husband");
@@ -76,47 +77,8 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
   }, [tx]);
 
   return (
-    <div
-      style={{
-        position: "fixed", inset: 0, zIndex: 1000,
-        display: "flex", alignItems: "flex-end", justifyContent: "center",
-        background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          width: "100%", maxWidth: 480,
-          background: "var(--bg2)",
-          borderRadius: "24px 24px 0 0",
-          border: "1px solid var(--border)",
-          padding: "20px 20px 40px",
-          animation: "slideUp 0.28s cubic-bezier(0.32,0.72,0,1)",
-          maxHeight: "92dvh", overflowY: "auto",
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div style={{
-          width: 40, height: 5,
-          background: "var(--border2)", borderRadius: 99,
-          margin: "0 auto 20px",
-        }} />
-
-        <div style={{
-          display: "flex", justifyContent: "space-between",
-          alignItems: "center", marginBottom: 16,
-        }}>
-          <div className="serif" style={{ fontSize: 20 }}>
-            {saved ? "✓ 저장됨" : "지출 입력"}
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none", border: "none",
-              fontSize: 20, color: "var(--text3)", cursor: "pointer",
-            }}
-          >✕</button>
-        </div>
+    <BottomSheet isOpen onClose={onClose} title={saved ? "✓ 저장됨" : "지출 입력"} maxHeight="92dvh">
+      <div>
 
         {!plan?.isSolo && (
           <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
@@ -384,7 +346,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
           </button>
         </div>
       </div>
-    </div>
+    </BottomSheet>
   );
 }
 
