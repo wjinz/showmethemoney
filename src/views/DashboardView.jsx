@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
 import debounce from 'lodash.debounce';
 import 'react-grid-layout/css/styles.css';
@@ -8,6 +8,7 @@ import { BudgetRingWidget } from './widgets/BudgetRingWidget.jsx';
 import { GoalWidget }        from './widgets/GoalWidget.jsx';
 import { TaxGuideWidget }    from './widgets/TaxGuideWidget.jsx';
 import { AiNudgeWidget }     from './widgets/AiNudgeWidget.jsx';
+import { Edit2, Check }      from 'lucide-react';
 
 /**
  * @typedef {import('../constants/index.js').TxItem} TxItem
@@ -29,7 +30,8 @@ import { AiNudgeWidget }     from './widgets/AiNudgeWidget.jsx';
  *   setPlan: (v: any) => void
  * }} props
  */
-export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, widgetLayout, setWidgetLayout, onSettings }) {
+export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, widgetLayout, setWidgetLayout, onSettings: _onSettings }) {
+  const [isEditMode, setIsEditMode] = useState(false);
   const layouts = widgetLayout ?? DEFAULT_WIDGET_LAYOUT;
   const { containerRef, width } = useContainerWidth({ initialWidth: 480 });
 
@@ -71,33 +73,61 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, widget
 
   return (
     <div ref={containerRef} style={{ padding: '0 8px 96px', overflowY: 'auto', height: '100%' }}>
-      <div style={{ padding: '12px 8px 8px', fontSize: 13, fontWeight: 800, color: 'var(--text2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>Joint Dashboard</span>
-        <button onClick={onSettings} style={{background:"none", border:"none", cursor:"pointer", fontSize:18, opacity:0.8}}>⚙️</button>
+      <div style={{ padding: '12px 12px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text2)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          Dashboard {isEditMode && <span style={{ color: 'var(--gold)', marginLeft: 8 }}>• Editing</span>}
+        </span>
+        <button
+          onClick={() => setIsEditMode(!isEditMode)}
+          style={{
+            background: isEditMode ? 'var(--goldD)' : 'var(--bg3)',
+            border: `1px solid ${isEditMode ? 'var(--gold)' : 'var(--border)'}`,
+            borderRadius: 10, padding: '6px 12px', cursor: 'pointer',
+            fontSize: 12, fontWeight: 700, color: isEditMode ? 'var(--gold)' : 'var(--text2)',
+            display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s'
+          }}
+        >
+          {isEditMode ? <><Check size={14} /> 완료</> : <><Edit2 size={13} /> 편집</>}
+        </button>
       </div>
+
       <ResponsiveGridLayout
         width={width}
         layouts={rglLayouts}
         breakpoints={{ desktop: 480, mobile: 0 }}
         cols={{ desktop: 2, mobile: 1 }}
         rowHeight={60}
-        isDraggable={true}
+        isDraggable={isEditMode}
         isResizable={false}
         draggableHandle=".widget-handle"
         onLayoutChange={onLayoutChange}
+        margin={[12, 12]}
       >
         {WIDGET_ENTRIES.map(([key, Widget]) => (
-          <div key={key} style={{ background: 'var(--bg2)', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden' }}>
-            <div
-              className="widget-handle"
-              style={{ height: 16, cursor: 'grab', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-            >
-              <div style={{ width: 32, height: 4, borderRadius: 2, background: 'var(--border)' }} />
+          <div
+            key={key}
+            style={{
+              background: 'var(--bg2)', borderRadius: 20,
+              border: `1px solid ${isEditMode ? 'var(--gold)' : 'var(--border)'}`,
+              overflow: 'hidden', boxShadow: isEditMode ? '0 8px 24px rgba(0,0,0,0.3)' : 'none',
+              transition: 'border 0.2s, box-shadow 0.2s'
+            }}
+          >
+            {isEditMode && (
+              <div
+                className="widget-handle"
+                style={{ height: 28, cursor: 'grab', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--bg3)' }}
+              >
+                <div style={{ width: 32, height: 4, borderRadius: 2, background: 'var(--gold)', opacity: 0.5 }} />
+              </div>
+            )}
+            <div style={{ padding: isEditMode ? '0 0 12px' : '12px 0' }}>
+              <Widget {...ctx} />
             </div>
-            <Widget {...ctx} />
           </div>
         ))}
       </ResponsiveGridLayout>
     </div>
   );
 }
+
