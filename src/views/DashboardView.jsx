@@ -75,7 +75,6 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, widget
         <span>Joint Dashboard</span>
         <button onClick={onSettings} style={{background:"none", border:"none", cursor:"pointer", fontSize:18, opacity:0.8}}>⚙️</button>
       </div>
-      {/* @ts-ignore */}
       <ResponsiveGridLayout
         width={width}
         layouts={rglLayouts}

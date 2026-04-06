@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { CATS, CAT } from "../constants";
 import { runBulkOCR } from "../utils/ocr";
 import { toDateStr } from "../utils/helpers";
+import { ReceiptSplitter } from "./ReceiptSplitter.jsx";
 
 /**
  * @typedef {{ id: string, date: string, amount: number, cat: string, memo: string, selected: boolean }} ScannedItem
@@ -19,6 +20,7 @@ const CAT_IDS = CATS.map(c => c.id);
  */
 export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
   const [phase, setPhase] = useState(/** @type {'idle'|'scanning'|'review'} */ ('idle'));
+  const [showSplitter, setShowSplitter] = useState(false);
   /** @type {[ScannedItem[], (v: ScannedItem[] | ((prev: ScannedItem[]) => ScannedItem[])) => void]} */
   const [items, setItems] = useState([]);
   const [errMsg, setErrMsg] = useState('');
@@ -123,6 +125,22 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
   });
 
   return (
+    <>
+    {showSplitter && (
+      <ReceiptSplitter
+        items={items.filter(i => i.selected)}
+        onConfirm={(shared, priv) => {
+          // 공동 + 개인을 합쳐 단 1회 bulk 저장
+          const all = [
+            ...shared.map(i => ({ who, amount: i.amount, cat: i.cat, memo: i.memo, date: i.date, payMethod: 'credit', type: 'expense', is_private: false })),
+            ...priv.map(i => ({ who, amount: i.amount, cat: i.cat, memo: i.memo, date: i.date, payMethod: 'credit', type: 'expense', is_private: true })),
+          ];
+          if (onSaveAll) { onSaveAll(all); } else { all.forEach(t => onSave(t)); }
+          onClose();
+        }}
+        onClose={() => setShowSplitter(false)}
+      />
+    )}
     <div style={overlayStyle} onClick={onClose}>
       <div style={sheetStyle} onClick={e => e.stopPropagation()}>
 
@@ -301,6 +319,20 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
                   취소/재촬영
                 </button>
                 <button
+                  onClick={() => setShowSplitter(true)}
+                  disabled={selectedCount === 0}
+                  style={{
+                    flex: 1, padding: '16px', borderRadius: 16, border: '1px solid #E8715A',
+                    background: 'transparent',
+                    color: selectedCount > 0 ? '#E8715A' : 'var(--text3)',
+                    fontWeight: 700, fontSize: 13,
+                    cursor: selectedCount > 0 ? 'pointer' : 'default',
+                    transition: 'all .25s',
+                  }}
+                >
+                  공동/개인 분류
+                </button>
+                <button
                   onClick={handleSaveAll}
                   disabled={selectedCount === 0}
                   style={{
@@ -313,7 +345,7 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
                     transition: 'all .25s',
                   }}
                 >
-                  {selectedCount > 0 ? `${selectedCount}건 한꺼번에 저장` : '저장할 항목 선택'}
+                  {selectedCount > 0 ? `${selectedCount}건 저장` : '항목 선택'}
                 </button>
               </div>
               <div style={{ textAlign: "center", marginTop: 16, fontSize: 11, color: "var(--text3)" }}>
@@ -324,5 +356,6 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
         </div>
       </div>
     </div>
+    </>
   );
 }
