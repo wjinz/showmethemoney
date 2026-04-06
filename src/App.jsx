@@ -735,12 +735,14 @@ export default function App() {
             <DashboardView
               plan={plan} budgets={budgets} tx={tx} fixed={fixed} names={names}
               widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout}
+              onSettings={() => setView("settings")}
             />
           )}
           {view === "private" && (
             <PrivateWalletView
               plan={plan} tx={tx} myRole={myRole} names={names}
               householdId={householdId} onSosSubmit={handleSosSubmit}
+              onAdd={() => setModal(myRole)} onSettings={() => setView("settings")}
             />
           )}
         </div>

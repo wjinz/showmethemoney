@@ -93,7 +93,10 @@ export function HomeView({tx,budgets,fixed,install,names,onAdd,sliderCfg,onWidge
         <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
           <div>
             <div style={{fontSize:10,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:2}}>{YEAR}년 {MONTH}월 · {DAY}일차</div>
-            <div className="serif" style={{fontSize:20}}>{isTotalMode ? "가계 종합 현황" : "생활비 집중 관리"}</div>
+            <div style={{display:"flex", alignItems:"center", gap: 10}}>
+              <span className="serif" style={{fontSize:20}}>{isTotalMode ? "가계 종합 현황" : "생활비 집중 관리"}</span>
+              <button onClick={() => onSettings("settings")} style={{background:"none", border:"none", fontSize: 18, cursor: "pointer", opacity: 0.8}}>⚙️</button>
+            </div>
           </div>
           <div style={{display:"flex", background:"var(--bg3)", borderRadius:12, padding:4, border:"1px solid var(--border)"}}>
             <button onClick={()=>setIsTotalMode(true)} style={{padding:"6px 12px", borderRadius:9, fontSize:11, fontWeight:700, cursor:"pointer", border:"none", background:isTotalMode?"var(--gold)":"none", color:isTotalMode?"#fff":"var(--text2)", transition:"all .2s"}}>🏢 종합</button>

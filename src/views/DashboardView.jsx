@@ -24,10 +24,11 @@ import { AiNudgeWidget }     from './widgets/AiNudgeWidget.jsx';
  *   fixed: FixedItem[],
  *   names: Record<string, string>,
  *   widgetLayout: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] },
- *   setWidgetLayout: (v: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }) => void
+ *   setWidgetLayout: (v: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }) => void,
+ *   onSettings?: () => void
  * }} props
  */
-export function DashboardView({ plan, budgets, tx, fixed, names, widgetLayout, setWidgetLayout }) {
+export function DashboardView({ plan, budgets, tx, fixed, names, widgetLayout, setWidgetLayout, onSettings }) {
   const layouts = widgetLayout ?? DEFAULT_WIDGET_LAYOUT;
   const { containerRef, width } = useContainerWidth({ initialWidth: 480 });
 
@@ -69,8 +70,9 @@ export function DashboardView({ plan, budgets, tx, fixed, names, widgetLayout, s
 
   return (
     <div ref={containerRef} style={{ padding: '0 8px 96px', overflowY: 'auto', height: '100%' }}>
-      <div style={{ padding: '12px 8px 8px', fontSize: 13, fontWeight: 800, color: 'var(--text2)' }}>
-        Joint Dashboard
+      <div style={{ padding: '12px 8px 8px', fontSize: 13, fontWeight: 800, color: 'var(--text2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>Joint Dashboard</span>
+        <button onClick={onSettings} style={{background:"none", border:"none", cursor:"pointer", fontSize:18, opacity:0.8}}>⚙️</button>
       </div>
       <ResponsiveGridLayout
         width={width}

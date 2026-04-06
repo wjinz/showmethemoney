@@ -21,10 +21,12 @@ import { SosRequestSheet } from '../components/SosRequestSheet.jsx';
  *   myRole: string,
  *   names: Record<string, string>,
  *   householdId: string,
- *   onSosSubmit: (req: { requester: string, amount: number, reason: string, repay_plan: string }) => Promise<void>
+ *   onSosSubmit: (req: { requester: string, amount: number, reason: string, repay_plan: string }) => Promise<void>,
+ *   onSettings: () => void,
+ *   onAdd: () => void
  * }} props
  */
-export function PrivateWalletView({ plan, tx, myRole, names, householdId: _householdId, onSosSubmit }) {
+export function PrivateWalletView({ plan, tx, myRole, names, householdId: _householdId, onSosSubmit, onSettings, onAdd }) {
   const [showSos, setShowSos] = useState(false);
 
   const name = names?.[myRole] ?? myRole;
@@ -47,10 +49,13 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
   return (
     <div style={{ padding: '16px 16px 96px', overflowY: 'auto', height: '100%' }}>
       {/* 헤더 */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 2 }}>Welcome,</div>
-        <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)' }}>{name}!</div>
-        <div style={{ fontSize: 12, color: 'var(--text2)' }}>Your Goals.</div>
+      <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 2 }}>Welcome,</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text)' }}>{name}!</div>
+          <div style={{ fontSize: 12, color: 'var(--text2)' }}>Your Goals.</div>
+        </div>
+        <button onClick={onSettings} style={{background:"none", border:"none", cursor:"pointer", fontSize:18, opacity:0.8}}>⚙️</button>
       </div>
 
       {/* 개인 목표 위시리스트 */}
@@ -112,6 +117,13 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
         }}>
           🔒 View My Private Details
         </button>
+      </div>
+
+      <div style={{ marginBottom: 12 }}>
+        <button onClick={onAdd} style={{
+          width: "100%", background: "var(--theme-accent)", border: "none", borderRadius: 14, padding: "16px",
+          color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", boxShadow: "0 4px 12px var(--theme-accent-soft)"
+        }}>+ 내 개인 지출 입력하기</button>
       </div>
 
       {/* SOS 버튼 — 90% 이상 소진 시 활성화, 펄스 애니메이션 */}
