@@ -5,7 +5,7 @@
 }
 
 /* ── Joint 테마 (Light: Navy & Sage Green) ── */
-[data-theme="joint"] {
+.app-root[data-theme="joint"] {
   --bg:         #F4F6F8;
   --bg2:        #FFFFFF;
   --bg3:        #F9FAFB;
@@ -27,7 +27,7 @@
 }
 
 /* ── Private 테마 (Dark: Charcoal & Coral) ── */
-[data-theme="private"] {
+.app-root[data-theme="private"] {
   --bg:         #121212;
   --bg2:        #1E1E1E;
   --bg3:        #2A2A2A;
