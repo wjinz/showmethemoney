@@ -83,20 +83,24 @@ export const DNAMES = ["일","월","화","수","목","금","토"];
  */
 export const DEFAULT_WIDGET_LAYOUT = {
   mobile: [
-    { i: 'today_status',     x: 0, y: 0,  w: 1, h: 3 },
-    { i: 'spending_insight', x: 0, y: 3,  w: 1, h: 3 },
-    { i: 'budget_ring',      x: 0, y: 6,  w: 1, h: 4 },
-    { i: 'goal',             x: 0, y: 10, w: 1, h: 3 },
-    { i: 'tax_guide',        x: 0, y: 13, w: 1, h: 3 },
-    { i: 'ai_nudge',         x: 0, y: 16, w: 1, h: 2 },
+    { i: 'sos_status',       x: 0, y: 0,  w: 1, h: 4 },
+    { i: 'today_status',     x: 0, y: 4,  w: 1, h: 3 },
+    { i: 'allowance_insight', x: 0, y: 7,  w: 1, h: 5 },
+    { i: 'spending_insight', x: 0, y: 12, w: 1, h: 3 },
+    { i: 'budget_ring',      x: 0, y: 15, w: 1, h: 4 },
+    { i: 'goal',             x: 0, y: 19, w: 1, h: 3 },
+    { i: 'tax_guide',        x: 0, y: 22, w: 1, h: 3 },
+    { i: 'ai_nudge',         x: 0, y: 25, w: 1, h: 2 },
   ],
   desktop: [
-    { i: 'today_status',     x: 0, y: 0, w: 1, h: 3 },
-    { i: 'spending_insight', x: 1, y: 0, w: 1, h: 3 },
-    { i: 'budget_ring',      x: 0, y: 3, w: 1, h: 4 },
-    { i: 'goal',             x: 1, y: 3, w: 1, h: 3 },
-    { i: 'tax_guide',        x: 0, y: 7, w: 1, h: 3 },
-    { i: 'ai_nudge',         x: 1, y: 6, w: 1, h: 2 },
+    { i: 'sos_status',       x: 0, y: 0, w: 2, h: 4 },
+    { i: 'today_status',     x: 0, y: 4, w: 1, h: 3 },
+    { i: 'spending_insight', x: 1, y: 4, w: 1, h: 3 },
+    { i: 'allowance_insight', x: 0, y: 7, w: 2, h: 5 },
+    { i: 'budget_ring',      x: 0, y: 12, w: 1, h: 4 },
+    { i: 'goal',             x: 1, y: 12, w: 1, h: 3 },
+    { i: 'tax_guide',        x: 0, y: 16, w: 1, h: 3 },
+    { i: 'ai_nudge',         x: 1, y: 15, w: 1, h: 2 },
   ],
 };
 

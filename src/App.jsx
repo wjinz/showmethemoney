@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 /**
  * @typedef {import('./constants/index.js').TxItem} TxItem
@@ -57,11 +57,21 @@ export default function App() {
   // 위젯 레이아웃 상태
   const [widgetLayout, setWidgetLayoutRaw] = useState(DEFAULT_WIDGET_LAYOUT);
 
-  // SOS 상태 (가불 요청 보낼 때 사용)
+  // SOS 상태 통합 관리 (내가 보낸 요청 & 받은 요청 모두)
+  const [sosRequests, setSosRequests] = useState(/** @type {SosRequest[]} */ ([]));
   const [showSosRequest, setShowSosRequest] = useState(false);
-  // SOS 펜딩 상태 (가불 요청을 받았을 때 사용)
-  const [sosPending, setSosPending] = useState(/** @type {SosRequest[]} */ ([]));
   const [showSosPending, setShowSosPending] = useState(false);
+
+  // 펜딩된 요청들 (상대방이 보낸 것)
+  const sosPending = useMemo(() => 
+    sosRequests.filter(r => r.requester !== myRole && r.status === 'pending'),
+    [sosRequests, myRole]
+  );
+  // 내가 보낸 펜딩 요청 (진행 상황 확인용)
+  const mySosPending = useMemo(() =>
+    sosRequests.filter(r => r.requester === myRole && r.status === 'pending'),
+    [sosRequests, myRole]
+  );
 
   // 뷰에 따른 테마 전환 (joint ↔ private)
   useTheme(view);
@@ -203,6 +213,10 @@ export default function App() {
       if (allData.taxConfig) setTaxConfigRaw(allData.taxConfig);
       if (allData.widgetLayout) setWidgetLayoutRaw(allData.widgetLayout);
 
+      // SOS 요청 초기 로드
+      const sosData = await db.loadPendingSos(hid);
+      setSosRequests(sosData);
+
       // migrateToRdb: tx_YYYY 데이터를 transactions 테이블로 마이그레이션 (1회성)
       if (allData['migrated_to_rdb'] !== true) {
         const txEntries = Object.entries(allData)
@@ -325,8 +339,12 @@ export default function App() {
   useEffect(() => {
     if (!setupDone || !householdId) return;
     db.subscribeSos(householdId, (req) => {
+      // 내 요청이든 파트너 요청이든 상태 배열에 추가
+      setSosRequests(prev => {
+        if (prev.find(p => p.id === req.id)) return prev;
+        return [...prev, req];
+      });
       if (req.requester !== myRole) {
-        setSosPending(prev => [...prev, req]);
         setShowSosPending(true);
         addToast(`🆘 가불 요청이 도착했습니다 (${req.amount.toLocaleString()}원)`, 'warning');
       }
@@ -620,7 +638,7 @@ export default function App() {
     /** @param {number} id @param {'approved'|'rejected'} status */
     async (id, status) => {
       await db.resolveSos(id, status);
-      setSosPending(prev => prev.filter(r => r.id !== id));
+      setSosRequests(prev => prev.map(r => r.id === id ? { ...r, status, resolved_at: new Date().toISOString() } : r));
       addToast(status === 'approved' ? '가불을 승인했습니다.' : '가불을 거절했습니다.');
     },
     [addToast]
@@ -740,6 +758,7 @@ export default function App() {
             <DashboardView
               plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} names={names}
               myRole={myRole}
+              mySosPending={mySosPending}
               widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout}
               onSettings={() => setView("settings")}
             />

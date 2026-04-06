@@ -137,6 +137,9 @@ export function HomeView({
   const filteredTx = useMemo(() => {
     const pool = searchTerm ? tx : thisMonthTx;
     return pool.filter(t => {
+      // 1. 개인 지출 필터링 — 홈 화면에는 공동 예산 지출만 노출
+      if (t.is_private) return false;
+      
       if (!searchTerm) return true;
       const label = CAT[t.cat]?.label || "";
       return (t.memo && t.memo.includes(searchTerm)) || label.includes(searchTerm);

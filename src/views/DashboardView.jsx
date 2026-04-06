@@ -10,6 +10,8 @@ import { BudgetRingWidget } from './widgets/BudgetRingWidget.jsx';
 import { GoalWidget }        from './widgets/GoalWidget.jsx';
 import { TaxGuideWidget }    from './widgets/TaxGuideWidget.jsx';
 import { AiNudgeWidget }     from './widgets/AiNudgeWidget.jsx';
+import { SosStatusWidget }   from './widgets/SosStatusWidget.jsx';
+import { AllowanceInsightWidget } from './widgets/AllowanceInsightWidget.jsx';
 import { Edit2, Check, Sparkles } from 'lucide-react';
 
 /**
@@ -17,6 +19,7 @@ import { Edit2, Check, Sparkles } from 'lucide-react';
  * @typedef {import('../constants/index.js').FixedItem} FixedItem
  * @typedef {import('../constants/index.js').WidgetLayoutItem} WidgetLayoutItem
  * @typedef {import('react-grid-layout').LayoutItem} RGLItem
+ * @typedef {import('../constants/index.js').SosRequest} SosRequest
  */
 
 /**
@@ -27,13 +30,14 @@ import { Edit2, Check, Sparkles } from 'lucide-react';
  *   fixed: FixedItem[],
  *   names: Record<string, string>,
  *   myRole: string,
+ *   mySosPending?: SosRequest[],
  *   widgetLayout: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] },
  *   setWidgetLayout: (v: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }) => void,
  *   onSettings?: () => void,
  *   setPlan: (v: any) => void
  * }} props
  */
-export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole, widgetLayout, setWidgetLayout, onSettings: _onSettings }) {
+export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending = [], widgetLayout, setWidgetLayout, onSettings: _onSettings }) {
   const [isEditMode, setIsEditMode] = useState(false);
   const layouts = widgetLayout ?? DEFAULT_WIDGET_LAYOUT;
   const { containerRef, width } = useContainerWidth();
@@ -64,10 +68,12 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
     [saveLayout, layouts]
   );
 
-  const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, names, myRole }), [plan, setPlan, budgets, tx, fixed, names, myRole]);
+  const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending }), [plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending]);
 
   /** @type {Record<string, React.ComponentType<any>>} */
   const WIDGET_MAP = {
+    sos_status:       SosStatusWidget,
+    allowance_insight: AllowanceInsightWidget,
     today_status:     TodayStatusWidget,
     spending_insight: SpendingInsightWidget,
     budget_ring:      BudgetRingWidget,
