@@ -31,7 +31,8 @@ function StackedBar({data,total,height=24,showLegend=false}){
   );
 }
 
-function ReportContent({tx,budgets,fixed,install,names,plan}){
+function ReportContent({tx: allTx, budgets, fixed, install, names,plan}){
+  const tx = useMemo(() => allTx.filter(t => !t.is_private), [allTx]);
   const YEAR  = getYear();
   const MONTH = getMonth();
   const DAY   = getDay();

@@ -54,7 +54,7 @@ export function HomeView({
   const installTotal = (install || []).reduce((s, i) => s + i.monthly, 0);
 
   const curMonthPrefix = `${YEAR}-${String(MONTH).padStart(2, "0")}`;
-  const thisMonthTx = useMemo(() => tx.filter(t => t.date.startsWith(curMonthPrefix)), [tx, curMonthPrefix]);
+  const thisMonthTx = useMemo(() => tx.filter(t => t.date.startsWith(curMonthPrefix) && !t.is_private), [tx, curMonthPrefix]);
 
   const variableSpent = useMemo(() => thisMonthTx.reduce((s, t) => s + t.amount, 0), [thisMonthTx]);
   const totalSpent    = variableSpent + fixedTotal + installTotal;

@@ -7,8 +7,9 @@ import { runOCR } from "../utils/ocr";
 const nowStr = () => toDateStr(new Date());
 
 // OCR 결과 상태: null | "loading" | "success" | "error"
-export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) {
+export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, defaultIsPrivate = false }) {
   const [who, setWho] = useState(defaultWho);
+  const [isPrivate] = useState(defaultIsPrivate);
   const [amount, setAmount] = useState("");
   const [cat, setCat] = useState("");
   const [memo, setMemo] = useState("");
@@ -28,7 +29,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave }) 
   const save = (e) => {
     if (e) e.stopPropagation();
     if (!amount || !cat) return;
-    onSave({ who, amount: parseInt(amount), cat, memo, payMethod, date, cardId });
+    onSave({ who, amount: parseInt(amount), cat, memo, payMethod, date, cardId, is_private: isPrivate });
     onClose();
   };
 

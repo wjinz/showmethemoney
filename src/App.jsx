@@ -767,13 +767,20 @@ export default function App() {
             <PrivateWalletView
               plan={plan} tx={tx} myRole={myRole} names={names}
               householdId={householdId} onSosSubmit={handleSosSubmit}
-              onAdd={() => setModal(myRole)} onSettings={() => setView("settings")}
+              onAdd={() => setModal({ who: myRole, isPrivate: true })} onSettings={() => setView("settings")}
               onSosRequest={() => setShowSosRequest(true)}
             />
           )}
         </div>
         <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} />
-        {modal && <InputModal defaultWho={modal} names={names} plan={plan} cards={cards} onClose={() => setModal(null)} onSave={addTx} />}
+        {modal && (
+          <InputModal 
+            defaultWho={typeof modal === 'string' ? modal : modal.who} 
+            defaultIsPrivate={typeof modal === 'object' ? !!modal.isPrivate : false}
+            names={names} plan={plan} cards={cards} 
+            onClose={() => setModal(null)} onSave={addTx} 
+          />
+        )}
         {showWidget && <WidgetView tx={tx} budgets={budgets} names={names} onClose={() => setShowWidget(false)} />}
         {showQuickEntry && <QuickEntrySheet names={names} plan={plan} cards={cards} tx={tx} onSave={addTx} onClose={() => setShowQuickEntry(false)} onCardScan={() => { setShowQuickEntry(false); setShowCardScan(true); }} onSosRequest={() => setShowSosRequest(true)} myRole={myRole} />}
         {showCardScan && <CardScanSheet who={myRole} onSave={addTx} onSaveAll={addTxBatch} onClose={() => setShowCardScan(false)} />}
