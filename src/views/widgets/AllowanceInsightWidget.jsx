@@ -67,7 +67,7 @@ export function AllowanceInsightWidget({ plan, tx, names, myRole }) {
                   소진율 {s.data.pct}%
                 </span>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 700, color: s.data.data.pct > 90 ? 'var(--red)' : 'var(--text2)' }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: s.data.pct > 90 ? 'var(--red)' : 'var(--text2)' }}>
                 {fmtS(s.data.left)}원 남음
               </span>
             </div>
