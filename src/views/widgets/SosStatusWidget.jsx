@@ -13,7 +13,7 @@ export function SosStatusWidget({ mySosPending = [], names, myRole }) {
   const partnerName = myRole === 'husband' ? (names.wife || '와이프') : (names.husband || '남편');
 
   return (
-    <div style={{ padding: '0 12px' }}>
+    <div style={{ padding: '16px 12px 12px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
         <Clock size={13} color="var(--gold)" />
         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.02em' }}>

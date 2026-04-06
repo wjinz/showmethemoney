@@ -15,6 +15,7 @@ import { THEME_TOKENS as T } from '../../styles/tokens.js';
  *   plan: {
  *     salary?: { husband: number, wife: number },
  *     personalAllowancePct?: number,
+ *     allowance?: { husband: number, wife: number },
  *   },
  *   tx: TxItem[],
  *   names: Record<string, string>,
@@ -28,7 +29,11 @@ export function AllowanceInsightWidget({ plan, tx, names, myRole }) {
   }, []);
 
   const calculateAllowance = (/** @type {string} */ role) => {
-    const allw = (plan.salary?.[role] ?? 0) * (plan.personalAllowancePct ?? 0.2);
+    // 1순위: 사용자가 직접 설정한 용돈 금액, 2순위: 급여의 20% 자동 계산
+    const allw = (plan.allowance?.[role] !== undefined && plan.allowance?.[role] > 0)
+      ? plan.allowance[role]
+      : (plan.salary?.[role] ?? 0) * (plan.personalAllowancePct ?? 0.2);
+
     const spent = tx
       .filter(t => t.who === role && t.is_private && t.date.startsWith(currentMonth))
       .reduce((s, t) => s + t.amount, 0);
@@ -37,8 +42,8 @@ export function AllowanceInsightWidget({ plan, tx, names, myRole }) {
     return { allw, spent, pct, left };
   };
 
-  const h = useMemo(() => calculateAllowance('husband'), [plan.salary, plan.personalAllowancePct, tx, currentMonth]);
-  const w = useMemo(() => calculateAllowance('wife'), [plan.salary, plan.personalAllowancePct, tx, currentMonth]);
+  const h = useMemo(() => calculateAllowance('husband'), [plan.salary, plan.allowance, plan.personalAllowancePct, tx, currentMonth]);
+  const w = useMemo(() => calculateAllowance('wife'), [plan.salary, plan.allowance, plan.personalAllowancePct, tx, currentMonth]);
 
   const stats = [
     { role: 'husband', name: names.husband || '남편', color: 'var(--h)', data: h },
@@ -46,7 +51,7 @@ export function AllowanceInsightWidget({ plan, tx, names, myRole }) {
   ];
 
   return (
-    <div style={{ padding: '0 12px' }}>
+    <div style={{ padding: '16px 12px 12px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
         <PiggyBank size={14} color="var(--gold)" />
         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.04em' }}>

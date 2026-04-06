@@ -15,6 +15,7 @@ import { THEME_TOKENS as T } from '../styles/tokens.js';
  *   plan: {
  *     salary?: { husband: number, wife: number },
  *     personalAllowancePct?: number,
+ *     allowance?: { husband: number, wife: number },
  *     privateGoals?: { husband: GoalItem[], wife: GoalItem[] }
  *   },
  *   tx: TxItem[],
@@ -34,7 +35,8 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
   const { allowance, leftAmt, pct } = useMemo(() => {
     const y = getYear(), m = getMonth();
     const prefix = `${y}-${String(m).padStart(2, '0')}`;
-    const allw = (plan.salary?.[/** @type {'husband'|'wife'} */ (myRole)] ?? 0) * (plan.personalAllowancePct ?? 0.2);
+    const allw = (plan.allowance?.[/** @type {'husband'|'wife'} */ (myRole)] ?? 0) || 
+                 (plan.salary?.[/** @type {'husband'|'wife'} */ (myRole)] ?? 0) * (plan.personalAllowancePct ?? 0.2);
     const spent = tx
       .filter(t => t.who === myRole && t.is_private && t.date.startsWith(prefix))
       .reduce((s, t) => s + t.amount, 0);

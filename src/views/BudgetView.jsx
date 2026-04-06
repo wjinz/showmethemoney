@@ -264,10 +264,14 @@ function BaselineTab({ plan, onGoToImport=undefined }) {
 function IncomeTab({ plan, setPlan, fixed, install }) {
   const update = (key, val) => setPlan(p => ({ ...p, [key]: val }));
   const salary = plan.salary || { husband: 0, wife: 0, savingsTarget: 0 };
+  const allowance = plan.allowance || { husband: 0, wife: 0 };
+  
   const monthlyIncome = (salary.husband || 0) + (salary.wife || 0);
   const monthlySavingTarget = salary.savingsTarget || 0;
+  const allowanceTotal = (allowance.husband || 0) + (allowance.wife || 0);
   const monthlyFixed = (fixed || []).reduce((s, f) => s + (f.amount || 0), 0) + (install || []).reduce((s, i) => s + (i.monthly || 0), 0);
-  const monthlyAvail = Math.max(0, monthlyIncome - monthlyFixed - monthlySavingTarget);
+  
+  const monthlyAvail = Math.max(0, monthlyIncome - monthlyFixed - monthlySavingTarget - allowanceTotal);
 
   return (
     <div>
@@ -302,11 +306,32 @@ function IncomeTab({ plan, setPlan, fixed, install }) {
         {monthlyIncome > 0 && <div style={{ marginTop: 8, fontSize: 11, color: "var(--text3)" }}>저축률: {Math.round(monthlySavingTarget / monthlyIncome * 100)}%</div>}
       </Card>
 
+      <Card style={{ padding: "18px", marginBottom: 10 }}>
+        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 부부 개별 용돈 설정</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>남편 용돈</div>
+            <input type="text" value={formatInput(allowance.husband)} onChange={e => {
+              const v = parseInput(e.target.value);
+              update("allowance", { ...allowance, husband: parseInt(v) || 0 });
+            }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
+          </div>
+          <div>
+            <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>아내 용돈</div>
+            <input type="text" value={formatInput(allowance.wife)} onChange={e => {
+              const v = parseInput(e.target.value);
+              update("allowance", { ...allowance, wife: parseInt(v) || 0 });
+            }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
+          </div>
+        </div>
+        <div style={{ marginTop: 12, fontSize: 14, fontWeight: 800 }}>용돈 합계: <span style={{ color: "var(--gold)" }}>{fmtS(allowanceTotal)}원</span></div>
+      </Card>
+
       <div style={{ background: monthlyAvail >= 0 ? "var(--bg2)" : "var(--redD)", border: "1px solid var(--border)", borderRadius: 14, padding: "16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}><span style={{ color: "var(--text2)" }}>월 실수령액</span><span style={{ fontWeight: 600 }}>{fmtS(monthlyIncome)}원</span></div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}><span style={{ color: "var(--text2)" }}>저축 및 고정비</span><span style={{ fontWeight: 600 }}>-{fmtS(monthlySavingTarget + monthlyFixed)}원</span></div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}><span style={{ color: "var(--text2)" }}>저축/고정비/용돈</span><span style={{ fontWeight: 600 }}>-{fmtS(monthlySavingTarget + monthlyFixed + allowanceTotal)}원</span></div>
         <div style={{ borderTop: "1px solid var(--border)", paddingTop: 10, marginTop: 4, display: "flex", justifyContent: "space-between" }}>
-          <span style={{ fontWeight: 700 }}>변동 예산 가능액</span>
+          <span style={{ fontWeight: 700 }}>이달의 생활비(변동 예산)</span>
           <span style={{ fontWeight: 800, fontSize: 15, color: "var(--gold)" }}>{fmtS(monthlyAvail)}원/월</span>
         </div>
       </div>
@@ -321,10 +346,13 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
   const [customUtil, setCustomUtil] = useState(false);
 
   const salary = plan.salary || { husband: 0, wife: 0, savingsTarget: 0 };
+  const allowance = plan.allowance || { husband: 0, wife: 0 };
   const totalSalary = (salary.husband || 0) + (salary.wife || 0);
   const fixedTotal = (fixed || []).reduce((s, f) => s + (f.amount || 0), 0);
   const installTotal = (install || []).reduce((s, i) => s + (i.monthly || 0), 0);
-  const monthlyAvailRaw = Math.max(0, totalSalary - fixedTotal - installTotal - (salary.savingsTarget || 0));
+  const allowanceTotal = (allowance.husband || 0) + (allowance.wife || 0);
+  
+  const monthlyAvailRaw = Math.max(0, totalSalary - fixedTotal - installTotal - (salary.savingsTarget || 0) - allowanceTotal);
 
   const utilTarget = plan.utilizationTarget ?? 100;
   const monthlyAvail = Math.round(monthlyAvailRaw * utilTarget / 100);
@@ -560,12 +588,14 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
  */
 function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
   const salary     = plan.salary || {};
+  const allowance  = plan.allowance || { husband: 0, wife: 0 };
   const income     = (salary.husband || 0) + (salary.wife || 0);
   const savings    = salary.savingsTarget || 0;
   const fixedTotal = (fixed || []).reduce((s, f) => s + (f.amount || 0), 0)
                    + (install || []).reduce((s, i) => s + (i.monthly || 0), 0);
+  const allowanceTotal = (allowance.husband || 0) + (allowance.wife || 0);
   const utilTarget = plan.utilizationTarget ?? 100;
-  const rawAvail   = Math.max(0, income - savings - fixedTotal);
+  const rawAvail   = Math.max(0, income - savings - fixedTotal - allowanceTotal);
   const avail      = Math.round(rawAvail * utilTarget / 100);
   const buffer     = rawAvail - avail;
 
@@ -618,11 +648,12 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
         <FlowRow label="월 실수령액" value={income} color="var(--green)" />
         <FlowRow label="저축 목표" value={-savings} color="var(--blue)" sub={`저축률 ${income > 0 ? Math.round(savings / income * 100) : 0}%`} />
         <FlowRow label="고정비 + 할부" value={-fixedTotal} color="var(--text)" />
+        <FlowRow label="부부 개별 용돈" value={-allowanceTotal} color="var(--gold)" />
         {utilTarget < 100 && (
           <FlowRow label={`예비 버퍼 (${100 - utilTarget}%)`} value={-buffer} color="var(--text3)" />
         )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0 2px" }}>
-          <span style={{ fontSize: 13, fontWeight: 700 }}>변동예산 ({utilTarget}% 한도)</span>
+          <span style={{ fontSize: 13, fontWeight: 700 }}>이달의 생활비 ({utilTarget}% 한도)</span>
           <span style={{ fontSize: 16, fontWeight: 800, color: "var(--gold)" }}>{fmtS(avail)}원</span>
         </div>
       </Card>

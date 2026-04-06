@@ -97,8 +97,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
     }
   };
 
-  const sharedTx = useMemo(() => tx.filter(t => !t.is_private), [tx]);
-  const ctx = useMemo(() => ({ plan, setPlan, budgets, tx: sharedTx, fixed, names, myRole, mySosPending }), [plan, setPlan, budgets, sharedTx, fixed, names, myRole, mySosPending]);
+  const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending }), [plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending]);
 
   /** @type {Record<string, string>} */
   const DISPLAY_NAMES = {

@@ -86,12 +86,14 @@ export function HomeView({
   const projectedAtPace  = variableSpent + currentPaceDaily * daysLeft;
 
   const salary         = /** @type {{ husband: number, wife: number, savingsTarget: number }} */ (plan?.salary) || { husband: 0, wife: 0, savingsTarget: 0 };
+  const allowance      = /** @type {{ husband: number, wife: number }} */ (plan?.allowance) || { husband: 0, wife: 0 };
   const utilTarget     = /** @type {number} */ (plan?.utilizationTarget) || 100;
   const totalSalary    = (salary.husband || 0) + (salary.wife || 0);
   const savingsTarget  = salary.savingsTarget || 0;
+  const allowanceTotal = (allowance.husband || 0) + (allowance.wife || 0);
   const committed      = fixedTotal + installTotal;
 
-  const monthlyAvailRaw = totalSalary - committed - savingsTarget;
+  const monthlyAvailRaw = totalSalary - committed - savingsTarget - allowanceTotal;
   const cardLimit       = Math.max(Math.round(monthlyAvailRaw * utilTarget / 100), 0);
   const cardUsedPct     = cardLimit > 0 ? Math.min(Math.round(variableSpent / cardLimit * 100), 100) : 0;
   const cardLeft        = cardLimit - variableSpent;
@@ -621,16 +623,18 @@ export function HomeView({
                 <span>남은 한도 {fmtS(cardLeft)}원</span>
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, borderTop: "1px solid var(--border)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 0, borderTop: "1px solid var(--border)" }}>
               <div style={{ padding: "11px 16px", borderRight: "1px solid var(--border)" }}>
-                <div style={{ fontSize: 9, color: "var(--text3)", marginBottom: 3 }}>📈 이달 예상 여유자금(률)</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: savingsRateColor }}>{totalSalary > 0 ? (savingsRate > 0 ? "+" : "") + savingsRate + "%" : "미정"}</div>
-                <div style={{ fontSize: 9, color: savingsRateColor, marginTop: 1, fontWeight: 700 }}>{savingsRateLabel}</div>
+                <div style={{ fontSize: 9, color: "var(--text3)", marginBottom: 3 }}>📈 이달 예상 여유</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: savingsRateColor }}>{totalSalary > 0 ? (savingsRate > 0 ? "+" : "") + savingsRate + "%" : "미정"}</div>
+              </div>
+              <div style={{ padding: "11px 16px", borderRight: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 9, color: "var(--text3)", marginBottom: 3 }}>👥 부부용돈 총합</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "var(--gold)" }}>{fmtS(allowanceTotal)}원</div>
               </div>
               <div style={{ padding: "11px 16px" }}>
-                <div style={{ fontSize: 9, color: "var(--text3)", marginBottom: 3 }}>📋 연회비/청구 예정</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text)" }}>{fmtS(thisMonthCardSpend)}원</div>
-                <div style={{ fontSize: 9, color: "var(--text2)", marginTop: 1 }}>카드 사용액 기반</div>
+                <div style={{ fontSize: 9, color: "var(--text3)", marginBottom: 3 }}>📋 청구 예정액</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>{fmtS(thisMonthCardSpend)}원</div>
               </div>
             </div>
           </>
