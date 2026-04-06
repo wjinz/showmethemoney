@@ -68,6 +68,12 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
     [saveLayout, layouts]
   );
 
+  const resetLayout = () => {
+    if (confirm("대시보드 배치를 초기화하시겠습니까?")) {
+      setWidgetLayout(DEFAULT_WIDGET_LAYOUT);
+    }
+  };
+
   const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending }), [plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending]);
 
   /** @type {Record<string, React.ComponentType<any>>} */
@@ -110,18 +116,34 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
         <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
           Widgets {isEditMode && <span style={{ color: 'var(--gold)' }}>• Edit Mode</span>}
         </span>
-        <button
-          onClick={() => setIsEditMode(!isEditMode)}
-          style={{
-            background: isEditMode ? 'var(--goldD)' : 'transparent',
-            border: `1px solid ${isEditMode ? 'var(--gold)' : 'var(--border)'}`,
-            borderRadius: 12, padding: '6px 12px', cursor: 'pointer',
-            fontSize: 12, fontWeight: 700, color: isEditMode ? 'var(--gold)' : 'var(--text2)',
-            display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s'
-          }}
-        >
-          {isEditMode ? <><Check size={14} /> 완료</> : <><Edit2 size={13} /> 편집</>}
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {isEditMode && (
+            <button
+              onClick={resetLayout}
+              style={{
+                background: 'rgba(255,100,100,0.1)',
+                border: '1px solid rgba(255,100,100,0.3)',
+                borderRadius: 12, padding: '6px 12px', cursor: 'pointer',
+                fontSize: 12, fontWeight: 700, color: '#FF6B6B',
+                transition: 'all 0.2s'
+              }}
+            >
+              초기화
+            </button>
+          )}
+          <button
+            onClick={() => setIsEditMode(!isEditMode)}
+            style={{
+              background: isEditMode ? 'var(--goldD)' : 'transparent',
+              border: `1px solid ${isEditMode ? 'var(--gold)' : 'var(--border)'}`,
+              borderRadius: 12, padding: '6px 12px', cursor: 'pointer',
+              fontSize: 12, fontWeight: 700, color: isEditMode ? 'var(--gold)' : 'var(--text2)',
+              display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s'
+            }}
+          >
+            {isEditMode ? <><Check size={14} /> 완료</> : <><Edit2 size={13} /> 편집</>}
+          </button>
+        </div>
       </div>
 
       <ResponsiveGridLayout
@@ -129,7 +151,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
         layouts={rglLayouts}
         breakpoints={{ desktop: 480, mobile: 0 }}
         cols={{ desktop: 2, mobile: 1 }}
-        rowHeight={60}
+        rowHeight={70}
         isDraggable={isEditMode}
         isResizable={false}
         draggableHandle=".widget-handle"
@@ -144,7 +166,8 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
               style={{
                 background: 'var(--bg2)', borderRadius: 24,
                 border: `1px solid ${isEditMode ? 'var(--gold)' : 'var(--border)'}`,
-                overflow: 'hidden', boxShadow: isEditMode ? '0 12px 32px rgba(0,0,0,0.4)' : 'none',
+                overflowX: 'hidden', overflowY: 'auto', 
+                boxShadow: isEditMode ? '0 12px 32px rgba(0,0,0,0.4)' : 'none',
                 transition: 'border 0.2s, box-shadow 0.2s'
               }}
             >
@@ -156,7 +179,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
                   <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--gold)', opacity: 0.4 }} />
                 </div>
               )}
-              <div style={{ padding: isEditMode ? '0 0 16px' : '16px 0' }}>
+              <div style={{ padding: '0' }}>
                 <Widget {...ctx} />
               </div>
             </div>
