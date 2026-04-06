@@ -60,13 +60,36 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
     /** @param {readonly RGLItem[]} _cur @param {Partial<Record<string, readonly RGLItem[]>>} allLayouts */
     (_cur, allLayouts) => {
       const next = {
-        mobile:  (allLayouts.mobile  ?? layouts.mobile).map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h })),
-        desktop: (allLayouts.desktop ?? layouts.desktop).map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h })),
+        mobile:  (allLayouts.mobile  ?? layouts.mobile).map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h, minW: l.minW, minH: l.minH })),
+        desktop: (allLayouts.desktop ?? layouts.desktop).map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h, minW: l.minW, minH: l.minH })),
       };
       saveLayout(next);
     },
     [saveLayout, layouts]
   );
+
+  const handleDelete = (/** @type {string} */ key) => {
+    const next = {
+      mobile:  layouts.mobile.filter(l => l.i !== key),
+      desktop: layouts.desktop.filter(l => l.i !== key),
+    };
+    setWidgetLayout(next);
+  };
+
+  const handleAdd = (/** @type {string} */ key) => {
+    // 이미 존재하는지 확인
+    if (layouts.mobile.find(l => l.i === key)) return;
+    
+    // 기본 레이아웃에서 정보 찾기
+    const dMob = DEFAULT_WIDGET_LAYOUT.mobile.find(l => l.i === key) || { i: key, x: 0, y: 100, w: 1, h: 4 };
+    const dDsk = DEFAULT_WIDGET_LAYOUT.desktop.find(l => l.i === key) || { i: key, x: 0, y: 100, w: 1, h: 4 };
+
+    const next = {
+      mobile:  [...layouts.mobile, { ...dMob, y: 100 }], // 맨 아래 배치
+      desktop: [...layouts.desktop, { ...dDsk, y: 100 }],
+    };
+    setWidgetLayout(next);
+  };
 
   const resetLayout = () => {
     if (confirm("대시보드 배치를 초기화하시겠습니까?")) {
@@ -75,6 +98,18 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
   };
 
   const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending }), [plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending]);
+
+  /** @type {Record<string, string>} */
+  const DISPLAY_NAMES = {
+    sos_status: 'SOS 진행 현황',
+    allowance_insight: '부부 용돈 현황',
+    today_status: '오늘의 요약',
+    spending_insight: '지출 분석',
+    budget_ring: '예산 현황',
+    goal: '저축 목표',
+    tax_guide: '세금 가이드',
+    ai_nudge: 'AI 추천',
+  };
 
   /** @type {Record<string, React.ComponentType<any>>} */
   const WIDGET_MAP = useMemo(() => ({
@@ -88,13 +123,20 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
     ai_nudge:         AiNudgeWidget,
   }), []);
 
+  // 전체 가능한 위젯 리스트
+  const ALL_KEYS = Object.keys(WIDGET_MAP);
+  // 현재 레이아웃에 있는 위젯 키들
+  const currentKeys = useMemo(() => layouts.mobile.map(l => l.i), [layouts]);
+  // 제거된(추가 가능한) 위젯 키들
+  const hiddenKeys = useMemo(() => ALL_KEYS.filter(k => !currentKeys.includes(k)), [currentKeys]);
+
   // 실제 렌더링할 위젯 키들 (데이터 유무에 따라 필터링)
   const visibleWidgetKeys = useMemo(() => {
-    return Object.keys(WIDGET_MAP).filter(key => {
+    return currentKeys.filter(key => {
       if (key === 'sos_status') return (mySosPending?.length ?? 0) > 0;
       return true;
     });
-  }, [WIDGET_MAP, mySosPending]);
+  }, [currentKeys, mySosPending]);
 
   return (
     <div ref={containerRef} style={{ padding: '0 4px 120px', overflowY: 'auto', height: '100%', background: 'var(--bg)' }}>
@@ -153,7 +195,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
         cols={{ desktop: 2, mobile: 1 }}
         rowHeight={70}
         isDraggable={isEditMode}
-        isResizable={false}
+        isResizable={isEditMode}
         draggableHandle=".widget-handle"
         onLayoutChange={onLayoutChange}
         margin={[12, 12]}
@@ -174,9 +216,15 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
               {isEditMode && (
                 <div
                   className="widget-handle"
-                  style={{ height: 32, cursor: 'grab', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--bg3)' }}
+                  style={{ height: 32, cursor: 'grab', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--bg3)', position: 'relative' }}
                 >
                   <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--gold)', opacity: 0.4 }} />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(key); }}
+                    style={{ position: 'absolute', right: 8, top: 4, background: 'transparent', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4 }}
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
               <div style={{ padding: '0' }}>
@@ -186,6 +234,36 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
           );
         })}
       </ResponsiveGridLayout>
+
+      {/* 위젯 추가 섹션 (편집 모드에서만 노출) */}
+      {isEditMode && hiddenKeys.length > 0 && (
+        <div style={{ padding: '20px 16px', borderTop: '1px dashed var(--border)', marginTop: 20 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)', marginBottom: 12 }}>
+            <Sparkles size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+            추가 가능한 위젯
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {hiddenKeys.map(key => (
+              <button
+                key={key}
+                onClick={() => handleAdd(key)}
+                style={{
+                  background: 'var(--bg3)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 16, padding: '8px 16px',
+                  fontSize: 12, fontWeight: 600, color: 'var(--text)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'transform 0.1s'
+                }}
+                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+                onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                + {DISPLAY_NAMES[key] || key}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

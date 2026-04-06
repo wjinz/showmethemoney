@@ -78,29 +78,29 @@ export const MONTH_NAMES = ["1월","2월","3월","4월","5월","6월","7월","8�
 export const DNAMES = ["일","월","화","수","목","금","토"];
 
 /**
- * @typedef {{ i: string, x: number, y: number, w: number, h: number }} WidgetLayoutItem
+ * @typedef {{ i: string, x: number, y: number, w: number, h: number, minW?: number, minH?: number }} WidgetLayoutItem
  * @type {{ mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }}
  */
 export const DEFAULT_WIDGET_LAYOUT = {
   mobile: [
-    { i: 'sos_status',       x: 0, y: 0,  w: 1, h: 4 },
-    { i: 'today_status',     x: 0, y: 4,  w: 1, h: 3 },
-    { i: 'allowance_insight', x: 0, y: 7,  w: 1, h: 5 },
-    { i: 'spending_insight', x: 0, y: 12, w: 1, h: 3 },
-    { i: 'budget_ring',      x: 0, y: 15, w: 1, h: 4 },
-    { i: 'goal',             x: 0, y: 19, w: 1, h: 3 },
-    { i: 'tax_guide',        x: 0, y: 22, w: 1, h: 3 },
-    { i: 'ai_nudge',         x: 0, y: 25, w: 1, h: 2 },
+    { i: 'sos_status',       x: 0, y: 0,  w: 1, h: 4, minW: 1, minH: 2 },
+    { i: 'today_status',     x: 0, y: 4,  w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'allowance_insight', x: 0, y: 7,  w: 1, h: 5, minW: 1, minH: 3 },
+    { i: 'spending_insight', x: 0, y: 12, w: 1, h: 3, minW: 1, minH: 3 },
+    { i: 'budget_ring',      x: 0, y: 15, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'goal',             x: 0, y: 19, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'tax_guide',        x: 0, y: 22, w: 1, h: 3, minW: 1, minH: 3 },
+    { i: 'ai_nudge',         x: 0, y: 25, w: 1, h: 2, minW: 1, minH: 2 },
   ],
   desktop: [
-    { i: 'sos_status',       x: 0, y: 0, w: 2, h: 4 },
-    { i: 'today_status',     x: 0, y: 4, w: 1, h: 3 },
-    { i: 'spending_insight', x: 1, y: 4, w: 1, h: 3 },
-    { i: 'allowance_insight', x: 0, y: 7, w: 2, h: 5 },
-    { i: 'budget_ring',      x: 0, y: 12, w: 1, h: 4 },
-    { i: 'goal',             x: 1, y: 12, w: 1, h: 3 },
-    { i: 'tax_guide',        x: 0, y: 16, w: 1, h: 3 },
-    { i: 'ai_nudge',         x: 1, y: 15, w: 1, h: 2 },
+    { i: 'sos_status',       x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 2 },
+    { i: 'today_status',     x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'spending_insight', x: 1, y: 4, w: 1, h: 3, minW: 1, minH: 3 },
+    { i: 'allowance_insight', x: 0, y: 7, w: 2, h: 5, minW: 1, minH: 3 },
+    { i: 'budget_ring',      x: 0, y: 12, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'goal',             x: 1, y: 12, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'tax_guide',        x: 0, y: 16, w: 1, h: 3, minW: 1, minH: 3 },
+    { i: 'ai_nudge',         x: 1, y: 15, w: 1, h: 2, minW: 1, minH: 2 },
   ],
 };
 
