@@ -73,6 +73,7 @@ export const db = {
   },
 
   // 특정 가계부 아이디의 특정 키(fixed, plan 등) 데이터를 저장(upsert)합니다.
+  /** @param {string} hid @param {string} key @param {unknown} value */
   async save(hid, key, value) {
     const { error } = await supabase
       .from('household_data')
@@ -158,9 +159,135 @@ export const db = {
     return ch;
   },
 
+  /** @param {string} hid */
   unsubscribe(hid) {
     const channelName = `realtime:household:${hid}`;
     const ch = this._channels.get(channelName);
     if (ch) { supabase.removeChannel(ch); this._channels.delete(channelName); }
-  }
+  },
+
+  // ── transactions 테이블 CRUD ──────────────────────────────────────────
+
+  /**
+   * 단건 insert
+   * @param {string} hid
+   * @param {import('../constants/index.js').TxItem & { is_private?: boolean }} tx
+   */
+  async insertTx(hid, tx) {
+    const { error } = await supabase.from('transactions').insert({
+      household_id: hid,
+      date:         tx.date,
+      amount:       tx.amount,
+      cat:          tx.cat,
+      memo:         tx.memo,
+      who:          tx.who,
+      pay_method:   tx.payMethod,
+      card_id:      tx.cardId ?? null,
+      is_private:   tx.is_private ?? false,
+      tx_type:      tx.type ?? 'expense',
+    });
+    if (error) throw error;
+  },
+
+  /**
+   * 다건 bulk insert — CardScanSheet, 마이그레이션 등
+   * @param {string} hid
+   * @param {Array<import('../constants/index.js').TxItem & { is_private?: boolean }>} txList
+   */
+  async insertTxBatch(hid, txList) {
+    if (!txList.length) return;
+    const rows = txList.map(tx => ({
+      household_id: hid,
+      date:         tx.date,
+      amount:       tx.amount,
+      cat:          tx.cat,
+      memo:         tx.memo,
+      who:          tx.who,
+      pay_method:   tx.payMethod,
+      card_id:      tx.cardId ?? null,
+      is_private:   tx.is_private ?? false,
+      tx_type:      tx.type ?? 'expense',
+    }));
+    const { error } = await supabase.from('transactions').insert(rows);
+    if (error) throw error;
+  },
+
+  /**
+   * 월별 총지출 집계 RPC 호출
+   * @param {string} hid
+   * @param {number} year
+   * @param {number} month
+   * @returns {Promise<Array<{ who: string, total: number }>>}
+   */
+  async getMonthlyTotals(hid, year, month) {
+    const { data, error } = await supabase.rpc('get_monthly_total_expenses', {
+      p_household_id: hid, p_year: year, p_month: month,
+    });
+    if (error) throw error;
+    return /** @type {Array<{ who: string, total: number }>} */ (data ?? []);
+  },
+
+  // ── SOS 가불 시스템 ────────────────────────────────────────────────────
+
+  /**
+   * SOS 가불 요청 생성
+   * @param {string} hid
+   * @param {{ requester: string, amount: number, reason: string, repay_plan: string }} req
+   * @returns {Promise<import('../constants/index.js').SosRequest>}
+   */
+  async createSosRequest(hid, req) {
+    const { data, error } = await supabase.from('sos_requests').insert({
+      household_id: hid,
+      requester:    req.requester,
+      amount:       req.amount,
+      reason:       req.reason,
+      repay_plan:   req.repay_plan,
+      status:       'pending',
+    }).select().single();
+    if (error) throw error;
+    return /** @type {import('../constants/index.js').SosRequest} */ (data);
+  },
+
+  /**
+   * SOS 승인/거절 — SQL 트리거(trg_sos_approved)가 approved 시 transactions 자동 insert
+   * @param {number} id
+   * @param {'approved'|'rejected'} status
+   */
+  async resolveSos(id, status) {
+    const { error } = await supabase.from('sos_requests')
+      .update({ status, resolved_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  /**
+   * pending 상태 SOS 요청 목록 조회
+   * @param {string} hid
+   * @returns {Promise<import('../constants/index.js').SosRequest[]>}
+   */
+  async loadPendingSos(hid) {
+    const { data, error } = await supabase.from('sos_requests')
+      .select('*').eq('household_id', hid)
+      .eq('status', 'pending').order('created_at', { ascending: false });
+    if (error) throw error;
+    return /** @type {import('../constants/index.js').SosRequest[]} */ (data ?? []);
+  },
+
+  /**
+   * SOS 채널 실시간 구독
+   * @param {string} hid
+   * @param {(req: import('../constants/index.js').SosRequest) => void} onInsert
+   */
+  subscribeSos(hid, onInsert) {
+    const channelName = `sos:${hid}`;
+    if (this._channels.has(channelName)) return this._channels.get(channelName);
+    const ch = supabase.channel(channelName)
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'sos_requests', filter: `household_id=eq.${hid}` },
+        (payload) => { onInsert(/** @type {import('../constants/index.js').SosRequest} */ (payload.new)); }
+      )
+      .subscribe();
+    this._channels.set(channelName, ch);
+    return ch;
+  },
 };

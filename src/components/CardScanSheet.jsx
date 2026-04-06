@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CATS, CAT } from "../constants";
 import { runBulkOCR } from "../utils/ocr";
 import { toDateStr } from "../utils/helpers";
@@ -23,6 +23,20 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
   const [items, setItems] = useState([]);
   const [errMsg, setErrMsg] = useState('');
   const fileRef = useRef(/** @type {HTMLInputElement|null} */ (null));
+  const processedRef = useRef(false);
+
+  // PWA Share Target 이미지 처리 (useEffect)
+  useEffect(() => {
+    if (processedRef.current) return;
+    // @ts-ignore
+    const sharedFile = window.__sharedFile;
+    if (sharedFile instanceof File) {
+      processedRef.current = true;
+      // @ts-ignore
+      window.__sharedFile = null; // 중복 방지
+      handleFile(sharedFile);
+    }
+  }, []);
 
   /** @param {File} file */
   const handleFile = async (file) => {

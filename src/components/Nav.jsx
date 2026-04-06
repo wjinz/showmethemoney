@@ -1,16 +1,20 @@
+/**
+ * @param {{ view: string, setView: (v: string) => void, syncStatus: string }} props
+ */
 export function Nav({ view, setView, syncStatus }) {
   const isEntry = view === "entry" || view === "quickEntry";
 
   const LEFT_ITEMS = [
-    { id: "home",   icon: "⌂",  l: "홈" },
-    { id: "entry",  icon: "✎",  l: "기록" },
+    { id: "home",      icon: "⌂",  l: "홈" },
+    { id: "entry",     icon: "✎",  l: "기록" },
   ];
   const RIGHT_ITEMS = [
-    { id: "budget", icon: "⚖️", l: "예산" },
-    { id: "report", icon: "◈",  l: "리포트" },
+    { id: "dashboard", icon: "⊞",  l: "대시보드" },
+    { id: "private",   icon: "🔒", l: "내 지갑" },
   ];
 
-  const NavBtn = ({ item }) => (
+  /** @param {{ id: string, icon: string, l: string }} item */
+  const NavBtn = (item) => (
     <div key={item.id} style={{ flex: 1, position: "relative", display: "flex", justifyContent: "center" }}>
       <button
         onClick={() => setView(item.id)}
@@ -38,7 +42,7 @@ export function Nav({ view, setView, syncStatus }) {
           {item.l}
         </span>
       </button>
-      {(item.id === "report") && syncStatus && syncStatus !== "ok" && (
+      {(item.id === "dashboard") && syncStatus && syncStatus !== "ok" && (
         <div style={{
           position: "absolute", top: 2, right: "calc(50% - 14px)",
           width: 7, height: 7, borderRadius: "50%",
@@ -88,9 +92,9 @@ export function Nav({ view, setView, syncStatus }) {
         display: "flex", alignItems: "center",
         padding: "8px 0 14px",
       }}>
-        {LEFT_ITEMS.map(item => <NavBtn key={item.id} item={item} />)}
+        {LEFT_ITEMS.map(item => <NavBtn key={item.id} {...item} />)}
         <div style={{ flex: 1 }} /> {/* FAB 공간 */}
-        {RIGHT_ITEMS.map(item => <NavBtn key={item.id} item={item} />)}
+        {RIGHT_ITEMS.map(item => <NavBtn key={item.id} {...item} />)}
       </div>
     </div>
   );

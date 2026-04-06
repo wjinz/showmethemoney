@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { CATS, getYear, getMonth } from "../constants";
 import { toDateStr, getContrastText } from "../utils/helpers";
 import { NumPad } from "./NumPad";
@@ -19,6 +19,17 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
   const [isOCR,        setIsOCR]        = useState(false);
   const [ocrStatus,    setOcrStatus]    = useState(/** @type {'success'|'error'|null} */ (null));
   const [ocrMsg,       setOcrMsg]       = useState('');
+  
+  // PWA Share Target 텍스트 처리 (useEffect)
+  useEffect(() => {
+    // @ts-ignore
+    const sharedText = window.__sharedText;
+    if (sharedText) {
+      setMemo(prev => prev ? prev + ' ' + sharedText : sharedText);
+      // @ts-ignore
+      window.__sharedText = null; // 중복 방지
+    }
+  }, []);
 
   const handleOCR = async (e) => {
     const file = e.target.files[0];

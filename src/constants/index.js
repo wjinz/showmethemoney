@@ -1,8 +1,10 @@
 /**
- * @typedef {{ id: number, date: string, amount: number, cat: string, memo: string, who: string, payMethod: string, type?: string, cardId?: string }} TxItem
+ * @typedef {{ id: number, date: string, amount: number, cat: string, memo: string, who: string, payMethod: string, type?: string, cardId?: string, is_private?: boolean }} TxItem
  * @typedef {{ id: string|number, label: string, amount: number, cat?: string, day?: number, cardId?: string }} FixedItem
  * @typedef {{ id: string|number, label: string, totalAmount: number, months: number, monthly: number, cardId?: string, date?: string }} InstallItem
  * @typedef {{ id: string|number, label: string, type: string, color?: string, icon?: string }} CardItem
+ * @typedef {{ id: number, household_id: string, requester: string, amount: number, reason: string, repay_plan: string, status: string, created_at: string, resolved_at?: string }} SosRequest
+ * @typedef {{ label: string, target: number, saved: number }} GoalItem
  */
 
 export const CATS = [
@@ -47,7 +49,13 @@ export const EMPTY_ASSETS  = [];
 export const EMPTY_PLAN    = {
   salary: { husband: 0, wife: 0, savingsTarget: 0 },
   utilizationTarget: 100,
-  events: /** @type {object[]} */ ([])
+  events: /** @type {object[]} */ ([]),
+  goals: /** @type {GoalItem[]} */ ([]),
+  privateGoals: {
+    husband: /** @type {GoalItem[]} */ ([]),
+    wife:    /** @type {GoalItem[]} */ ([]),
+  },
+  personalAllowancePct: 0.2,
 };
 
 export const getNow  = () => new Date();
@@ -68,6 +76,25 @@ export const CARD_PRESETS_COLOR = ["#1c2340","#2d1a3a","#1a3020","#3a1a1a","#2a2
 export const CARD_ICONS_LIST    = ["💳","🏦","💰","🪙","🎴","⭐","🔵","🔴"];
 export const MONTH_NAMES = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 export const DNAMES = ["일","월","화","수","목","금","토"];
+
+/**
+ * @typedef {{ i: string, x: number, y: number, w: number, h: number }} WidgetLayoutItem
+ * @type {{ mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }}
+ */
+export const DEFAULT_WIDGET_LAYOUT = {
+  mobile: [
+    { i: 'budget_ring', x: 0, y: 0,  w: 1, h: 4 },
+    { i: 'goal',        x: 0, y: 4,  w: 1, h: 3 },
+    { i: 'tax_guide',   x: 0, y: 7,  w: 1, h: 3 },
+    { i: 'ai_nudge',    x: 0, y: 10, w: 1, h: 2 },
+  ],
+  desktop: [
+    { i: 'budget_ring', x: 0, y: 0, w: 1, h: 4 },
+    { i: 'goal',        x: 1, y: 0, w: 1, h: 3 },
+    { i: 'tax_guide',   x: 0, y: 4, w: 1, h: 3 },
+    { i: 'ai_nudge',    x: 1, y: 3, w: 1, h: 2 },
+  ],
+};
 
 export const PAY_METHODS = [
   {id:"credit", label:"신용카드"},

@@ -5,15 +5,20 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
  * @typedef {import('./constants/index.js').FixedItem} FixedItem
  * @typedef {import('./constants/index.js').InstallItem} InstallItem
  * @typedef {import('./constants/index.js').CardItem} CardItem
+ * @typedef {import('./constants/index.js').SosRequest} SosRequest
+ * @typedef {import('./constants/index.js').WidgetLayoutItem} WidgetLayoutItem
  */
 import { G } from "./styles/globalStyles.js";
+import "./styles/theme.css";
 import { validate } from "./utils/validate.js";
 import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued } from "./utils/offlineQueue.js";
 import {
   CATS, INIT_BUDGETS, DEFAULT_SLIDER_CFG, DEFAULT_TAX_CONFIG,
   EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS, EMPTY_PLAN,
+  DEFAULT_WIDGET_LAYOUT,
   getYear,
 } from "./constants/index.js";
+import { useTheme } from "./hooks/useTheme.js";
 import { HomeView } from "./views/HomeView.jsx";
 import { EntryView } from "./views/EntryView.jsx";
 import { ReportView } from "./views/ReportView.jsx";
@@ -21,11 +26,14 @@ import { SettingsView } from "./views/SettingsView.jsx";
 import { AssetView } from "./views/AssetView.jsx";
 import { SyncSetup } from "./views/SyncSetup.jsx";
 import { WidgetView } from "./views/WidgetView.jsx";
+import { DashboardView } from "./views/DashboardView.jsx";
+import { PrivateWalletView } from "./views/PrivateWalletView.jsx";
 import { Nav } from "./components/Nav.jsx";
 import { InputModal } from "./components/InputModal.jsx";
 import { BugReportModal } from "./components/BugReportModal.jsx";
 import { AdminLoginModal } from "./components/AdminLoginModal.jsx";
 import { QuickEntrySheet } from "./components/QuickEntrySheet.jsx";
+import { SosPendingSheet } from "./components/SosPendingSheet.jsx";
 import { useToast, ToastContainer } from "./components/Toast.jsx";
 import { db, isSupabaseConfigured } from "./utils/supabase.js";
 import { BudgetContext } from "./context/BudgetContext.jsx";
@@ -43,7 +51,17 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showBugReport, setShowBugReport] = useState(false);
-  const [lastSync, setLastSync] = useState(null);
+  const [lastSync, setLastSync] = useState(/** @type {Date|null} */ (null));
+
+  // 위젯 레이아웃 상태
+  const [widgetLayout, setWidgetLayoutRaw] = useState(DEFAULT_WIDGET_LAYOUT);
+
+  // SOS 상태
+  const [sosPending, setSosPending] = useState(/** @type {SosRequest[]} */ ([]));
+  const [showSosPending, setShowSosPending] = useState(false);
+
+  // 뷰에 따른 테마 전환 (joint ↔ private)
+  useTheme(view);
 
   // 공유 데이터 필드들
   const [tx, setTxRaw] = useState(EMPTY_TX);
@@ -180,6 +198,28 @@ export default function App() {
         }
       }
       if (allData.taxConfig) setTaxConfigRaw(allData.taxConfig);
+      if (allData.widgetLayout) setWidgetLayoutRaw(allData.widgetLayout);
+
+      // migrateToRdb: tx_YYYY 데이터를 transactions 테이블로 마이그레이션 (1회성)
+      if (allData['migrated_to_rdb'] !== true) {
+        const txEntries = Object.entries(allData)
+          .filter(([k]) => /^tx_\d{4}$/.test(k))
+          .flatMap(([, rows]) => Array.isArray(rows) ? rows : []);
+        if (txEntries.length > 0) {
+          try {
+            await db.insertTxBatch(hid, txEntries);
+            console.log('[migrate] tx → transactions 완료:', txEntries.length, '건');
+          } catch (e) {
+            console.warn('[migrate] insertTxBatch 실패 (transactions 테이블 없을 수 있음):', e);
+          }
+        }
+        try {
+          await db.save(hid, 'migrated_to_rdb', true);
+        } catch (e) {
+          console.warn('[migrate] 플래그 저장 실패:', e);
+        }
+      }
+
       setSyncStatus("ok");
     } catch(e) {
       console.error("Supabase load error:", e);
@@ -249,6 +289,47 @@ export default function App() {
     window.addEventListener('online', handleOnline);
     return () => { window.removeEventListener('online', handleOnline); };
   }, [setupDone, householdId, loadShared, addToast]);
+  
+  // PWA Share Target 핸들러 (Task 2-3)
+  useEffect(() => {
+    /** @param {any} e */
+    const handleShare = (e) => {
+      const { type, buf, name, text } = e.detail;
+      if (type === 'SHARE_IMAGE' && buf) {
+        // 이미지가 공유된 경우: 카드 스캔 레이어로 전달
+        const blob = new Blob([buf], { type: 'image/png' });
+        const file = new File([blob], name || 'shared_receipt.png', { type: 'image/png' });
+        // 로컬 상태로 보관하거나 바로 스캔 로직 트리거
+        // 여기서는 CardScanSheet가 열릴 때 이 파일을 감지하도록 유도하거나 
+        // 간단하게 window 전역/ref에 보관 후 Sheet를 엽니다.
+        // @ts-ignore
+        window.__sharedFile = file; 
+        setShowCardScan(true);
+        addToast("📸 이미지가 공유되었습니다. 스캔을 시작합니다.");
+      } else if (text) {
+        // 텍스트(SMS 등)가 공유된 경우: 퀵 엔트리 모달 열고 입력창에 채움
+        // @ts-ignore
+        window.__sharedText = text;
+        setShowQuickEntry(true);
+        addToast("📝 텍스트가 공유되었습니다.");
+      }
+    };
+    window.addEventListener('sw-share', handleShare);
+    return () => window.removeEventListener('sw-share', handleShare);
+  }, [addToast]);
+
+  // SOS Realtime 구독 — 파트너의 가불 요청 수신
+  useEffect(() => {
+    if (!setupDone || !householdId) return;
+    db.subscribeSos(householdId, (req) => {
+      if (req.requester !== myRole) {
+        setSosPending(prev => [...prev, req]);
+        setShowSosPending(true);
+        addToast(`🆘 가불 요청이 도착했습니다 (${req.amount.toLocaleString()}원)`, 'warning');
+      }
+    });
+    // SOS 채널은 household 채널과 함께 unsubscribe
+  }, [setupDone, householdId, myRole, addToast]);
 
   // B1/B2/B7: tx 디바운스 저장 effect
   // - B1: setTx가 functional update를 사용하므로 상태는 항상 올바름, 여기서 최종 값을 저장
@@ -403,6 +484,13 @@ export default function App() {
   const setSliderCfg = useCallback(v => { setSliderCfgRaw(v); savePrivate("sliderCfg", v); }, [savePrivate]);
   const setTheme = useCallback(v => { setThemeRaw(v); savePrivate("theme", v); }, [savePrivate]);
 
+  // 위젯 레이아웃 저장
+  const setWidgetLayout = useCallback(
+    /** @param {{ mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }} v */
+    v => setShared("widgetLayout", v, setWidgetLayoutRaw),
+    [setShared]
+  );
+
   // B4: id = ms * 1000 + 난수 → 동시 다건 추가 시 충돌 방지
   // setTx가 functional update이므로 연속 호출 시 prev가 항상 최신 상태 (B1 fix)
   const addTx = useCallback(/** @param {Omit<TxItem, 'id'>} t */ t =>
@@ -515,6 +603,26 @@ export default function App() {
     setSetupDone(true);
   }, [loadShared, savePrivate]);
 
+  // SOS 핸들러
+  const handleSosSubmit = useCallback(
+    /** @param {{ requester: string, amount: number, reason: string, repay_plan: string }} req */
+    async (req) => {
+      await db.createSosRequest(householdId, req);
+      addToast('가불 요청을 파트너에게 전송했습니다.');
+    },
+    [householdId, addToast]
+  );
+
+  const handleSosResolve = useCallback(
+    /** @param {number} id @param {'approved'|'rejected'} status */
+    async (id, status) => {
+      await db.resolveSos(id, status);
+      setSosPending(prev => prev.filter(r => r.id !== id));
+      addToast(status === 'approved' ? '가불을 승인했습니다.' : '가불을 거절했습니다.');
+    },
+    [addToast]
+  );
+
   const handleAdminLogin = useCallback(async () => {
     setIsAdmin(true);
     await savePrivate("isAdmin", true);
@@ -623,6 +731,18 @@ export default function App() {
           {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />}
           {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} />}
           {view === "admin" && isAdmin && <AdminView onClose={handleAdminLogout} addToast={addToast} />}
+          {view === "dashboard" && (
+            <DashboardView
+              plan={plan} budgets={budgets} tx={tx} fixed={fixed} names={names}
+              widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout}
+            />
+          )}
+          {view === "private" && (
+            <PrivateWalletView
+              plan={plan} tx={tx} myRole={myRole} names={names}
+              householdId={householdId} onSosSubmit={handleSosSubmit}
+            />
+          )}
         </div>
         <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} />
         {modal && <InputModal defaultWho={modal} names={names} plan={plan} cards={cards} onClose={() => setModal(null)} onSave={addTx} />}
@@ -631,6 +751,13 @@ export default function App() {
         {showCardScan && <CardScanSheet who={myRole} onSave={addTx} onSaveAll={addTxBatch} onClose={() => setShowCardScan(false)} />}
         {showBugReport && <BugReportModal householdId={householdId} onClose={() => setShowBugReport(false)} addToast={addToast} />}
         {showAdminLogin && <AdminLoginModal onLogin={handleAdminLogin} onClose={() => setShowAdminLogin(false)} addToast={addToast} />}
+        {showSosPending && sosPending.length > 0 && (
+          <SosPendingSheet
+            requests={sosPending} names={names}
+            onResolve={handleSosResolve}
+            onClose={() => setShowSosPending(false)}
+          />
+        )}
         <ToastContainer toasts={toasts} />
       </div>
     </BudgetContext.Provider>
