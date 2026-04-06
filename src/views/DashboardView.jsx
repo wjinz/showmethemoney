@@ -80,8 +80,9 @@ export function DashboardView({ plan, budgets, tx, fixed, names, widgetLayout, s
         breakpoints={{ desktop: 480, mobile: 0 }}
         cols={{ desktop: 2, mobile: 1 }}
         rowHeight={60}
-        dragConfig={{ enabled: true, handle: '.widget-handle', bounded: false, threshold: 3 }}
-        resizeConfig={{ enabled: false, handles: [] }}
+        isDraggable={true}
+        isResizable={false}
+        draggableHandle=".widget-handle"
         onLayoutChange={onLayoutChange}
       >
         {WIDGET_ENTRIES.map(([key, Widget]) => (
