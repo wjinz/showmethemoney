@@ -28,10 +28,11 @@ import { THEME_TOKENS as T } from '../styles/tokens.js';
  *   householdId: string,
  *   onSosSubmit: (req: { requester: string, amount: number, reason: string, repay_plan: string }) => Promise<void>,
  *   onSettings: () => void,
- *   onAdd: () => void
+ *   onAdd: () => void,
+ *   onSosRequest: () => void
  * }} props
  */
-export function PrivateWalletView({ plan, tx, myRole, names, householdId: _householdId, onSosSubmit, onSettings, onAdd }) {
+export function PrivateWalletView({ plan, tx, myRole, names, householdId: _householdId, onSosSubmit, onSettings, onAdd, onSosRequest }) {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pin, setPin]               = useState('');
   const [pinError, setPinError]     = useState(false);
@@ -168,7 +169,7 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
     plan={plan} tx={tx} myRole={myRole} names={names}
     onLock={() => setIsUnlocked(false)}
     onSettings={onSettings} onAdd={onAdd}
-    showSos={showSos} setShowSos={setShowSos}
+    onSosRequest={onSosRequest}
     onSosSubmit={onSosSubmit}
   />;
 }
@@ -186,13 +187,13 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
  *   onLock: () => void,
  *   onSettings: () => void,
  *   onAdd: () => void,
- *   showSos: boolean,
- *   setShowSos: (v: boolean) => void,
+ *   onSosRequest: () => void,
  *   onSosSubmit: (req: { requester: string, amount: number, reason: string, repay_plan: string }) => Promise<void>,
  * }} props
  */
-function UnlockedView({ plan, tx, myRole, names, onLock, onSettings: _onSettings, onAdd, showSos, setShowSos, onSosSubmit }) {
+function UnlockedView({ plan, tx, myRole, names, onLock, onSettings: _onSettings, onAdd, onSosRequest, onSosSubmit: _onSosSubmit }) {
   const name = names?.[myRole] ?? myRole;
+  const partnerName = myRole === 'husband' ? (names.wife || '와이프') : (names.husband || '남편');
 
   const { allowance, mySpent, leftAmt, pct } = useMemo(() => {
     const y = getYear(), m = getMonth();
@@ -208,7 +209,6 @@ function UnlockedView({ plan, tx, myRole, names, onLock, onSettings: _onSettings
 
   const privateTx    = tx.filter(t => t.who === myRole && t.is_private);
   const privateTxTotal = privateTx.reduce((s, t) => s + t.amount, 0);
-  const sosActive    = allowance > 0 && pct >= 90;
   const privateGoals = plan.privateGoals?.[/** @type {'husband'|'wife'} */ (myRole)] ?? [];
 
   return (
@@ -357,113 +357,91 @@ function UnlockedView({ plan, tx, myRole, names, onLock, onSettings: _onSettings
           style={{
             width: '100%', background: 'var(--gold)', border: 'none',
             borderRadius: T.radius.lg, padding: '16px',
-            color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer',
-            boxShadow: '0 4px 12px var(--goldD)',
+            color: '#fff', fontWeight: 800, fontSize: 16, cursor: 'pointer',
+            boxShadow: '0 8px 24px var(--goldD)',
+            transition: 'all 0.2s'
           }}
+          onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
         >
           + 내 개인 지출 입력하기
         </button>
       </div>
 
-      {/* SOS 버튼 — 90% 이상 소진 시 */}
-      <AnimatePresence>
-        {sosActive && (
-          <motion.button
-            key="sos-btn"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: [1, 1.03, 1], opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ repeat: Infinity, duration: 2 }}
-            onClick={() => setShowSos(true)}
-            style={{
-              width: '100%', padding: 16, borderRadius: T.radius.lg, border: 'none',
-              background: '#EF4444', color: '#fff', marginBottom: 20,
-              fontWeight: 900, fontSize: 15, cursor: 'pointer',
-              boxShadow: '0 4px 20px rgba(239,68,68,0.3)',
-            }}
-          >
-            🚨 긴급 생활비 가불 요청하기
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* SOS 버튼 — 상시 노출로 변경 */}
+      <div style={{ marginBottom: 20 }}>
+        <button
+          onClick={onSosRequest}
+          style={{
+            width: '100%', padding: 16, borderRadius: T.radius.lg,
+            background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444',
+            fontWeight: 800, fontSize: 15, cursor: 'pointer',
+            border: '2px solid rgba(239, 68, 68, 0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            transition: 'all 0.2s'
+          }}
+          onMouseOver={e => {
+            e.currentTarget.style.background = '#EF4444';
+            e.currentTarget.style.color = '#fff';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+            e.currentTarget.style.color = '#EF4444';
+          }}
+        >
+          🚨 {partnerName}에게 긴급 가불 요청하기
+        </button>
+      </div>
 
       {/* 비밀 지출 내역 */}
       <div
         style={{
           background: 'var(--bg2)', borderRadius: T.radius.xl,
           border: '1px solid var(--border-solid)', overflow: 'hidden',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
         }}
       >
-        <p
-          style={{
-            fontSize: 14, fontWeight: 700, color: 'var(--text)',
-            padding: '14px 16px 10px',
-            borderBottom: '1px solid var(--border-solid)', margin: 0,
-          }}
-        >
-          비밀 지출 내역
-        </p>
-        {privateTx.length === 0 ? (
-          <div
-            style={{
-              padding: '28px 16px', textAlign: 'center',
-              color: 'var(--text3)',
-            }}
-          >
-            <EyeOff size={28} style={{ opacity: 0.4, marginBottom: 8 }} />
-            <p style={{ fontSize: 13, margin: 0 }}>아직 비밀 지출이 없네요!</p>
-          </div>
-        ) : (
-          privateTx.slice(0, 30).map((t, idx) => {
-            const c = CAT[t.cat] || CATS[8];
-            const isLast = idx === Math.min(privateTx.length, 30) - 1;
-            return (
-              <div
-                key={t.id}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 16px',
-                  borderBottom: isLast ? 'none' : '1px solid var(--border-solid)',
-                  transition: 'background 0.15s',
-                }}
-                onMouseOver={e => { e.currentTarget.style.background = 'var(--bg3)'; }}
-                onMouseOut={e => { e.currentTarget.style.background = 'none'; }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div
-                    style={{
-                      width: 42, height: 42, borderRadius: T.radius.full,
-                      background: 'var(--bg3)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 18, flexShrink: 0,
-                      border: '1px solid var(--border-solid)',
-                    }}
-                  >
-                    {c.icon}
-                  </div>
+        <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>비밀 지출 내역</p>
+          <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>이번 달</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {privateTx.length === 0 ? (
+            <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: 24, marginBottom: 12, opacity: 0.5 }}>🤐</div>
+              <p style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 500 }}>이번 달 비밀 지출이 없습니다.</p>
+            </div>
+          ) : (
+            privateTx.sort((a,b) => b.date.localeCompare(a.date)).slice(0, 30).map((t, idx) => {
+              const c = CAT[t.cat] || CATS[8];
+              const isLast = idx === Math.min(privateTx.length, 30) - 1;
+              return (
+                <div
+                  key={t.id}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '14px 16px',
+                    borderBottom: isLast ? 'none' : '1px solid var(--border)',
+                    background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                  }}
+                >
                   <div>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', margin: 0 }}>{t.memo || c.label}</p>
-                    <p style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2 }}>{c.label} · {t.date}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--gold)' }}>{c.label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.memo || '지출'}</span>
+                    </div>
+                    <p style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 500 }}>{t.date}</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>-{fmtS(t.amount)}원</p>
+                    <p style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 600 }}>{t.payMethod === 'cash' ? '현금' : '카드'}</p>
                   </div>
                 </div>
-                <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--gold)', flexShrink: 0 }}>
-                  -{fmtS(t.amount)}원
-                </span>
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          )}
+        </div>
       </div>
-
-      {showSos && (
-        <SosRequestSheet
-          myRole={myRole}
-          allowance={allowance}
-          spentPct={pct}
-          onSubmit={onSosSubmit}
-          onClose={() => setShowSos(false)}
-        />
-      )}
     </motion.div>
   );
 }

@@ -6,9 +6,24 @@ import { runOCR } from "../utils/ocr";
 import { CardScanSheet } from "./CardScanSheet";
 import { CAT } from "../constants";
 import { BottomSheet } from "./BottomSheet.jsx";
+import { Camera, AlertCircle, Edit3, X, ChevronRight } from "lucide-react";
 
-export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCardScan }) {
-  const [who,       setWho]       = useState("husband");
+/**
+ * @param {{ 
+ *   names: Record<string, string>, 
+ *   plan: any, 
+ *   cards: any[], 
+ *   tx: any[], 
+ *   onSave: (v: any) => void, 
+ *   onClose: () => void, 
+ *   onCardScan: () => void,
+ *   onSosRequest: () => void,
+ *   myRole: string
+ * }} props
+ */
+export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCardScan, onSosRequest, myRole }) {
+  const [entryStep,  setEntryStep]  = useState('select'); // 'select' | 'form'
+  const [who,        setWho]        = useState(myRole || "husband");
   const [amount,    setAmount]    = useState("");
   const [cat,       setCat]       = useState("");
   const [memo,      setMemo]      = useState("");
@@ -20,15 +35,18 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
   const [isOCR,        setIsOCR]        = useState(false);
   const [ocrStatus,    setOcrStatus]    = useState(/** @type {'success'|'error'|null} */ (null));
   const [ocrMsg,       setOcrMsg]       = useState('');
+
+  const partnerName = myRole === 'husband' ? (names.wife || '와이프') : (names.husband || '남편');
   
-  // PWA Share Target 텍스트 처리 (useEffect)
+  // PWA Share Target 텍스트 처리
   useEffect(() => {
     // @ts-ignore
     const sharedText = window.__sharedText;
     if (sharedText) {
       setMemo(prev => prev ? prev + ' ' + sharedText : sharedText);
+      setEntryStep('form');
       // @ts-ignore
-      window.__sharedText = null; // 중복 방지
+      window.__sharedText = null;
     }
   }, []);
 
@@ -36,6 +54,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
     const file = e.target.files[0];
     if (!file) return;
     setIsOCR(true); setOcrStatus(null);
+    setEntryStep('form');
     try {
       const res = await runOCR(file);
       let filled = 0;
@@ -59,27 +78,101 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
     setTimeout(() => onClose(), 700);
   };
 
-  // 최근 1개월 기준 tx로 카테고리 빈도순 정렬
   const SORTED_CATS = useMemo(() => {
     const curYear = getYear();
     const curMonth = getMonth();
     const prefix = `${curYear}-${String(curMonth).padStart(2,'0')}`;
-    
     const freqs = {};
     tx.forEach(t => {
-      // 대충 최근 내역만 카운트 (간소화를 위해 앞자리 일치 확인)
       if(t.date && t.date.startsWith(prefix)) {
         freqs[t.cat] = (freqs[t.cat] || 0) + 1;
       }
     });
-    
     return [...CATS].sort((a,b) => (freqs[b.id] || 0) - (freqs[a.id] || 0));
   }, [tx]);
 
-  return (
-    <BottomSheet isOpen onClose={onClose} title={saved ? "✓ 저장됨" : "지출 입력"} maxHeight="92dvh">
-      <div>
+  if (entryStep === 'select') {
+    return (
+      <BottomSheet isOpen onClose={onClose} title="무엇을 기록할까요?" maxHeight="70dvh">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 0 20px' }}>
+          
+          {/* AI 영수증 스캔 */}
+          <label style={{ cursor: 'pointer', display: 'block' }}>
+            <input type="file" accept="image/*" capture="environment" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
+            <div style={{
+              background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
+              borderRadius: 24, padding: '24px 20px', display: 'flex', alignItems: 'center', gap: 18,
+              transition: 'transform 0.2s'
+            }}>
+              <div style={{ 
+                width: 56, height: 56, background: '#3B82F6', borderRadius: 16, 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+                boxShadow: '0 8px 16px rgba(59,130,246,0.3)'
+              }}>
+                <Camera size={28} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>AI 영수증 스캔</p>
+                <p style={{ fontSize: 13, color: '#3B82F6', fontWeight: 500 }}>사진 한 장으로 자동 입력</p>
+              </div>
+              <ChevronRight size={20} color="var(--text3)" />
+            </div>
+          </label>
 
+          {/* SOS 긴급 결재 */}
+          <div 
+            onClick={() => { onClose(); onSosRequest(); }}
+            style={{
+              background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)',
+              borderRadius: 24, padding: '24px 20px', display: 'flex', alignItems: 'center', gap: 18,
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ 
+              width: 56, height: 56, background: '#EF4444', borderRadius: 16, 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+              boxShadow: '0 8px 16px rgba(239,68,68,0.25)'
+            }}>
+              <AlertCircle size={28} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>SOS 긴급 결재</p>
+              <p style={{ fontSize: 13, color: '#EF4444', fontWeight: 500 }}>{partnerName}에게 애교있게 조르기 🥺</p>
+            </div>
+            <ChevronRight size={20} color="var(--text3)" />
+          </div>
+
+          {/* 직접 입력하기 */}
+          <div 
+            onClick={() => setEntryStep('form')}
+            style={{
+              background: 'var(--bg3)', border: '1px solid var(--border)',
+              borderRadius: 24, padding: '20px 20px', display: 'flex', alignItems: 'center', gap: 18,
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ 
+              width: 56, height: 56, background: 'var(--gold)', borderRadius: 16, 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+              boxShadow: '0 8px 16px var(--goldD)'
+            }}>
+              <Edit3 size={24} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>직접 입력하기</p>
+              <p style={{ fontSize: 12, color: 'var(--text2)' }}>카테고리와 금액을 한 땀 한 땀</p>
+            </div>
+            <ChevronRight size={18} color="var(--text3)" />
+          </div>
+
+        </div>
+      </BottomSheet>
+    );
+  }
+
+  return (
+    <BottomSheet isOpen onClose={onClose} title={saved ? "✓ 저장됨" : "직접 입력"} maxHeight="92dvh">
+      <div>
         {!plan?.isSolo && (
           <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
             {["husband", "wife"].map(r => (
@@ -178,7 +271,6 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
           ))}
         </div>
 
-        {/* 결제 수단 & 카드 선택 (상시 노출로 변경) */}
         <div style={{ marginBottom: 14 }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
             {[
@@ -240,7 +332,6 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
 
         {expanded && (
           <div style={{ marginBottom: 14, animation: "fadeIn 0.2s ease" }}>
-            {/* 날짜 */}
             <div style={{
               display: "flex", alignItems: "center", gap: 8,
               background: "var(--bg3)", borderRadius: 12,
@@ -258,8 +349,6 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
                 }}
               />
             </div>
-
-            {/* 메모 */}
             <div style={{
               background: "var(--bg3)", borderRadius: 12,
               padding: "4px 14px", marginBottom: 8,
@@ -279,7 +368,6 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
           </div>
         )}
 
-        {/* OCR 피드백 */}
         {ocrStatus && (
           <div style={{
             display: "flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 14px", marginBottom: 12, fontSize: 12,
@@ -291,14 +379,13 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
           </div>
         )}
 
-        {/* 카메라 + 카드스캔 + 저장 */}
         <div style={{ display: "flex", gap: 8 }}>
           <label style={{
             width: 58, height: 58, borderRadius: 16, background: "var(--bg3)", border: "1px solid var(--border)",
             display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 22, flexShrink: 0,
           }}>
             <input type="file" accept="image/*" capture="environment" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
-            {isOCR ? <OCRSpinner /> : "📷"}
+            {isOCR ? <OCRSpinner /> : <Camera size={24} color="var(--text2)" />}
           </label>
           <button
             onClick={onCardScan}
@@ -341,7 +428,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
             {saved
               ? "✓ 저장 완료"
               : (!amount || !cat)
-              ? "금액/카테고리 선택"
+              ? "저장"
               : `${parseInt(amount).toLocaleString()}원 저장`}
           </button>
         </div>

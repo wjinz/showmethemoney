@@ -34,6 +34,7 @@ import { BugReportModal } from "./components/BugReportModal.jsx";
 import { AdminLoginModal } from "./components/AdminLoginModal.jsx";
 import { QuickEntrySheet } from "./components/QuickEntrySheet.jsx";
 import { SosPendingSheet } from "./components/SosPendingSheet.jsx";
+import { SosRequestSheet } from "./components/SosRequestSheet.jsx";
 import { useToast, ToastContainer } from "./components/Toast.jsx";
 import { db, isSupabaseConfigured } from "./utils/supabase.js";
 import { BudgetContext } from "./context/BudgetContext.jsx";
@@ -56,7 +57,9 @@ export default function App() {
   // 위젯 레이아웃 상태
   const [widgetLayout, setWidgetLayoutRaw] = useState(DEFAULT_WIDGET_LAYOUT);
 
-  // SOS 상태
+  // SOS 상태 (가불 요청 보낼 때 사용)
+  const [showSosRequest, setShowSosRequest] = useState(false);
+  // SOS 펜딩 상태 (가불 요청을 받았을 때 사용)
   const [sosPending, setSosPending] = useState(/** @type {SosRequest[]} */ ([]));
   const [showSosPending, setShowSosPending] = useState(false);
 
@@ -745,16 +748,27 @@ export default function App() {
               plan={plan} tx={tx} myRole={myRole} names={names}
               householdId={householdId} onSosSubmit={handleSosSubmit}
               onAdd={() => setModal(myRole)} onSettings={() => setView("settings")}
+              onSosRequest={() => setShowSosRequest(true)}
             />
           )}
         </div>
         <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} />
         {modal && <InputModal defaultWho={modal} names={names} plan={plan} cards={cards} onClose={() => setModal(null)} onSave={addTx} />}
         {showWidget && <WidgetView tx={tx} budgets={budgets} names={names} onClose={() => setShowWidget(false)} />}
-        {showQuickEntry && <QuickEntrySheet names={names} plan={plan} cards={cards} tx={tx} onSave={addTx} onClose={() => setShowQuickEntry(false)} onCardScan={() => { setShowQuickEntry(false); setShowCardScan(true); }} />}
+        {showQuickEntry && <QuickEntrySheet names={names} plan={plan} cards={cards} tx={tx} onSave={addTx} onClose={() => setShowQuickEntry(false)} onCardScan={() => { setShowQuickEntry(false); setShowCardScan(true); }} onSosRequest={() => setShowSosRequest(true)} myRole={myRole} />}
         {showCardScan && <CardScanSheet who={myRole} onSave={addTx} onSaveAll={addTxBatch} onClose={() => setShowCardScan(false)} />}
         {showBugReport && <BugReportModal householdId={householdId} onClose={() => setShowBugReport(false)} addToast={addToast} />}
         {showAdminLogin && <AdminLoginModal onLogin={handleAdminLogin} onClose={() => setShowAdminLogin(false)} addToast={addToast} />}
+        {showSosRequest && (
+          <SosRequestSheet 
+            myRole={myRole} 
+            allowance={0} // PrivateWalletView 내부 계산 로직 유지 
+            spentPct={0} 
+            onSubmit={handleSosSubmit} 
+            onClose={() => setShowSosRequest(false)} 
+            names={names}
+          />
+        )}
         {showSosPending && sosPending.length > 0 && (
           <SosPendingSheet
             requests={sosPending} names={names}
