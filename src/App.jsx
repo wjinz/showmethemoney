@@ -739,6 +739,7 @@ export default function App() {
           {view === "dashboard" && (
             <DashboardView
               plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} names={names}
+              myRole={myRole}
               widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout}
               onSettings={() => setView("settings")}
             />
