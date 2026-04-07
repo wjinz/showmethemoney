@@ -261,6 +261,29 @@ export const db = {
   },
 
   /**
+   * SOS 요청 수정 (금액, 사유 등)
+   * @param {number} id
+   * @param {Partial<import('../constants/index.js').SosRequest>} updates
+   */
+  async updateSos(id, updates) {
+    const { error } = await supabase.from('sos_requests')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  /**
+   * SOS 요청 삭제 (취소)
+   * @param {number} id
+   */
+  async deleteSos(id) {
+    const { error } = await supabase.from('sos_requests')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  /**
    * pending 상태 SOS 요청 목록 조회
    * @param {string} hid
    * @returns {Promise<import('../constants/index.js').SosRequest[]>}

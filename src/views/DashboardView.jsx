@@ -37,13 +37,16 @@ import { FixedExpenseWidget } from './widgets/FixedExpenseWidget.jsx';
  *   names: Record<string, string>,
  *   myRole: string,
  *   mySosPending?: SosRequest[],
+ *   sosRequests?: SosRequest[],
+ *   onSosUpdate?: (id: number, updates: Partial<SosRequest>) => void,
+ *   onSosCancel?: (id: number) => void,
  *   widgetLayout: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] },
  *   setWidgetLayout: (v: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }) => void,
  *   onSettings?: () => void,
  *   setPlan: (v: any) => void
  * }} props
  */
-export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [], cards = [], names, myRole, mySosPending = [], widgetLayout, setWidgetLayout, onSettings: _onSettings }) {
+export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [], cards = [], names, myRole, mySosPending = [], sosRequests = [], onSosUpdate, onSosCancel, widgetLayout, setWidgetLayout, onSettings: _onSettings }) {
   const [isEditMode, setIsEditMode] = useState(false);
   const layouts = widgetLayout ?? DEFAULT_WIDGET_LAYOUT;
   const { containerRef, width } = useContainerWidth();
@@ -110,7 +113,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
     }
   };
 
-  const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, install, cards, names, myRole, mySosPending }), [plan, setPlan, budgets, tx, fixed, install, cards, names, myRole, mySosPending]);
+  const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, install, cards, names, myRole, mySosPending, sosRequests, onSosUpdate, onSosCancel }), [plan, setPlan, budgets, tx, fixed, install, cards, names, myRole, mySosPending, sosRequests, onSosUpdate, onSosCancel]);
 
   /** @type {Record<string, string>} */
   const DISPLAY_NAMES = {
@@ -151,10 +154,10 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
   const visibleWidgetKeys = useMemo(() => {
     return currentKeys.filter(key => {
       if (!WIDGET_MAP[key]) return false; // 방어 로직
-      if (key === 'sos_status') return (mySosPending?.length ?? 0) > 0;
+      // sos_status는 이제 상시 노출 (사용자 요청 반영)
       return true;
     });
-  }, [currentKeys, mySosPending, WIDGET_MAP]);
+  }, [currentKeys, WIDGET_MAP]);
 
   return (
     <div ref={containerRef} style={{ padding: '0 4px 120px', overflowY: 'auto', height: '100%', background: 'var(--bg)' }}>

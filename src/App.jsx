@@ -719,6 +719,27 @@ export default function App() {
     [addToast]
   );
 
+  const handleSosUpdate = useCallback(
+    /** @param {number} id @param {Partial<SosRequest>} updates */
+    async (id, updates) => {
+      await db.updateSos(id, updates);
+      setSosRequests(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+      addToast('가불 요청을 수정했습니다.');
+    },
+    [addToast]
+  );
+
+  const handleSosCancel = useCallback(
+    /** @param {number} id */
+    async (id) => {
+      if (!confirm('가불 요청을 취소하시겠습니까?')) return;
+      await db.deleteSos(id);
+      setSosRequests(prev => prev.filter(r => r.id !== id));
+      addToast('가불 요청이 취소되었습니다.');
+    },
+    [addToast]
+  );
+
   const handleAdminLogin = useCallback(async () => {
     setIsAdmin(true);
     await savePrivate("isAdmin", true);
@@ -854,7 +875,7 @@ export default function App() {
                 case "report":    return <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />;
                 case "settings":  return <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />;
                 case "admin":     return isAdmin ? <AdminView onClose={handleAdminLogout} addToast={addToast} /> : null;
-                case "dashboard": return <DashboardView plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} install={install} cards={cards} names={names} myRole={myRole} mySosPending={mySosPending} widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout} onSettings={() => setView("settings")} />;
+                case "dashboard": return <DashboardView plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} install={install} cards={cards} names={names} myRole={myRole} mySosPending={mySosPending} sosRequests={sosRequests} onSosUpdate={handleSosUpdate} onSosCancel={handleSosCancel} widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout} onSettings={() => setView("settings")} />;
                 case "private":   return <PrivateWalletView plan={plan} tx={tx} myRole={myRole} names={names} householdId={householdId} onSosSubmit={handleSosSubmit} onAdd={() => setModal({ who: myRole, isPrivate: true })} onSettings={() => setView("settings")} onSosRequest={() => setShowSosRequest(true)} />;
                 default:          return <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />;
               }
