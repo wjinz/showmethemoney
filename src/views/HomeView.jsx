@@ -135,6 +135,22 @@ export function HomeView({
   const [showFull, setShowFull]     = useState(false);
   const [editItem, setEditItem]     = useState(/** @type {TxItem|null} */ (null));
 
+  // -- Allowance Data Calculation (Image 3 integration) --
+  const allowanceData = useMemo(() => {
+    const p = plan || {};
+    if (p.isSolo) return null;
+    const targets = p.allowance || { husband: 0, wife: 0 };
+    
+    // 이번 달 비밀 지출 (is_private === true) 집계
+    const hPrivate = tx.filter(t => t.date.startsWith(curMonthPrefix) && t.is_private && t.who === 'husband').reduce((s, t) => s + t.amount, 0);
+    const wPrivate = tx.filter(t => t.date.startsWith(curMonthPrefix) && t.is_private && t.who === 'wife').reduce((s, t) => s + t.amount, 0);
+    
+    return {
+      husband: { target: targets.husband || 0, spent: hPrivate, remaining: (targets.husband || 0) - hPrivate, pct: (targets.husband || 0) > 0 ? Math.min(100, Math.round(hPrivate / targets.husband * 100)) : 0 },
+      wife:    { target: targets.wife || 0,    spent: wPrivate, remaining: (targets.wife || 0) - wPrivate,    pct: (targets.wife || 0) > 0    ? Math.min(100, Math.round(wPrivate / targets.wife * 100))    : 0 }
+    };
+  }, [tx, plan, curMonthPrefix]);
+
   // Layout Handlers
   const saveLayout = useRef(
     debounce((next) => {
@@ -219,7 +235,7 @@ export function HomeView({
   // Widget Mapper
   const WIDGET_MAP = {
     hero:              () => <HomeHeroWidget remaining={remaining} YEAR={YEAR} MONTH={MONTH} DAY={DAY} daysLeft={daysLeft} onSettings={onSettings} />,
-    execution_summary: () => <HomeExecutionSummaryWidget isTotalMode={isTotalMode} setIsTotalMode={setIsTotalMode} totalSpent={totalSpent} variableSpent={variableSpent} ringPct={ringPct} ringDash={ringDash} paceStatus={paceStatus} fixedTotal={fixedTotal} installTotal={installTotal} totalBudget={totalBudget} onSettings={onSettings} />,
+    execution_summary: () => <HomeExecutionSummaryWidget isTotalMode={isTotalMode} setIsTotalMode={setIsTotalMode} totalSpent={totalSpent} variableSpent={variableSpent} ringPct={ringPct} ringDash={ringDash} paceStatus={paceStatus} fixedTotal={fixedTotal} installTotal={installTotal} totalBudget={totalBudget} allowanceData={allowanceData} names={names} onSettings={onSettings} />,
     ai_nudge:          () => <HomeAiCoachWidget nudgeText={nudgeText} />,
     sos_pending:       () => <HomeSosPendingWidget sosPending={sosPending} onSosResolve={onSosResolve} />,
     pace_predictor:    () => <HomePacePredictorWidget isOnTrack={isOnTrack} remainingAtPace={remainingAtPace} currentPaceDaily={currentPaceDaily} daysLeft={daysLeft} paceProgressPct={paceProgressPct} variableSpent={variableSpent} totalBudget={totalBudget} />,

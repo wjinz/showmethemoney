@@ -14,13 +14,15 @@ import { fmtS } from "../../utils/helpers";
  *   fixedTotal: number,
  *   installTotal: number,
  *   totalBudget: number,
+ *   allowanceData: { husband: any, wife: any } | null,
+ *   names: Record<string, string>,
  *   onSettings: (v: string) => void
  * }} props
  */
 export function HomeExecutionSummaryWidget({
   isTotalMode, setIsTotalMode, totalSpent, variableSpent,
   ringPct, ringDash, paceStatus, fixedTotal, installTotal,
-  totalBudget, onSettings
+  totalBudget, allowanceData, names, onSettings
 }) {
   const CIRC = 251;
 
@@ -147,6 +149,49 @@ export function HomeExecutionSummaryWidget({
           </div>
         ))}
       </div>
+
+      {/* 추가: 부부 용돈 현황 (Image 3 스타일 통합) */}
+      {allowanceData && (
+        <div style={{ marginTop: 4, padding: '16px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: T.radius.lg, border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+             <span style={{ fontSize: 13 }}>🐷</span>
+             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)' }}>부부 용돈 현황</span>
+          </div>
+          
+          {['husband', 'wife'].map(role => {
+            const data = allowanceData[role];
+            const color = role === 'husband' ? 'var(--h)' : 'var(--w)';
+            const bg = role === 'husband' ? 'var(--hD)' : 'var(--wD)';
+            return (
+              <div key={role} style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
+                      {names[role]} <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500, marginLeft: 2 }}>{data.pct}%</span>
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>
+                    {fmtS(data.remaining)}원 <span style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 500 }}>남음</span>
+                  </span>
+                </div>
+                <div style={{ height: 6, background: 'var(--bg4)', borderRadius: 99, overflow: 'hidden' }}>
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${data.pct}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    style={{ height: '100%', background: color, borderRadius: 99 }} 
+                  />
+                </div>
+              </div>
+            );
+          })}
+          
+          <div style={{ fontSize: 9, color: 'var(--text3)', textAlign: 'center', marginTop: 10, opacity: 0.6 }}>
+            * 개인별 비밀 용돈 지출 기반 🤫
+          </div>
+        </div>
+      )}
     </div>
   );
 }
