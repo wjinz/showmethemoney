@@ -2,10 +2,6 @@
 // API 키를 서버 사이드에서만 사용 (브라우저 번들에 포함되지 않음)
 // Vercel 환경 변수: GOOGLE_API_KEY (VITE_ 접두사 없이 설정)
 
-/** @type {string} Gemini 모델 ID */
-const GEMINI_MODEL = 'gemini-2.5-flash';
-/** @type {string} Gemini generateContent 엔드포인트 베이스 URL */
-const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
 
 /**
  * @param {import('http').IncomingMessage & {body: {image?: string, mediaType?: string, mode?: string}}} req
@@ -42,81 +38,146 @@ export default async function handler(req, res) {
   }
 
   const today = new Date().toISOString().slice(0, 10);
+  const currentYear = today.slice(0, 4);
   const CAT_GUIDE = `food, housing, education, transport, medical, culture, clothing, sub, etc`;
 
-  const promptText = mode === 'bulk'
-    ? `이 이미지는 카드 앱의 이용내역 화면 캡처입니다.
-화면에 보이는 모든 결제 내역을 추출하세요.
+  // 1. 시스템 지시문 (행동 지침 격리)
+  const systemInstruction = `You are a JSON-only OCR extractor. 
+Begin your response immediately with the JSON character ([ or {). 
+Never explain, never summarize, never output markdown code blocks unless forced. 
+No preamble, no postamble.`;
 
-아래 JSON 배열 형식으로만 응답하세요 (코드블록, 설명 없이):
-[{"date":"YYYY-MM-DD","amount":숫자,"cat":"카테고리","memo":"가맹점명"},...]
+  let promptText = '';
+  if (mode === 'bulk') {
+    promptText = `CRITICAL: Output ONLY valid JSON array. Start with [ and end with ].
+Extract all transactions from this card statement screenshot.
+Format: [{"date":"YYYY-MM-DD","amount":number,"cat":"category","memo":"merchant"}]
+Rules:
+- Category must be one of: ${CAT_GUIDE}
+- Amount must be a positive number (no commas, no currency signs)
+- If date is missing, use ${today}. If year is missing, use ${currentYear}.
+- Example: [{"date":"2026-04-01","amount":15000,"cat":"food","memo":"스타벅스"}]`;
+  } else if (mode === 'schedule') {
+    promptText = `CRITICAL: Output ONLY valid JSON object. Start with { and end with }.
+Extract all names and their work schedules from this image.
+Format: {"names":["Name1"],"schedules":{"Name1":[{"date":"YYYY-MM-DD","type":"shift_name"}]}}
+Rules:
+- Map codes (D,N,E,O) to Day, Night, Evening, Off.
+- Use year ${currentYear} if missing.
+- IMPORTANT: If scanning in December but the schedule is for January, use ${parseInt(currentYear) + 1}.
+- Example: {"names":["홍길동"],"schedules":{"홍길동":[{"date":"2026-04-01","type":"Day"}]}}`;
+  } else {
+    promptText = `CRITICAL: Output ONLY valid JSON object. Start with { and end with }.
+Extract the total amount, category, and merchant from this receipt.
+Format: {"amount":number,"cat":"category","memo":"merchant"}
+- Category: one of [${CAT_GUIDE}]
+- Example: {"amount":12000,"cat":"food","memo":"김밥천국"}`;
+  }
 
-날짜가 없는 항목은 오늘(${today})을 사용하세요. 연도가 없으면 ${today.slice(0,4)}년으로 가정하세요.
-취소/환불 내역은 제외하세요. 금액은 양수 숫자만(원 기호, 콤마 제거).
-카테고리: ${CAT_GUIDE}`
-    : `이 영수증 이미지를 분석해서 지출 정보를 추출해주세요.
 
-아래 JSON 형식으로만 응답하세요 (코드블록, 설명 없이 JSON만):
-{"amount": 숫자, "cat": "카테고리", "memo": "가게명 또는 설명"}
+  // Fallback 모델 체인 (차세대 전용: Gemma 4 -> Gemini 2.x)
+  const models = ['gemma-4-31b-it', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+  let lastErrorJson = null;
+  let lastStatus = 500;
+  let geminiRes = null;
 
-카테고리는 아래 중 하나만 선택:
-- food, housing, education, transport, medical, culture, clothing, sub, etc
+  for (const model of models) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    try {
+      geminiRes = await fetch(`${url}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: [{
+            parts: [
+              { text: promptText },
+              { inline_data: { mime_type: mediaType, data: image } }
+            ]
+          }],
+          generationConfig: {
+            temperature: 0.0,
+            // [최적화] single 모드는 256 토큰이면 충분함 (추론 시간 단축)
+            maxOutputTokens: mode === 'single' ? 256 : (mode === 'bulk' ? 4096 : 1024),
+            response_mime_type: "application/json"
+          }
+        }),
+      });
 
-영수증에서 총액(합계)을 amount로 추출하세요. 금액은 숫자만(원 기호, 콤마 제거).`;
-
-  try {
-    // Gemini API 호출 (v1beta + gemini-2.0-flash-lite)
-    // 주의: v1(정식) 엔드포인트는 -latest alias를 지원하지 않아 404 발생
-    const geminiRes = await fetch(`${GEMINI_BASE_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: promptText },
-            { inline_data: { mime_type: mediaType, data: image } }
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: mode === 'bulk' ? 2048 : 1024,
-        }
-      }),
-    });
-
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      console.error('Gemini API 오류:', errText);
-      try {
-        const errJson = JSON.parse(errText);
-        const detail = errJson.error?.message || 'Unknown Gemini error';
-        return res.status(geminiRes.status).json({ error: `Gemini API 오류: ${detail} (Code: ${geminiRes.status})` });
-      } catch {
-        return res.status(geminiRes.status).json({ error: `Gemini API 오류: ${geminiRes.status}` });
+      if (geminiRes.ok) {
+        break; // 성공 시 루프 탈출
       }
-    }
+      
+      const errText = await geminiRes.text();
+      lastStatus = geminiRes.status;
+      lastErrorJson = { error: `AI ${model} 오류 (Code: ${geminiRes.status}) - ${errText}` };
 
+      // 429 (Rate Limit) 또는 503 (Service Unavailable)면 다음 모델을 시도
+      if (geminiRes.status !== 429 && geminiRes.status !== 503) {
+        break;
+      }
+    } catch (err) {
+      console.error(`OCR 처리 오류 (${model}):`, err);
+      lastErrorJson = { error: err instanceof Error ? err.message : '요청 실패' };
+    }
+  }
+
+  if (!geminiRes || !geminiRes.ok) {
+    return res.status(lastStatus).json(lastErrorJson || { error: '모든 AI 엔진 요청 실패' });
+  }
+
+  let text = '';
+  try {
     const data = await geminiRes.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 
-    if (mode === 'bulk') {
-      const arrMatch = text.match(/\[[\s\S]*\]/);
-      if (!arrMatch) return res.status(422).json({ error: '거래 내역을 인식하지 못했습니다.' });
-      /** @type {Array<{date:string, amount:number, cat:string, memo:string}>} */
-      const items = JSON.parse(arrMatch[0]);
-      const valid = items.filter(i => typeof i.amount === 'number' && i.amount > 0);
-      return res.status(200).json({ items: valid });
+    // [3단계 견고한 파싱 파이프라인]
+    
+    // 1단계: 기본적인 클리닝 (트림 및 마크다운 제거)
+    let cleaned = text.trim()
+      .replace(/^```(?:json)?\s*/, '') // 시작 마크다운 제거
+      .replace(/\s*```$/, '');         // 끝 마크다운 제거
+    
+    // 2단계: 직접 파싱 시도
+    try {
+      const parsed = JSON.parse(cleaned);
+      return res.status(200).json(normalizeOcrData(parsed, mode));
+    } catch (e) {
+      // 3단계: 정규식 기반 폴백
+      const startChar = mode === 'bulk' ? '[' : '{';
+      const endChar = mode === 'bulk' ? ']' : '}';
+      const startIdx = cleaned.indexOf(startChar);
+      const endIdx = cleaned.lastIndexOf(endChar);
+      
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        try {
+          const fallbackParsed = JSON.parse(cleaned.slice(startIdx, endIdx + 1));
+          return res.status(200).json(normalizeOcrData(fallbackParsed, mode));
+        } catch (e2) {
+          throw new Error(`JSON 구조 추출 후 파싱 실패: ${e2.message}`);
+        }
+      }
+      throw new Error(`응답에서 JSON 구조(${startChar}...${endChar})를 찾을 수 없습니다.`);
     }
-
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return res.status(422).json({ error: '영수증에서 정보를 인식하지 못했습니다.' });
-    /** @type {{amount?: number, cat?: string, memo?: string}} */
-    const result = JSON.parse(match[0]);
-    if (typeof result.amount !== 'number' || result.amount <= 0) result.amount = 0;
-    return res.status(200).json(result);
 
   } catch (err) {
-    console.error('OCR 처리 오류:', err);
-    return res.status(500).json({ error: err instanceof Error ? err.message : 'OCR 처리 중 오류가 발생했습니다.' });
+    console.error('OCR 파싱 오류:', err);
+    return res.status(500).json({ 
+      error: `OCR 파싱 오류: ${err.message}`,
+      raw: text.slice(0, 300)
+    });
   }
+}
+
+/**
+ * AI 응답 데이터를 모드별로 정규화하여 프런트엔드 크래시를 방지합니다.
+ */
+function normalizeOcrData(parsed, mode) {
+  if (mode === 'bulk') {
+    // 배열이 아니면 배열로 감싸기
+    if (!Array.isArray(parsed)) return { items: [parsed] };
+    return { items: parsed };
+  }
+
+  return parsed;
 }

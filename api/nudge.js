@@ -1,8 +1,8 @@
 // Vercel Serverless Function — AI 지출 패턴 조언 (Nudge)
 import { kv } from '@vercel/kv';
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
-const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
+const GEMINI_MODEL = 'gemini-2.0-flash-lite';
+const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 /**
  * @param {import('http').IncomingMessage & {body: { spent: number, total: number, txSummary: string, householdId?: string }}} req
@@ -13,12 +13,17 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+  const { spent, total, txSummary, householdId = '' } = req.body;
 
   const apiKey = process.env.GOOGLE_API_KEY?.trim();
   if (!apiKey) return res.status(500).json({ error: 'API 키가 서버에 설정되지 않았습니다.' });
 
-  const { spent, total, txSummary, householdId = '' } = req.body;
+  // 내부 시크릿 인증
+  const internalSecret = process.env.INTERNAL_API_SECRET;
+  if (internalSecret && req.headers['x-internal-secret'] !== internalSecret) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   const pct = total > 0 ? Math.round((spent / total) * 100) : 0;
 
   // pct를 5% 단위로 버림 → 캐시 히트율 향상 (TTL 1h)
@@ -45,30 +50,40 @@ ${txSummary || '지출 내역 없음'}
 3. 예산 소진율(${pct}%)에 걸맞는 톤앤매너를 유지하세요. (90% 이상이면 잔소리, 50% 미만이면 응원 등)
 4. 응답은 순수 텍스트로만 반환하세요 (따옴표나 JSON 형식 금지).`;
 
-  try {
-    const resp = await fetch(`${GEMINI_BASE_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 60 }
-      }),
-    });
+  // Fallback 모델 체인 (1순위 gemma-4-31b-it)
+  const models = ['gemma-4-31b-it', 'gemini-2.5-flash-lite'];
+  let lastError = 'Nudge 생성 실패';
 
-    if (!resp.ok) {
-      return res.status(resp.status).json({ error: 'Gemini API Error' });
+  for (const model of models) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    try {
+      const resp = await fetch(`${url}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 100 }
+        }),
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        let text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+        if (text) {
+          text = text.trim().replace(/^"|"$/g, '');
+          // 캐시 저장 (TTL 24시간)
+          try { await kv.set(cacheKey, text, { ex: 86400 }); } catch {}
+          return res.status(200).json({ message: text });
+        }
+      } else {
+        lastError = await resp.text();
+      }
+    } catch (err) {
+      console.error(`Nudge API 에러 (${model}):`, err);
+      lastError = err instanceof Error ? err.message : '요청 실패';
     }
-
-    const data = await resp.json();
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '이번 달 지출, 꼼꼼히 관리해 봅시다!';
-    text = text.trim().replace(/^"|"$/g, '');
-
-    // 캐시 저장 (TTL 1시간)
-    try { await kv.set(cacheKey, text, { ex: 3600 }); } catch {}
-
-    return res.status(200).json({ message: text });
-  } catch (err) {
-    console.error('Nudge API 에러:', err);
-    return res.status(500).json({ error: 'Nudge 생성 실패' });
   }
+
+  // 모든 모델 실패 시 기본 메시지
+  return res.status(200).json({ message: '이번 달 지출, 꼼꼼히 관리해 봅시다!', error: lastError });
 }

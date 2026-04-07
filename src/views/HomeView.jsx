@@ -204,11 +204,25 @@ export function HomeView({
   useEffect(() => {
     if (thisMonthTx.length === 0) return;
     const ctrl = new AbortController();
+    
+    // 버킷 파악용 pct 및 키 이름
+    const _variableSpent = thisMonthTx.reduce((s, t) => s + t.amount, 0);
+    const _pct = totalBudget > 0 ? Math.min(Math.round(_variableSpent / totalBudget * 100), 100) : 0;
+    const pctBucket = Math.floor(_pct / 5) * 5;
+    const sessionKey = `nudge-${curMonthPrefix}-${pctBucket}`;
+    
+    const localCache = sessionStorage.getItem(sessionKey);
+    if (localCache) {
+      setNudgeText(localCache);
+      return;
+    }
+
     /** @type {Record<string, number>} */
     const summary = {};
     for (const t of thisMonthTx) {
       summary[t.cat] = (summary[t.cat] || 0) + t.amount;
     }
+    
     fetch("/api/nudge", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -216,10 +230,15 @@ export function HomeView({
       signal: ctrl.signal,
     })
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.text) setNudgeText(data.text); })
+      .then(data => { 
+        if (data?.message) {
+          setNudgeText(data.message);
+          sessionStorage.setItem(sessionKey, data.message);
+        }
+      })
       .catch(() => {/* nudge 실패는 조용히 처리 */});
     return () => ctrl.abort();
-  }, [thisMonthTx.length, totalBudget, remaining]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [thisMonthTx.length, totalBudget, remaining, curMonthPrefix]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // B8: 검색 결과 memoize
   const filteredTx = useMemo(() => {

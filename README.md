@@ -48,16 +48,25 @@ npm install
 npm run dev
 ```
 
-## GitHub Pages 배포
+## 🚀 배포 (Deployment)
 
-1. 저장소 → **Settings** → **Pages** → Source: **GitHub Actions**
-2. `vite.config.js`에서 `base` 값을 저장소 이름으로 변경
-   ```js
-   base: '/family-budget-app/'   // 본인 저장소 이름으로
-   ```
-3. `main` 브랜치에 push → 자동 빌드·배포
+본 프로젝트는 **Vercel**을 통해 배포 및 운영되고 있습니다.
 
-배포 완료 후: `https://[아이디].github.io/[저장소명]/`
+- **Vercel 프로젝트명**: `showmethemoney`
+- **프로덕션 URL**: [https://showmethemoney-eta.vercel.app](https://showmethemoney-eta.vercel.app)
+
+> [!CAUTION]
+> 배포 시 반드시 `npx vercel link`를 통해 **showmethemoney** 프로젝트에 연결되어 있는지 확인하십시오. (`showmethemoney-eta` 프로젝트와 혼동 주의)
+
+### 배포 방법
+```bash
+# 1. 프로젝트 연결 확인
+npx vercel link
+
+# 2. 실 서버 배포 (Production)
+npx vercel --prod
+```
+
 
 ## 기술 스택
 
