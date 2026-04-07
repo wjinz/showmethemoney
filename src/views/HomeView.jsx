@@ -249,13 +249,13 @@ export function HomeView({
     const enforceMin = (layout, defaultLayout) => layout.map(l => {
       const def = defaultLayout.find(d => d.i === l.i);
       const minH = def?.minH || 1;
-      return { ...l, h: Math.max(l.h, minH), minH };
+      return { ...l, h: Math.max(l.h, minH), minH, static: !isEditMode };
     });
     return {
       desktop: enforceMin(layouts.desktop, DEFAULT_HOME_LAYOUT.desktop),
       mobile:  enforceMin(layouts.mobile, DEFAULT_HOME_LAYOUT.mobile),
     };
-  }, [layouts]);
+  }, [layouts, isEditMode]);
 
   return (
     <div ref={containerRef} style={{ padding: "0 4px 96px", overflowY: "auto", height: "100%", background: 'var(--bg)' }}>

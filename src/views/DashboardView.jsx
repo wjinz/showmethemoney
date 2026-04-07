@@ -49,13 +49,13 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
     const enforceMin = (layout, defaultLayout) => layout.map(l => {
       const def = defaultLayout.find(d => d.i === l.i);
       const minH = def?.minH || 1;
-      return { ...l, h: Math.max(l.h, minH), minH };
+      return { ...l, h: Math.max(l.h, minH), minH, static: !isEditMode };
     });
     return {
       desktop: enforceMin(layouts.desktop, DEFAULT_WIDGET_LAYOUT.desktop),
       mobile:  enforceMin(layouts.mobile, DEFAULT_WIDGET_LAYOUT.mobile),
     };
-  }, [layouts]);
+  }, [layouts, isEditMode]);
 
   const saveLayout = useRef(
     debounce((/** @type {{ mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }} */ next) => {
