@@ -4,7 +4,7 @@ export function SliderRow({ label, value, min, max, step=1000, onChange, fillCol
   const clamped = Math.min(Math.max(value, min), max);
   const pct     = max > min ? ((clamped - min) / (max - min)) * 100 : 0;
   const fill    = fillColor || "var(--gold)";
-  const trackBg = `linear-gradient(to right, ${fill} 0%, ${fill} ${pct}%, var(--track) ${pct}%, var(--track) 100%)`;
+  const trackBg = `linear-gradient(to right, ${fill} 0%, ${fill} ${pct}%, rgba(255,255,255,0.15) ${pct}%, rgba(255,255,255,0.15) 100%)`;
 
   return (
     <div style={{marginBottom:16}}>

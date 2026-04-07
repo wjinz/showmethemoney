@@ -63,6 +63,7 @@ export function KidsView() {
       who: myRole,
       payMethod: 'allowance',
       type: 'expense',
+      kid_id: kid.id,
     });
   };
 
@@ -73,10 +74,20 @@ export function KidsView() {
       padding: '24px 20px 120px', overflowY: 'auto', height: '100%',
       background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center',
     }}>
-      {/* 이름 인사 */}
-      <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
-        안녕, {kid?.name ?? '친구'}! 👋
-      </div>
+      {!kid ? (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)' }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>🧑‍🧑‍🧒</div>
+          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: 'var(--text2)' }}>프로필이 없습니다</div>
+          <div style={{ fontSize: 13, textAlign: 'center', lineHeight: 1.5 }}>
+            부모님 모드에서 아이 프로필을<br/>먼진 추가해주세요.
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* 이름 인사 */}
+          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
+            안녕, {kid?.name ?? '친구'}! 👋
+          </div>
 
       {/* 돼지저금통 bounce 애니메이션 */}
       <motion.div
@@ -190,6 +201,8 @@ export function KidsView() {
           </motion.div>
         )}
       </AnimatePresence>
+      </>
+      )}
     </div>
   );
 }

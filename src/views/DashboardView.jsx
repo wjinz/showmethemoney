@@ -44,11 +44,18 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
 
   const name = names?.[myRole] ?? myRole;
 
-  // ResponsiveLayouts 형식에 맞게 변환
-  const rglLayouts = useMemo(() => ({
-    desktop: layouts.desktop.map(l => ({ ...l })),
-    mobile:  layouts.mobile.map(l => ({ ...l })),
-  }), [layouts]);
+  // 기존에 저장된 레이아웃이라도 현재의 최소 높이를 강제 적용
+  const rglLayouts = useMemo(() => {
+    const enforceMin = (layout, defaultLayout) => layout.map(l => {
+      const def = defaultLayout.find(d => d.i === l.i);
+      const minH = def?.minH || 1;
+      return { ...l, h: Math.max(l.h, minH), minH };
+    });
+    return {
+      desktop: enforceMin(layouts.desktop, DEFAULT_WIDGET_LAYOUT.desktop),
+      mobile:  enforceMin(layouts.mobile, DEFAULT_WIDGET_LAYOUT.mobile),
+    };
+  }, [layouts]);
 
   const saveLayout = useRef(
     debounce((/** @type {{ mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }} */ next) => {

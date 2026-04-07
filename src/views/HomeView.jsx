@@ -238,16 +238,24 @@ export function HomeView({
   const currentKeys = layouts.mobile.map(l => l.i);
   const hiddenKeys = ALL_KEYS.filter(k => !currentKeys.includes(k));
 
-  const visibleKeys = currentKeys.filter(k => {
+  const visibleKeys = useMemo(() => currentKeys.filter(k => {
     if (k === 'sos_pending') return (sosPending?.length ?? 0) > 0;
     if (k === 'ai_nudge') return !!nudgeText;
     return true;
-  });
+  }), [currentKeys, sosPending, nudgeText]);
 
-  const rglLayouts = {
-    desktop: layouts.desktop.map(l => ({ ...l })),
-    mobile:  layouts.mobile.map(l => ({ ...l })),
-  };
+  // 기존에 저장된 레이아웃이라도 현재의 최소 높이를 강제 적용
+  const rglLayouts = useMemo(() => {
+    const enforceMin = (layout, defaultLayout) => layout.map(l => {
+      const def = defaultLayout.find(d => d.i === l.i);
+      const minH = def?.minH || 1;
+      return { ...l, h: Math.max(l.h, minH), minH };
+    });
+    return {
+      desktop: enforceMin(layouts.desktop, DEFAULT_HOME_LAYOUT.desktop),
+      mobile:  enforceMin(layouts.mobile, DEFAULT_HOME_LAYOUT.mobile),
+    };
+  }, [layouts]);
 
   return (
     <div ref={containerRef} style={{ padding: "0 4px 96px", overflowY: "auto", height: "100%", background: 'var(--bg)' }}>
@@ -293,7 +301,6 @@ export function HomeView({
         width={width}
         isDraggable={isEditMode}
         isResizable={isEditMode}
-        static={!isEditMode}
         draggableHandle=".widget-handle"
         onLayoutChange={onLayoutChange}
         margin={[12, 12]}
