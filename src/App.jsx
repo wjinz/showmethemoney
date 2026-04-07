@@ -811,9 +811,12 @@ export default function App() {
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
           <Suspense fallback={lazyFallback}>
             {kidsMode ? (
-              // Kids Mode 라우팅 가드: settings만 허용, 나머지는 KidsView로
-              view === "settings"
-                ? <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />
+              // Kids Mode 라우팅 가드: settings, kids-mgmt만 허용, 나머지는 KidsView로
+              (view === "settings" || view === "kids-mgmt")
+                ? (view === "settings" 
+                    ? <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />
+                    : <ParentKidsMgmtView />
+                  )
                 : <KidsView />
             ) : (
               <>
