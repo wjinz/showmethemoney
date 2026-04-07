@@ -889,6 +889,7 @@ export default function App() {
             defaultIsPrivate={typeof modal === 'object' ? !!modal.isPrivate : false}
             names={names} plan={plan} cards={cards} 
             onClose={() => setModal(null)} onSave={addTx} 
+            onCardScan={() => { setModal(null); setShowCardScan(true); }}
           />
         )}
         {showWidget && <WidgetView tx={tx} budgets={budgets} names={names} onClose={() => setShowWidget(false)} />}

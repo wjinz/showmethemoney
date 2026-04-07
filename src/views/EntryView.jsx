@@ -4,7 +4,6 @@ import { TxEditModal } from "../components/TxEditModal";
 import { CardScanSheet } from "../components/CardScanSheet";
 import { CAT, CATS } from "../constants";
 import { fmtS, toDateStr, getContrastText } from "../utils/helpers";
-import { runOCR } from "../utils/ocr";
 
 const nowStr = () => toDateStr(new Date());
 
@@ -17,9 +16,6 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
   const [payMethod, setPayMethod] = useState("credit");
   const [date,      setDate]      = useState(nowStr());
   const [saved,     setSaved]     = useState(false);
-  const [isOCR,        setIsOCR]        = useState(false);
-  const [ocrStatus,    setOcrStatus]    = useState(/** @type {'success'|'error'|null} */ (null));
-  const [ocrMsg,       setOcrMsg]       = useState('');
   const [showCardScan, setShowCardScan] = useState(false);
 
   // 수정 모달: null 이면 닫힘, tx 객체면 해당 항목 편집 중
@@ -41,24 +37,12 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
     }, 900);
   };
 
-  const handleOCR = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setIsOCR(true); setOcrStatus(null);
-    try {
-      const res = await runOCR(file);
-      let filled = 0;
-      if (res.amount && res.amount > 0) { setAmount(String(res.amount)); filled++; }
-      if (res.cat && CAT[res.cat])      { setCat(res.cat);              filled++; }
-      if (res.memo)                     { setMemo(res.memo);            filled++; }
-      setOcrStatus(filled > 0 ? "success" : "error");
-      setOcrMsg(filled > 0 ? `${filled}개 항목 자동 입력` : "인식 실패");
-    } catch (err) {
-      setOcrStatus("error"); setOcrMsg(err.message ?? "OCR 오류");
-    } finally {
-      setIsOCR(false);
-      setTimeout(() => { setOcrStatus(null); setOcrMsg(""); }, 2500);
-    }
+    // @ts-ignore
+    window.__sharedFile = file;
+    setShowCardScan(true);
   };
 
   // 선택한 날짜의 내역
@@ -166,40 +150,19 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
         ))}
       </div>
 
-      {/* OCR 피드백 */}
-      {ocrStatus && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8, borderRadius: 10, padding: "8px 14px", marginBottom: 10, fontSize: 12,
-          background: ocrStatus === "success" ? "#1a3a1a" : "#3a1a1a",
-          border: `1px solid ${ocrStatus === "success" ? "#4dab87" : "#d97f7f"}`,
-        }}>
-          <span>{ocrStatus === "success" ? "✓" : "!"}</span>
-          <span>{ocrMsg}</span>
-        </div>
-      )}
-
       {/* 카메라 + 카드스캔 + 저장 */}
       <div className="u5" style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-        {/* 단일 영수증 OCR */}
+        {/* 통합 AI 스캔 */}
         <label style={{
-          width: 52, height: 52, borderRadius: 13, background: "var(--bg3)", border: "1px solid var(--border)",
-          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 20, flexShrink: 0,
+          width: 52, height: 52, borderRadius: 13, flexShrink: 0, cursor: "pointer",
+          background: "var(--bg3)", border: "1px solid var(--border)",
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+          transition: "background 0.2s"
         }}>
-          <input type="file" accept="image/*" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
-          {isOCR ? <OCRSpinner /> : "📷"}
+          <input type="file" accept="image/*" onChange={handleFileSelect} style={{ display: "none" }} />
+          <span style={{ fontSize: 17, lineHeight: 1 }}>📸</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--text2)" }}>AI 스캔</span>
         </label>
-        {/* 카드 이용내역 스크린샷 일괄 입력 */}
-        <button
-          onClick={() => setShowCardScan(true)}
-          style={{
-            width: 52, height: 52, borderRadius: 13, flexShrink: 0, cursor: "pointer",
-            background: "var(--bg3)", border: "1px solid var(--border)",
-            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-          }}
-        >
-          <span style={{ fontSize: 17, lineHeight: 1 }}>🪪</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--text2)" }}>카드</span>
-        </button>
         <button onClick={save} disabled={!amount || !cat} style={{
           flex: 1, padding: "15px",
           background: saved ? "var(--greenD)" : (!amount || !cat) ? "var(--bg3)" : "var(--gold)",
@@ -292,13 +255,5 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
         />
       )}
     </div>
-  );
-}
-
-function OCRSpinner() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" style={{ animation: "spin 0.8s linear infinite" }}>
-      <circle cx="12" cy="12" r="9" fill="none" stroke="var(--gold)" strokeWidth="2.5" strokeDasharray="40 20" strokeLinecap="round" />
-    </svg>
   );
 }

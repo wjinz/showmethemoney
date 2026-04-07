@@ -2,12 +2,11 @@ import { useState } from "react";
 import { Card, Chip } from "../components/UI";
 import { CAT, CATS } from "../constants";
 import { toDateStr, getContrastText, fmtC } from "../utils/helpers";
-import { runOCR } from "../utils/ocr";
 
 const nowStr = () => toDateStr(new Date());
 
 // OCR 결과 상태: null | "loading" | "success" | "error"
-export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, defaultIsPrivate = false }) {
+export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, onCardScan, defaultIsPrivate = false }) {
   const [who, setWho] = useState(defaultWho);
   const [isPrivate] = useState(defaultIsPrivate);
   const [amount, setAmount] = useState("");
@@ -16,8 +15,6 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, de
   const [payMethod, setPayMethod] = useState("credit");
   const [cardId, setCardId] = useState("");
   const [date, setDate] = useState(nowStr());
-  const [ocrStatus, setOcrStatus] = useState(null); // null | "loading" | "success" | "error"
-  const [ocrMsg, setOcrMsg] = useState("");
 
   const press = (v, e) => {
     if (e) e.stopPropagation();
@@ -33,44 +30,18 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, de
     onClose();
   };
 
-  const handleOCR = async (e) => {
+  const handleFileSelect = (e) => {
     e.stopPropagation();
     const file = e.target.files[0];
     if (!file) return;
-
-    setOcrStatus("loading");
-    setOcrMsg("");
-
-    try {
-      const res = await runOCR(file);
-
-      let filled = 0;
-      if (res.amount && res.amount > 0) { setAmount(String(res.amount)); filled++; }
-      if (res.cat && CAT[res.cat])      { setCat(res.cat);              filled++; }
-      if (res.memo)                     { setMemo(res.memo);            filled++; }
-
-      if (filled === 0) {
-        setOcrStatus("error");
-        setOcrMsg("영수증 정보를 인식하지 못했어요.");
-      } else {
-        setOcrStatus("success");
-        setOcrMsg(`${filled}개 항목을 자동으로 입력했어요.`);
-      }
-    } catch (err) {
-      setOcrStatus("error");
-      setOcrMsg(err.message ?? "OCR 처리 중 오류가 발생했습니다.");
+    
+    // @ts-ignore
+    window.__sharedFile = file;
+    
+    if (onCardScan) {
+      onCardScan();
     }
-
-    // 3초 후 상태 메시지 자동 제거
-    setTimeout(() => { setOcrStatus(null); setOcrMsg(""); }, 3000);
   };
-
-  const ocrColors = {
-    loading: { bg: "var(--bg3)", border: "var(--gold)", icon: null },
-    success: { bg: "#1a3a1a", border: "#4dab87", icon: "✓" },
-    error:   { bg: "#3a1a1a", border: "#d97f7f", icon: "!" },
-  };
-  const oc = ocrStatus ? ocrColors[ocrStatus] : null;
 
   return (
     <div
@@ -221,46 +192,23 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, de
           )}
         </div>
 
-        {/* OCR 피드백 메시지 */}
-        {ocrStatus && ocrStatus !== "loading" && (
-          <div style={{
-            display: "flex", alignItems: "center", gap: 8,
-            background: oc.bg, border: `1px solid ${oc.border}`,
-            borderRadius: 10, padding: "10px 14px", marginBottom: 12,
-            fontSize: 13, color: "var(--text)",
-            animation: "fadeIn 0.2s ease",
-          }}>
-            <span style={{
-              width: 20, height: 20, borderRadius: "50%",
-              background: oc.border, color: "#fff",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12, fontWeight: 700, flexShrink: 0,
-            }}>
-              {oc.icon}
-            </span>
-            {ocrMsg}
-          </div>
-        )}
-
-        {/* 하단: 카메라 버튼 + 저장 버튼 */}
+        {/* 하단: 스캔 버튼 + 저장 버튼 */}
         <div style={{ display: "flex", gap: 10 }}>
           <label style={{
             width: 55, height: 55, borderRadius: 14,
-            background: oc ? oc.bg : "var(--bg3)",
-            border: `1px solid ${oc ? oc.border : "var(--border)"}`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: ocrStatus === "loading" ? "wait" : "pointer",
-            fontSize: 22, position: "relative", overflow: "hidden",
+            background: "var(--bg3)", border: "1px solid var(--border)",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+            cursor: "pointer", flexShrink: 0,
             transition: "all 0.2s ease",
           }}>
             <input
               type="file"
               accept="image/*"
-              onChange={handleOCR}
+              onChange={handleFileSelect}
               style={{ display: "none" }}
-              disabled={ocrStatus === "loading"}
             />
-            {ocrStatus === "loading" ? <LoadingSpinner /> : "📷"}
+            <span style={{ fontSize: 18, lineHeight: 1 }}>📸</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: "var(--text2)" }}>AI 스캔</span>
           </label>
 
           <button
@@ -279,18 +227,5 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, de
         </div>
       </Card>
     </div>
-  );
-}
-
-// 인라인 로딩 스피너 컴포넌트
-function LoadingSpinner() {
-  return (
-    <svg
-      width="24" height="24" viewBox="0 0 24 24"
-      style={{ animation: "spin 0.8s linear infinite" }}
-    >
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-      <circle cx="12" cy="12" r="9" fill="none" stroke="var(--gold)" strokeWidth="2.5" strokeDasharray="40 20" strokeLinecap="round" />
-    </svg>
   );
 }
