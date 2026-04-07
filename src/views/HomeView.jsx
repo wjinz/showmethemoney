@@ -15,9 +15,7 @@ import { THEME_TOKENS as T } from "../styles/tokens.js";
 
 // Home Widgets
 import { HomeHeroWidget } from "./home-widgets/HomeHeroWidget.jsx";
-import { HomeProgressRingWidget } from "./home-widgets/HomeProgressRingWidget.jsx";
-import { HomeSummaryBarsWidget } from "./home-widgets/HomeSummaryBarsWidget.jsx";
-import { HomeScanBannerWidget } from "./home-widgets/HomeScanBannerWidget.jsx";
+import { HomeExecutionSummaryWidget } from "./home-widgets/HomeExecutionSummaryWidget.jsx";
 import { HomeAiCoachWidget } from "./home-widgets/HomeAiCoachWidget.jsx";
 import { HomeSosPendingWidget } from "./home-widgets/HomeSosPendingWidget.jsx";
 import { HomePacePredictorWidget } from "./home-widgets/HomePacePredictorWidget.jsx";
@@ -215,22 +213,20 @@ export function HomeView({
 
   // Widget Mapper
   const WIDGET_MAP = {
-    hero:             () => <HomeHeroWidget remaining={remaining} YEAR={YEAR} MONTH={MONTH} DAY={DAY} daysLeft={daysLeft} onSettings={onSettings} />,
-    progress_ring:    () => <HomeProgressRingWidget isTotalMode={isTotalMode} setIsTotalMode={setIsTotalMode} totalSpent={totalSpent} variableSpent={variableSpent} ringPct={ringPct} ringDash={ringDash} paceStatus={paceStatus} />,
-    summary_bars:     () => <HomeSummaryBarsWidget fixedTotal={fixedTotal} installTotal={installTotal} variableSpent={variableSpent} />,
-    scan_banner:      () => <HomeScanBannerWidget onScan={onScan} />,
-    ai_nudge:         () => <HomeAiCoachWidget nudgeText={nudgeText} />,
-    sos_pending:      () => <HomeSosPendingWidget sosPending={sosPending} onSosResolve={onSosResolve} />,
-    pace_predictor:   () => <HomePacePredictorWidget isOnTrack={isOnTrack} remainingAtPace={remainingAtPace} currentPaceDaily={currentPaceDaily} daysLeft={daysLeft} paceProgressPct={paceProgressPct} variableSpent={variableSpent} totalBudget={totalBudget} />,
-    scenario_slider:  () => <HomeScenarioSliderWidget paceDaily={paceDaily} paceMax={paceMax} setPaceDaily={setPaceDaily} paceColor={paceColor} projOver={projOver} projected={projected} currentPaceDaily={currentPaceDaily} defaultPaceVal={defaultPaceVal} />,
-    limit_status:     () => <HomeLimitStatusWidget totalSalary={totalSalary} utilTarget={utilTarget} variableSpent={variableSpent} cardLimitOk={cardLimitOk} cardLimit={cardLimit} cardLeft={cardLeft} cardUsedPct={cardUsedPct} savingsRateColor={savingsRateColor} savingsRate={savingsRate} allowanceTotal={allowanceTotal} thisMonthCardSpend={thisMonthCardSpend} onSettings={onSettings} />,
-    partner_spending: () => <HomePartnerSpendingWidget plan={plan} totalSpent={totalSpent} hSpent={hSpent} wSpent={wSpent} names={names} onAdd={onAdd} />,
-    recent_tx:        () => <HomeRecentTxWidget searchTerm={searchTerm} setSearchTerm={setSearchTerm} showFull={showFull} setShowFull={setShowFull} filteredTx={filteredTx} setEditItem={setEditItem} CAT={CAT} CATS={CATS} cards={cards} plan={plan} names={names} />,
+    hero:              () => <HomeHeroWidget remaining={remaining} YEAR={YEAR} MONTH={MONTH} DAY={DAY} daysLeft={daysLeft} onSettings={onSettings} />,
+    execution_summary: () => <HomeExecutionSummaryWidget isTotalMode={isTotalMode} setIsTotalMode={setIsTotalMode} totalSpent={totalSpent} variableSpent={variableSpent} ringPct={ringPct} ringDash={ringDash} paceStatus={paceStatus} fixedTotal={fixedTotal} installTotal={installTotal} totalBudget={totalBudget} onSettings={onSettings} />,
+    ai_nudge:          () => <HomeAiCoachWidget nudgeText={nudgeText} />,
+    sos_pending:       () => <HomeSosPendingWidget sosPending={sosPending} onSosResolve={onSosResolve} />,
+    pace_predictor:    () => <HomePacePredictorWidget isOnTrack={isOnTrack} remainingAtPace={remainingAtPace} currentPaceDaily={currentPaceDaily} daysLeft={daysLeft} paceProgressPct={paceProgressPct} variableSpent={variableSpent} totalBudget={totalBudget} />,
+    scenario_slider:   () => <HomeScenarioSliderWidget paceDaily={paceDaily} paceMax={paceMax} setPaceDaily={setPaceDaily} paceColor={paceColor} projOver={projOver} projected={projected} currentPaceDaily={currentPaceDaily} defaultPaceVal={defaultPaceVal} />,
+    limit_status:      () => <HomeLimitStatusWidget totalSalary={totalSalary} utilTarget={utilTarget} variableSpent={variableSpent} cardLimitOk={cardLimitOk} cardLimit={cardLimit} cardLeft={cardLeft} cardUsedPct={cardUsedPct} savingsRateColor={savingsRateColor} savingsRate={savingsRate} allowanceTotal={allowanceTotal} thisMonthCardSpend={thisMonthCardSpend} onSettings={onSettings} />,
+    partner_spending:  () => <HomePartnerSpendingWidget plan={plan} totalSpent={totalSpent} hSpent={hSpent} wSpent={wSpent} names={names} onAdd={onAdd} />,
+    recent_tx:         () => <HomeRecentTxWidget searchTerm={searchTerm} setSearchTerm={setSearchTerm} showFull={showFull} setShowFull={setShowFull} filteredTx={filteredTx} setEditItem={setEditItem} CAT={CAT} CATS={CATS} cards={cards} plan={plan} names={names} />,
   };
 
   const DISPLAY_NAMES = {
-    hero: '잔액 요약', progress_ring: '집행률 링', summary_bars: '항목별 요약', scan_banner: 'AI 스캔',
-    ai_nudge: 'AI 코치', sos_pending: 'SOS 대기', pace_predictor: '페이스 예측',
+    hero: '잔액 요약', execution_summary: '집행 요약', ai_nudge: 'AI 코치',
+    sos_pending: 'SOS 대기', pace_predictor: '페이스 예측',
     scenario_slider: '시나리오 조정', limit_status: '한도 & 저축률', partner_spending: '파트너별 지출', recent_tx: '최근 지출'
   };
 
@@ -239,10 +235,11 @@ export function HomeView({
   const hiddenKeys = ALL_KEYS.filter(k => !currentKeys.includes(k));
 
   const visibleKeys = useMemo(() => currentKeys.filter(k => {
+    if (!WIDGET_MAP[k]) return false; // 존재하지 않는 위젯 제거
     if (k === 'sos_pending') return (sosPending?.length ?? 0) > 0;
     if (k === 'ai_nudge') return !!nudgeText;
     return true;
-  }), [currentKeys, sosPending, nudgeText]);
+  }), [currentKeys, sosPending, nudgeText]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 기존에 저장된 레이아웃이라도 현재의 최소 높이를 강제 적용
   const rglLayouts = useMemo(() => {

@@ -13,6 +13,8 @@ import { fmtS } from "../../utils/helpers";
  * }} props
  */
 export function HomeHeroWidget({ remaining, YEAR, MONTH, DAY, daysLeft, onSettings }) {
+  const isNegative = remaining < 0;
+
   return (
     <div style={{ padding: "4px 0 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
       <div>
@@ -24,7 +26,7 @@ export function HomeHeroWidget({ remaining, YEAR, MONTH, DAY, daysLeft, onSettin
             fontSize: "var(--fluid-hero, 36px)",
             fontWeight: 800,
             letterSpacing: "-0.03em",
-            color: "var(--text)",
+            color: isNegative ? "var(--red)" : "var(--text)",
             lineHeight: 1.1,
             margin: 0,
             whiteSpace: "nowrap"
@@ -33,20 +35,26 @@ export function HomeHeroWidget({ remaining, YEAR, MONTH, DAY, daysLeft, onSettin
           {fmtS(remaining)}
           <span style={{ fontSize: "var(--fluid-lg, 24px)", fontWeight: 700, marginLeft: 4 }}>원</span>
         </h1>
-        <p style={{ fontSize: "var(--fluid-sm, 11px)", color: "var(--text2)", marginTop: 4, opacity: 0.8 }}>
-          {YEAR}년 {MONTH}월 · {DAY}일차 · 잔여 {daysLeft}일
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 6 }}>
+          <p style={{ fontSize: 10, color: "var(--text3)", fontWeight: 500 }}>
+            (카테고리 예산 총합 - 이번 달 생활비 지출)
+          </p>
+          <p style={{ fontSize: "var(--fluid-sm, 11px)", color: "var(--text2)", opacity: 0.8 }}>
+            {YEAR}년 {MONTH}월 · {DAY}일차 · 잔여 {daysLeft}일
+          </p>
+        </div>
       </div>
       <button
-        onClick={() => onSettings("settings")}
+        onClick={() => onSettings("budget")}
         style={{
           marginTop: 4,
           width: "clamp(28px, 8cqw, 36px)", height: "clamp(28px, 8cqw, 36px)", borderRadius: T.radius.full,
           background: "var(--bg2)", border: "1px solid var(--border-solid)",
           cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-          color: "var(--text2)",
+          color: "var(--gold)",
           flexShrink: 0
         }}
+        title="예산 관리로 이동"
       >
         <Settings size={18} strokeWidth={2} />
       </button>

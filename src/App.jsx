@@ -229,7 +229,29 @@ export default function App() {
       }
       if (allData.taxConfig) setTaxConfigRaw(allData.taxConfig);
       if (allData.widgetLayout) setWidgetLayoutRaw(allData.widgetLayout);
-      if (allData.homeLayout) setHomeLayoutRaw(allData.homeLayout);
+      if (allData.homeLayout) {
+        let needsMigrate = false;
+        const migrate = (layout) => layout.map(l => {
+          if (['progress_ring', 'summary_bars', 'scan_banner'].includes(l.i)) {
+            needsMigrate = true;
+            return { ...l, i: 'execution_summary', h: 6 }; // 대략적인 새 높이
+          }
+          return l;
+        }).filter((l, idx, self) => self.findIndex(t => t.i === l.i) === idx); // 중복 제거
+
+        if (allData.homeLayout.mobile?.some(l => ['progress_ring', 'summary_bars', 'scan_banner'].includes(l.i)) || 
+            allData.homeLayout.desktop?.some(l => ['progress_ring', 'summary_bars', 'scan_banner'].includes(l.i))) {
+          const migrated = {
+            mobile: migrate(allData.homeLayout.mobile || []),
+            desktop: migrate(allData.homeLayout.desktop || []),
+          };
+          setHomeLayoutRaw(migrated);
+          await db.save(hid, "homeLayout", migrated);
+          console.log('[home-migrate] 구버전 위젯 마이그레이션 완료');
+        } else {
+          setHomeLayoutRaw(allData.homeLayout);
+        }
+      }
       if (typeof allData.kidsMode === 'boolean') setKidsModeRaw(allData.kidsMode);
 
       // SOS 요청 초기 로드

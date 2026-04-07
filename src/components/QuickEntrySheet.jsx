@@ -113,7 +113,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>AI 영수증 스캔</p>
-                <p style={{ fontSize: 13, color: '#3B82F6', fontWeight: 500 }}>사진 한 장으로 자동 입력</p>
+                <p style={{ fontSize: 13, color: '#3B82F6', fontWeight: 500 }}>영수증/카드내역 자동 입력 ✨</p>
               </div>
               <ChevronRight size={20} color="var(--text3)" />
             </div>
