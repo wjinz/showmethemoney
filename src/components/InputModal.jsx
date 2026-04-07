@@ -256,7 +256,6 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, de
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={handleOCR}
               style={{ display: "none" }}
               disabled={ocrStatus === "loading"}

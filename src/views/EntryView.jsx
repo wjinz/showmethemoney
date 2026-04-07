@@ -185,7 +185,7 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
           width: 52, height: 52, borderRadius: 13, background: "var(--bg3)", border: "1px solid var(--border)",
           display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 20, flexShrink: 0,
         }}>
-          <input type="file" accept="image/*" capture="environment" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
+          <input type="file" accept="image/*" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
           {isOCR ? <OCRSpinner /> : "📷"}
         </label>
         {/* 카드 이용내역 스크린샷 일괄 입력 */}

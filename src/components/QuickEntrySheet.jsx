@@ -96,9 +96,8 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
       <BottomSheet isOpen onClose={onClose} title="무엇을 기록할까요?" maxHeight="70dvh">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 0 20px' }}>
           
-          {/* AI 영수증 스캔 */}
           <label style={{ cursor: 'pointer', display: 'block' }}>
-            <input type="file" accept="image/*" capture="environment" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
+            <input type="file" accept="image/*" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
             <div style={{
               background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
               borderRadius: 24, padding: '24px 20px', display: 'flex', alignItems: 'center', gap: 18,
@@ -384,7 +383,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
             width: 58, height: 58, borderRadius: 16, background: "var(--bg3)", border: "1px solid var(--border)",
             display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 22, flexShrink: 0,
           }}>
-            <input type="file" accept="image/*" capture="environment" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
+            <input type="file" accept="image/*" onChange={handleOCR} style={{ display: "none" }} disabled={isOCR} />
             {isOCR ? <OCRSpinner /> : <Camera size={24} color="var(--text2)" />}
           </label>
           <button
