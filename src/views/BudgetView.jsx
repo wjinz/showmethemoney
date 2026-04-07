@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { Card, Bar } from "../components/UI";
 import { CAT, CATS, getYear, getMonth, getDay, MONTH_NAMES } from "../constants";
-import { fmtS } from "../utils/helpers";
+import { fmtS, fmtC } from "../utils/helpers";
+import { NumericInput } from "../components/NumericInput.jsx";
 import { CardView } from "./CardView";
 import { SimulatorView } from "./SimulatorView";
 
@@ -20,12 +21,6 @@ const iStyle = {
   width: "100%", background: "var(--bg3)", border: "1px solid var(--border)",
   borderRadius: 10, padding: "10px 13px", color: "var(--text)", fontSize: 14, outline: "none",
 };
-
-const formatInput = (val) => {
-  const num = String(val).replace(/[^0-9]/g, "");
-  return num ? Number(num).toLocaleString() : "";
-};
-const parseInput = (val) => String(val).replace(/[^0-9]/g, "");
 
 // ── 로컬 AI 예산 배분 알고리즘 (Heuristic Fallback) ──
 const runLocalAI = (totalSalary, fixedTotal, installTotal, savingsTarget, catHistory, utilizationTarget = 100) => {
@@ -82,25 +77,25 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
   const [editFId, setEditFId] = useState(null);
   const [editIId, setEditIId] = useState(null);
   // B3 fix: name → label (스키마 통일), type 필드 초기값 추가 (UI 탭 전환용)
-  const [newF, setNewF] = useState({ label: "", amount: "", cat: "housing", day: "", type: "f" });
-  const [newI, setNewI] = useState({ label: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
+  const [newF, setNewF] = useState({ label: "", amount: 0, cat: "housing", day: "", type: "f" });
+  const [newI, setNewI] = useState({ label: "", total: 0, months: "", cardId: cards[0]?.id || "", date: "" });
 
   const addF = () => {
     if (!newF.label || !newF.amount || !newF.day) return;
-    const amount = parseInt(parseInput(newF.amount));
-    const day = parseInt(newF.day);
+    const amount = Number(newF.amount);
+    const day = Number(newF.day);
     if (editFId) {
       setFixed(p => p.map(f => f.id === editFId ? { ...f, label: newF.label, amount, day, cat: newF.cat } : f));
     } else {
       setFixed(p => [...p, { label: newF.label, cat: newF.cat, id: Date.now(), amount, day }]);
     }
-    setShowAdd(false); setEditFId(null); setNewF({ label: "", amount: "", cat: "housing", day: "", type: "f" });
+    setShowAdd(false); setEditFId(null); setNewF({ label: "", amount: 0, cat: "housing", day: "", type: "f" });
   };
   const delF = id => setFixed(p => p.filter(f => f.id !== id));
 
   const addI = () => {
-    const totalNum = parseInt(parseInput(newI.total));
-    const monthsNum = parseInt(newI.months);
+    const totalNum = Number(newI.total);
+    const monthsNum = Number(newI.months);
     if (!newI.label || !totalNum || !monthsNum || !newI.date) return;
     const monthly = Math.round(totalNum / monthsNum);
     if (editIId) {
@@ -108,7 +103,7 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
     } else {
       setInstall(p => [...p, { label: newI.label, id: Date.now(), totalAmount: totalNum, months: monthsNum, monthly, cardId: newI.cardId, date: newI.date }]);
     }
-    setShowAdd(false); setEditIId(null); setNewI({ label: "", total: "", months: "", cardId: cards[0]?.id || "", date: "" });
+    setShowAdd(false); setEditIId(null); setNewI({ label: "", total: 0, months: "", cardId: cards[0]?.id || "", date: "" });
   };
   const delI = id => setInstall(p => p.filter(i => i.id !== id));
 
@@ -139,7 +134,7 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
             <div>
               <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>항목명</div><input value={newF.label} onChange={e => setNewF({ ...newF, label: e.target.value })} placeholder="예: 아파트 관리비" style={iStyle} /></div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-                <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>월 금액</div><input type="text" value={formatInput(newF.amount)} onChange={e => setNewF({ ...newF, amount: parseInput(e.target.value) })} placeholder="0" style={{ ...iStyle, textAlign: "right" }} /></div>
+                <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>월 금액</div><NumericInput value={newF.amount} onChange={v => setNewF({ ...newF, amount: v })} placeholder="0" style={{ ...iStyle, textAlign: "right" }} /></div>
                 <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>출금일</div><input type="number" value={newF.day} onChange={e => setNewF({ ...newF, day: e.target.value })} placeholder="일(1-31)" style={{ ...iStyle, textAlign: "right" }} /></div>
               </div>
               <button onClick={addF} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "var(--blue)", color: "#fff", fontWeight: 700, fontSize: 13 }}>{editFId ? "수정 완료" : "고정비 등록"}</button>
@@ -148,7 +143,7 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
             <div>
               <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>할부 항목</div><input value={newI.label} onChange={e => setNewI({ ...newI, label: e.target.value })} placeholder="예: 가전제품" style={iStyle} /></div>
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 10, marginBottom: 10 }}>
-                <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>할부 원금</div><input type="text" value={formatInput(newI.total)} onChange={e => setNewI({ ...newI, total: parseInput(e.target.value) })} placeholder="0" style={iStyle} /></div>
+                <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>할부 원금</div><NumericInput value={newI.total} onChange={v => setNewI({ ...newI, total: v })} placeholder="0" style={iStyle} /></div>
                 <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>개월 수</div><input type="number" value={newI.months} onChange={e => setNewI({ ...newI, months: e.target.value })} placeholder="개월" style={{ ...iStyle, textAlign: "right" }} /></div>
               </div>
               <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
@@ -179,7 +174,7 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
               {fmtS(f.amount)}원
               <button onClick={() => {
                 setEditFId(f.id); setShowAdd(true);
-                setNewF({ ...f, amount: String(f.amount), type: "f" });
+                setNewF({ ...f, amount: Number(f.amount), type: "f" });
               }} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--bg3)", border: "none", color: "var(--blue)", fontSize: 10, marginLeft: 8 }}>✏️</button>
               <button onClick={() => delF(f.id)} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--bg3)", border: "none", color: "var(--red)", fontSize: 10, marginLeft: 4 }}>✕</button>
             </div>
@@ -196,7 +191,7 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
               <button onClick={() => {
                 setEditIId(i.id); setShowAdd(true);
                 setNewF({ ...newF, type: "i" });
-                setNewI({ ...i, total: String(i.total) });
+                setNewI({ ...i, total: Number(i.total) });
               }} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--bg3)", border: "none", color: "var(--blue)", fontSize: 10, marginLeft: 8 }}>✏️</button>
               <button onClick={() => delI(i.id)} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--bg3)", border: "none", color: "var(--red)", fontSize: 10, marginLeft: 4 }}>✕</button>
             </div>
@@ -278,19 +273,16 @@ function IncomeTab({ plan, setPlan, fixed, install }) {
       <Card style={{ padding: "18px", marginBottom: 10 }}>
         <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ {plan?.isSolo ? "나의 월 실수령액" : "부부 월 실수령액"}</div>
         {plan?.isSolo ? (
-          <input type="text" value={formatInput(salary.husband)} onChange={e => {
-            const v = parseInput(e.target.value);
-            update("salary", { ...salary, husband: parseInt(v) || 0, wife: 0 });
+          <NumericInput value={salary.husband} onChange={v => {
+            update("salary", { ...salary, husband: v, wife: 0 });
           }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>남편</div><input type="text" value={formatInput(salary.husband)} onChange={e => {
-              const v = parseInput(e.target.value);
-              update("salary", { ...salary, husband: parseInt(v) || 0 });
+            <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>남편</div><NumericInput value={salary.husband} onChange={v => {
+              update("salary", { ...salary, husband: v });
             }} style={{...iStyle, textAlign: "right"}} placeholder="0" /></div>
-            <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>아내</div><input type="text" value={formatInput(salary.wife)} onChange={e => {
-              const v = parseInput(e.target.value);
-              update("salary", { ...salary, wife: parseInt(v) || 0 });
+            <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>아내</div><NumericInput value={salary.wife} onChange={v => {
+              update("salary", { ...salary, wife: v });
             }} style={{...iStyle, textAlign: "right"}} placeholder="0" /></div>
           </div>
         )}
@@ -299,9 +291,8 @@ function IncomeTab({ plan, setPlan, fixed, install }) {
       
       <Card style={{ padding: "18px", marginBottom: 10 }}>
         <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 월 저축 목표</div>
-        <input type="text" value={formatInput(salary.savingsTarget)} onChange={e => {
-          const v = parseInput(e.target.value);
-          update("salary", { ...salary, savingsTarget: parseInt(v) || 0 });
+        <NumericInput value={salary.savingsTarget} onChange={v => {
+          update("salary", { ...salary, savingsTarget: v });
         }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
         {monthlyIncome > 0 && <div style={{ marginTop: 8, fontSize: 11, color: "var(--text3)" }}>저축률: {Math.round(monthlySavingTarget / monthlyIncome * 100)}%</div>}
       </Card>
@@ -311,16 +302,14 @@ function IncomeTab({ plan, setPlan, fixed, install }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <div>
             <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>남편 용돈</div>
-            <input type="text" value={formatInput(allowance.husband)} onChange={e => {
-              const v = parseInput(e.target.value);
-              update("allowance", { ...allowance, husband: parseInt(v) || 0 });
+            <NumericInput value={allowance.husband} onChange={v => {
+              update("allowance", { ...allowance, husband: v });
             }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
           </div>
           <div>
             <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>아내 용돈</div>
-            <input type="text" value={formatInput(allowance.wife)} onChange={e => {
-              const v = parseInput(e.target.value);
-              update("allowance", { ...allowance, wife: parseInt(v) || 0 });
+            <NumericInput value={allowance.wife} onChange={v => {
+              update("allowance", { ...allowance, wife: v });
             }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
           </div>
         </div>
@@ -534,9 +523,8 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
                 </div>
                 {editMode ? (
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <input type="text" value={formatInput(budgets[c.id])} onChange={e => {
-                      const v = parseInput(e.target.value);
-                      setBudgets(prev => ({ ...prev, [c.id]: parseInt(v) || 0 }));
+                    <NumericInput value={budgets[c.id]} onChange={v => {
+                      setBudgets(prev => ({ ...prev, [c.id]: v }));
                     }} style={{ width: 100, background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: 8, padding: "7px 10px", fontSize: 13, textAlign: "right", color: "var(--text)", fontWeight: 700 }} />
                     <span style={{ fontSize: 11, color: "var(--text2)" }}>원</span>
                   </div>
@@ -740,20 +728,20 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
 
 function EventsTab({ plan, setPlan }) {
   const currentMonth = getMonth();
-  const [newEv, setNewEv] = useState({ title: "", amount: "", month: currentMonth, cat: "etc" });
+  const [newEv, setNewEv] = useState({ title: "", amount: 0, month: currentMonth, cat: "etc" });
   const addEvent = () => {
     if (!newEv.title || !newEv.amount) return;
-    setPlan(p => ({ ...p, events: [...(p.events || []), { id: Date.now(), ...newEv, amount: parseInt(newEv.amount) }] }));
-    setNewEv({ title: "", amount: "", month: currentMonth, cat: "etc" });
+    setPlan(p => ({ ...p, events: [...(p.events || []), { id: Date.now(), ...newEv, amount: Number(newEv.amount) }] }));
+    setNewEv({ title: "", amount: 0, month: currentMonth, cat: "etc" });
   };
   const events = (plan.events || []).sort((a, b) => a.month - b.month);
   return (
     <div>
       <Card style={{ padding: "16px", marginBottom: 12 }}>
         <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 12 }}>■ 새 이벤트 추가 (명절, 여행 등)</div>
-        <input value={newEv.title} onChange={e => setNewEv(v => ({ ...v, title: e.target.value }))} placeholder="이벤트명" style={{ ...iStyle, marginBottom: 8 }} />
+        <input value={newEv.title} onChange={e => setNewEv(prev => ({ ...prev, title: e.target.value }))} placeholder="이벤트명" style={{ ...iStyle, marginBottom: 8 }} />
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-          <input type="number" value={newEv.amount} onChange={e => setNewEv(v => ({ ...v, amount: e.target.value }))} placeholder="예상 금액" style={{ ...iStyle, flex: 1 }} />
+          <NumericInput value={newEv.amount} onChange={v => setNewEv(prev => ({ ...prev, amount: v }))} placeholder="예상 금액" style={{ ...iStyle, flex: 1 }} />
           <select value={newEv.month} onChange={e => setNewEv(v => ({ ...v, month: parseInt(e.target.value) }))} style={{ ...iStyle, flex: 1 }}>
             {MONTH_NAMES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>

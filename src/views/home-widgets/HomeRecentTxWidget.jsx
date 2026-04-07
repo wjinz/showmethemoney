@@ -1,5 +1,6 @@
 import { Chip } from "../../components/UI";
 import { THEME_TOKENS as T } from "../../styles/tokens.js";
+import { fmtC } from "../../utils/helpers.js";
 
 /**
  * @param {{
@@ -126,7 +127,7 @@ export function HomeRecentTxWidget({
                   </div>
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)", flexShrink: 0 }}>
-                  -{t.amount.toLocaleString()}원
+                  -{fmtC(t.amount)}원
                 </div>
               </div>
             );

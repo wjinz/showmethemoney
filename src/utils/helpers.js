@@ -23,8 +23,11 @@ export const fmtS = n => {
   if(n>=10000)     return Math.round(n/10000).toLocaleString()+"만";
   return (Number(n)||0).toLocaleString();
 };
-/** @param {number} n */
-export const fmtC = n => (Number(n)||0).toLocaleString(); // Comma only
+/** @param {number|string} n */
+export const fmtC = n => {
+  const num = typeof n === 'string' ? Number(n.replace(/[^0-9.-]/g, '')) : n;
+  return (num || 0).toLocaleString();
+}; // Comma only
 
 /** @param {Date} d */
 export function toDateStr(d) {

@@ -1,4 +1,4 @@
-import { fmt, fmtS } from '../utils/helpers';
+import { fmt, fmtS, fmtC } from '../utils/helpers';
 
 export function SliderRow({ label, value, min, max, step=1000, onChange, fillColor=undefined, formatVal=undefined, showReset=false, onReset, defaultValue: _defaultValue=undefined }) {
   const clamped = Math.min(Math.max(value, min), max);
@@ -18,7 +18,7 @@ export function SliderRow({ label, value, min, max, step=1000, onChange, fillCol
             }}>초기화</button>
           )}
           <span style={{fontSize:15,fontWeight:700,color:fill,letterSpacing:"-.01em"}}>
-            {formatVal ? formatVal(clamped) : fmt(clamped)}
+            {formatVal ? formatVal(clamped) : fmtC(clamped) + "원"}
           </span>
         </div>
       </div>

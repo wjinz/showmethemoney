@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, Chip } from "../components/UI";
 import { CAT, CATS } from "../constants";
-import { toDateStr, getContrastText } from "../utils/helpers";
+import { toDateStr, getContrastText, fmtC } from "../utils/helpers";
 import { runOCR } from "../utils/ocr";
 
 const nowStr = () => toDateStr(new Date());
@@ -127,7 +127,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, de
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
             <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700 }}>금액</div>
             <div style={{ fontSize: 32, fontWeight: 800, color: amount ? "var(--text)" : "var(--text3)" }}>
-              {amount ? parseInt(amount).toLocaleString() : 0}
+              {amount ? fmtC(amount) : 0}
               <span style={{ fontSize: 18, marginLeft: 4, fontWeight: 500 }}>원</span>
             </div>
           </div>

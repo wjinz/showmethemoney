@@ -9,6 +9,8 @@ import { useKidsStore } from '../stores/kidsStore.js';
 import { useBudget } from '../context/BudgetContext.jsx';
 import { db } from '../utils/supabase.js';
 import { BottomSheet } from '../components/BottomSheet.jsx';
+import { NumericInput } from '../components/NumericInput.jsx';
+import { fmtC } from '../utils/helpers.js';
 
 /**
  * @typedef {import('../context/BudgetContext.jsx').KidProfile} KidProfile
@@ -38,6 +40,7 @@ export function ParentKidsMgmtView() {
         rewardMission(mission.id, mission.kid_id, mission.reward);
       } catch (e) {
         console.error('[ParentKidsMgmtView] 보상 지급 실패:', e);
+        window.alert('보상 지급 실패: ' + (e.message || e));
       }
     },
     [rewardMission]
@@ -55,6 +58,7 @@ export function ParentKidsMgmtView() {
         );
       } catch (e) {
         console.error('[ParentKidsMgmtView] 미션 완료 처리 실패:', e);
+        window.alert('미션 완료 처리 실패: ' + (e.message || e));
       }
     },
     [kidsMissions]
@@ -70,6 +74,7 @@ export function ParentKidsMgmtView() {
         setShowAddMission(false);
       } catch (e) {
         console.error('[ParentKidsMgmtView] 미션 추가 실패:', e);
+        window.alert('미션 추가 실패: ' + (e.message || e));
       }
     },
     [selectedKidId, addMission]
@@ -78,7 +83,10 @@ export function ParentKidsMgmtView() {
   const handleAddKid = useCallback(
     /** @param {{ name: string, avatar: string, goal_label: string, goal_amount: number }} params */
     async (params) => {
-      if (!householdId) return;
+      if (!householdId) {
+        window.alert('가계부 아이디(HID)를 찾을 수 없습니다. 동기화 상태를 확인해주세요.');
+        return;
+      }
       try {
         const newProfile = await db.createKidProfile(householdId, { ...params, saved_amount: 0 });
         addProfile(newProfile);
@@ -86,6 +94,7 @@ export function ParentKidsMgmtView() {
         setShowAddKid(false);
       } catch (e) {
         console.error('[ParentKidsMgmtView] 아이 추가 실패:', e);
+        window.alert('아이 추가 실패: ' + (e.message || e));
       }
     },
     [householdId, addProfile]
@@ -134,7 +143,7 @@ export function ParentKidsMgmtView() {
           <div style={{ background: 'var(--bg2)', borderRadius: 16, padding: 20, marginBottom: 16, border: '1px solid var(--border)' }}>
             <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 8 }}>🎯 {selectedKid.goal_label}</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text3)', marginBottom: 6 }}>
-              <span>{selectedKid.saved_amount.toLocaleString()}원</span>
+              <span>{fmtC(selectedKid.saved_amount)}원</span>
               <span>{goalPct}%</span>
             </div>
             <div style={{ height: 10, background: 'var(--bg3)', borderRadius: 99, overflow: 'hidden' }}>
@@ -146,7 +155,7 @@ export function ParentKidsMgmtView() {
               }} />
             </div>
             <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6, textAlign: 'right' }}>
-              목표: {selectedKid.goal_amount.toLocaleString()}원
+              목표: {fmtC(selectedKid.goal_amount)}원
             </div>
           </div>
 
@@ -175,7 +184,7 @@ export function ParentKidsMgmtView() {
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{m.title}</div>
                     <div style={{ fontSize: 11, color: isPenalty ? '#ef4444' : 'var(--gold)' }}>
-                      {isPenalty ? `${m.reward.toLocaleString()}원 차감` : `+${m.reward.toLocaleString()}원`}
+                      {isPenalty ? `${fmtC(m.reward)}원 차감` : `+${fmtC(m.reward)}원`}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
@@ -214,7 +223,7 @@ export function ParentKidsMgmtView() {
  */
 function AddMissionSheet({ isOpen, onAdd, onClose }) {
   const [title, setTitle] = useState('');
-  const [reward, setReward] = useState('');
+  const [reward, setReward] = useState(0);
   const [isPenalty, setIsPenalty] = useState(false);
 
   const handleSubmit = () => {
@@ -233,11 +242,10 @@ function AddMissionSheet({ isOpen, onAdd, onClose }) {
           onChange={e => setTitle(e.target.value)}
           style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }}
         />
-        <input
-          type="number"
+        <NumericInput
           placeholder="보상 금액 (원)"
           value={reward}
-          onChange={e => setReward(e.target.value)}
+          onChange={v => setReward(v)}
           style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }}
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
@@ -275,7 +283,7 @@ function AddKidSheet({ isOpen, onAdd, onClose }) {
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState('🐶');
   const [goalLabel, setGoalLabel] = useState('');
-  const [goalAmount, setGoalAmount] = useState('');
+  const [goalAmount, setGoalAmount] = useState(0);
 
   const handleSubmit = () => {
     const amount = Number(goalAmount);
@@ -299,7 +307,7 @@ function AddKidSheet({ isOpen, onAdd, onClose }) {
           style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }} />
         <input placeholder="목표 (예: 레고 테크닉 42151)" value={goalLabel} onChange={e => setGoalLabel(e.target.value)}
           style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }} />
-        <input type="number" placeholder="목표 금액 (원)" value={goalAmount} onChange={e => setGoalAmount(e.target.value)}
+        <NumericInput placeholder="목표 금액 (원)" value={goalAmount} onChange={v => setGoalAmount(v)}
           style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 20, outline: 'none', boxSizing: 'border-box' }} />
         <button onClick={handleSubmit}
           style={{ width: '100%', background: 'var(--gold)', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
