@@ -139,13 +139,18 @@ export function HomeView({
   const saveLayout = useRef(
     debounce((next) => {
       setHomeLayout(next);
-    }, 1500)
+    }, 800)
   ).current;
 
   const onLayoutChange = useCallback((_cur, all) => {
+    // i, x, y, w, h 정보만 추출 (minW, minH 등은 시스템 기본값 사용)
+    const mapLayouts = (lArr) => (lArr || []).map(l => ({
+      i: l.i, x: l.x, y: l.y, w: l.w, h: l.h
+    }));
+
     const next = {
-      mobile:  (all.mobile  ?? layouts.mobile).map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h, minW: l.minW, minH: l.minH })),
-      desktop: (all.desktop ?? layouts.desktop).map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h, minW: l.minW, minH: l.minH })),
+      mobile:  mapLayouts(all.mobile  || layouts.mobile),
+      desktop: mapLayouts(all.desktop || layouts.desktop),
     };
     saveLayout(next);
   }, [saveLayout, layouts]);
