@@ -105,16 +105,29 @@ export function SettingsView({
           </button>
         </div>
         {kidsMode && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {kidsProfiles.length === 0 ? (
-              <div style={{ fontSize: 11, color: "var(--text3)" }}>아이 프로필이 없습니다. 아이 관리 화면에서 추가해주세요.</div>
-            ) : (
-              kidsProfiles.map(kid => (
-                <div key={kid.id} style={{ background: "var(--bg3)", borderRadius: 10, padding: "6px 12px", fontSize: 12, color: "var(--text2)" }}>
-                  {kid.avatar} {kid.name}
-                </div>
-              ))
-            )}
+          <div style={{ marginTop: 16 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+              {kidsProfiles.length === 0 ? (
+                <div style={{ fontSize: 11, color: "var(--text3)" }}>등록된 아이가 없습니다.</div>
+              ) : (
+                kidsProfiles.map(kid => (
+                  <div key={kid.id} style={{ background: "var(--bg3)", borderRadius: 10, padding: "6px 12px", fontSize: 12, color: "var(--text2)" }}>
+                    {kid.avatar} {kid.name}
+                  </div>
+                ))
+              )}
+            </div>
+            <button
+              onClick={() => onNavigate && onNavigate("kids-mgmt")}
+              style={{
+                width: "100%", padding: "12px", borderRadius: 10,
+                background: "var(--bg3)", border: "1px solid var(--border)",
+                color: "var(--text)", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+              }}
+            >
+              🧒 아이 프로필 및 미션 관리하기
+            </button>
           </div>
         )}
       </Card>
