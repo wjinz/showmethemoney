@@ -293,6 +293,7 @@ export function HomeView({
         width={width}
         isDraggable={isEditMode}
         isResizable={isEditMode}
+        static={!isEditMode}
         draggableHandle=".widget-handle"
         onLayoutChange={onLayoutChange}
         margin={[12, 12]}
@@ -300,10 +301,10 @@ export function HomeView({
         {visibleKeys.map((key) => (
           <div
             key={key}
+            className="widget-item-wrapper"
             style={{
               background: 'var(--bg2)', borderRadius: 24,
               border: `1px solid ${isEditMode ? 'var(--gold)' : 'transparent'}`,
-              overflowX: 'hidden', overflowY: 'auto',
               boxShadow: isEditMode ? '0 12px 32px rgba(0,0,0,0.4)' : 'none',
               transition: 'border 0.2s, box-shadow 0.2s'
             }}
@@ -322,7 +323,7 @@ export function HomeView({
                 </button>
               </div>
             )}
-            <div style={{ height: isEditMode ? 'calc(100% - 32px)' : '100%' }}>
+            <div className="responsive-narrow-padding" style={{ padding: "20px 24px", height: isEditMode ? 'calc(100% - 32px)' : '100%', overflowY: 'auto' }}>
               {WIDGET_MAP[key] ? WIDGET_MAP[key]() : <div style={{ padding: 20 }}>Widget {key} not found</div>}
             </div>
           </div>
@@ -357,10 +358,11 @@ export function HomeView({
 
       {editItem && (
         <TxEditModal
-          item={editItem}
+          tx={editItem}
+          names={names}
           onClose={() => setEditItem(null)}
-          onSave={(updates) => { onEdit(editItem.id, updates); setEditItem(null); }}
-          onDelete={() => { onDelete(editItem.id); setEditItem(null); }}
+          onEdit={(id, updates) => { onEdit(id, updates); setEditItem(null); }}
+          onDelete={(id) => { onDelete(id); setEditItem(null); }}
           cards={cards}
         />
       )}

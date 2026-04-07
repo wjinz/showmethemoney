@@ -16,23 +16,24 @@ export function HomeHeroWidget({ remaining, YEAR, MONTH, DAY, daysLeft, onSettin
   return (
     <div style={{ padding: "4px 0 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
       <div>
-        <p style={{ fontSize: 13, color: "var(--text2)", fontWeight: 500, marginBottom: 4 }}>
+        <p style={{ fontSize: "var(--fluid-sm, 13px)", color: "var(--text2)", fontWeight: 500, marginBottom: 4 }}>
           이번 달 남은 공동 예산
         </p>
         <h1
           style={{
-            fontSize: T.font.hero,
+            fontSize: "var(--fluid-hero, 36px)",
             fontWeight: 800,
             letterSpacing: "-0.03em",
             color: "var(--text)",
             lineHeight: 1.1,
             margin: 0,
+            whiteSpace: "nowrap"
           }}
         >
           {fmtS(remaining)}
-          <span style={{ fontSize: T.font.xxl, fontWeight: 700, marginLeft: 4 }}>원</span>
+          <span style={{ fontSize: "var(--fluid-lg, 24px)", fontWeight: 700, marginLeft: 4 }}>원</span>
         </h1>
-        <p style={{ fontSize: 11, color: "var(--text2)", marginTop: 4 }}>
+        <p style={{ fontSize: "var(--fluid-sm, 11px)", color: "var(--text2)", marginTop: 4, opacity: 0.8 }}>
           {YEAR}년 {MONTH}월 · {DAY}일차 · 잔여 {daysLeft}일
         </p>
       </div>
@@ -40,10 +41,11 @@ export function HomeHeroWidget({ remaining, YEAR, MONTH, DAY, daysLeft, onSettin
         onClick={() => onSettings("settings")}
         style={{
           marginTop: 4,
-          width: 36, height: 36, borderRadius: T.radius.full,
+          width: "clamp(28px, 8cqw, 36px)", height: "clamp(28px, 8cqw, 36px)", borderRadius: T.radius.full,
           background: "var(--bg2)", border: "1px solid var(--border-solid)",
           cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
           color: "var(--text2)",
+          flexShrink: 0
         }}
       >
         <Settings size={18} strokeWidth={2} />

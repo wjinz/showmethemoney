@@ -117,4 +117,27 @@
   box-shadow:             0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* ── 위젯 컨테이너 및 반응형 폰트 (Container Queries) ── */
+.widget-item-wrapper {
+  container-type: inline-size;
+  container-name: widget;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
+/* 유동적 폰트 크기 변수 (컨테이너 너비 비례) */
+.widget-item-wrapper {
+  --fluid-hero: clamp(24px, 10cqw, 42px);
+  --fluid-lg:   clamp(18px, 6cqw, 28px);
+  --fluid-md:   clamp(14px, 4cqw, 18px);
+  --fluid-sm:   clamp(11px, 3cqw, 13px);
+}
+
+@container widget (max-width: 280px) {
+  .responsive-hide { display: none !important; }
+  .responsive-narrow-padding { padding: 12px 14px !important; }
+  .responsive-flex-column { flex-direction: column !important; align-items: flex-start !important; }
+}

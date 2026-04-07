@@ -27,18 +27,18 @@ export function HomePacePredictorWidget({
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <div style={{ fontSize: 10, color: "var(--text2)", marginBottom: 4, letterSpacing: ".04em" }}>이 속도면 월말에</div>
-          <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1, color: isOnTrack ? "var(--green)" : "var(--red)", letterSpacing: "-.02em" }}>
-            {isOnTrack ? "+" : "-"}{fmtS(Math.abs(remainingAtPace))}<span style={{ fontSize: 14, marginLeft: 3 }}>원</span>
+          <div style={{ fontSize: "var(--fluid-sm, 10px)", color: "var(--text2)", marginBottom: 4, letterSpacing: ".04em" }}>이 속도면 월말에</div>
+          <div style={{ fontSize: "var(--fluid-lg, 28px)", fontWeight: 700, lineHeight: 1, color: isOnTrack ? "var(--green)" : "var(--red)", letterSpacing: "-.02em", whiteSpace: "nowrap" }}>
+            {isOnTrack ? "+" : "-"}{fmtS(Math.abs(remainingAtPace))}<span style={{ fontSize: "var(--fluid-md, 14px)", marginLeft: 3 }}>원</span>
           </div>
-          <div style={{ fontSize: 11, color: isOnTrack ? "var(--green)" : "var(--red)", marginTop: 5 }}>
+          <div className="responsive-hide" style={{ fontSize: "var(--fluid-sm, 11px)", color: isOnTrack ? "var(--green)" : "var(--red)", marginTop: 5 }}>
             {isOnTrack ? `예산 ${fmtS(Math.abs(remainingAtPace))}원 남아요 ✓` : `예산 ${fmtS(Math.abs(remainingAtPace))}원 초과 ⚠`}
           </div>
         </div>
         <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <div style={{ fontSize: 10, color: "var(--text2)", marginBottom: 3 }}>일평균 지출</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)" }}>{fmtS(currentPaceDaily)}<span style={{ fontSize: 10, color: "var(--text2)", marginLeft: 2 }}>원/일</span></div>
-          <div style={{ fontSize: 10, color: "var(--text2)", marginTop: 2 }}>잔여 {daysLeft}일</div>
+          <div style={{ fontSize: "var(--fluid-sm, 10px)", color: "var(--text2)", marginBottom: 3 }}>일평균 지출</div>
+          <div style={{ fontSize: "var(--fluid-md, 18px)", fontWeight: 700, color: "var(--text)", whiteSpace: "nowrap" }}>{fmtS(currentPaceDaily)}<span style={{ fontSize: "10px", color: "var(--text2)", marginLeft: 2 }}>/일</span></div>
+          <div style={{ fontSize: "var(--fluid-sm, 10px)", color: "var(--text2)", marginTop: 2 }}>잔여 {daysLeft}일</div>
         </div>
       </div>
       <div>

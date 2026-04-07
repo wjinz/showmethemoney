@@ -46,20 +46,21 @@ export function HomeLimitStatusWidget({
           <div style={{ padding: "16px 16px 14px", flex: 1 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
               <div>
-                <div style={{ fontSize: 10, color: "var(--text2)", marginBottom: 4, letterSpacing: ".04em" }}>💳 카드 권장 한도 ({utilTarget}%)</div>
+                <div style={{ fontSize: "var(--fluid-sm, 10px)", color: "var(--text2)", marginBottom: 4, letterSpacing: ".04em", whiteSpace: "nowrap" }}>💳 카드 권장 한도 ({utilTarget}%)</div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-                  <span style={{ fontSize: 22, fontWeight: 800, color: cardLimitOk ? "var(--text)" : "var(--red)", letterSpacing: "-.02em" }}>
+                  <span style={{ fontSize: "var(--fluid-lg, 22px)", fontWeight: 800, color: cardLimitOk ? "var(--text)" : "var(--red)", letterSpacing: "-.02em" }}>
                     {fmtS(variableSpent)}
                   </span>
-                  <span style={{ fontSize: 12, color: "var(--text3)" }}>/ {fmtS(cardLimit)}원</span>
+                  <span style={{ fontSize: "var(--fluid-sm, 12px)", color: "var(--text3)", whiteSpace: "nowrap" }}>/ {fmtS(cardLimit)}원</span>
                 </div>
               </div>
-              <div style={{ textAlign: "right" }}>
+              <div style={{ textAlign: "right", flexShrink: 0, paddingLeft: 8 }}>
                 <div style={{
-                  display: "inline-block", padding: "4px 10px", borderRadius: 99, fontSize: 11, fontWeight: 700,
+                  display: "inline-block", padding: "4px 10px", borderRadius: 99, fontSize: "clamp(9px, 3cqw, 11px)", fontWeight: 700,
                   background: cardLimitOk ? "rgba(60,180,100,.12)" : "rgba(200,50,50,.12)",
                   color: cardLimitOk ? "var(--green)" : "var(--red)",
                   border: `1px solid ${cardLimitOk ? "rgba(60,180,100,.2)" : "rgba(200,50,50,.2)"}`,
+                  whiteSpace: "nowrap"
                 }}>
                   {cardLimitOk ? `${fmtS(cardLeft)}원 남음` : `${fmtS(Math.abs(cardLeft))}원 초과`}
                 </div>

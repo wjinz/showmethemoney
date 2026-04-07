@@ -32,10 +32,10 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
       }}
     >
       <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 12, color: "var(--text2)", fontWeight: 500, marginBottom: 4 }}>
+        <p style={{ fontSize: "var(--fluid-sm, 12px)", color: "var(--text2)", fontWeight: 500, marginBottom: 4 }}>
           {isTotalMode ? "총 집행액" : "생활비 집행"}
         </p>
-        <p style={{ fontSize: T.font.xl, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>
+        <p style={{ fontSize: "var(--fluid-lg, 24px)", fontWeight: 700, color: "var(--text)", marginBottom: 8, whiteSpace: "nowrap" }}>
           {fmtS(isTotalMode ? totalSpent : variableSpent)}원
         </p>
         <div
@@ -65,6 +65,7 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
           ))}
         </div>
         <span
+          className="responsive-hide"
           style={{
             display: "inline-block",
             fontSize: 10, fontWeight: 600, color: "var(--gold)",
@@ -77,7 +78,7 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
         </span>
       </div>
 
-      <div style={{ position: "relative", width: 96, height: 96, flexShrink: 0 }}>
+      <div style={{ position: "relative", width: "clamp(64px, 25cqw, 96px)", height: "clamp(64px, 25cqw, 96px)", flexShrink: 0 }}>
         <svg
           style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}
           viewBox="0 0 100 100"
@@ -100,8 +101,8 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
             alignItems: "center", justifyContent: "center",
           }}
         >
-          <span style={{ fontSize: 16, fontWeight: 800, color: "var(--text)" }}>{ringPct}%</span>
-          <span style={{ fontSize: 8, color: "var(--text3)", marginTop: 1 }}>집행</span>
+          <span style={{ fontSize: "clamp(12px, 4cqw, 16px)", fontWeight: 800, color: "var(--text)" }}>{ringPct}%</span>
+          <span style={{ fontSize: "clamp(7px, 2cqw, 8px)", color: "var(--text3)", marginTop: 1 }}>집행</span>
         </div>
       </div>
     </div>
