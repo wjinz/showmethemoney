@@ -15,6 +15,8 @@ import { AllowanceInsightWidget } from './widgets/AllowanceInsightWidget.jsx';
 import { Edit2, Check, Sparkles } from 'lucide-react';
 import { IncomeSavingsWidget } from './widgets/IncomeSavingsWidget.jsx';
 import { FixedExpenseWidget } from './widgets/FixedExpenseWidget.jsx';
+import { PlanSummaryWidget } from './widgets/PlanSummaryWidget.jsx';
+import { CalendarWidget } from './widgets/CalendarWidget.jsx';
 
 /**
  * @typedef {import('../constants/index.js').TxItem} TxItem
@@ -127,6 +129,8 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
     ai_nudge: 'AI 추천',
     income_savings: '수입 및 저축 목표',
     fixed_list: '고정비 및 할부 요약',
+    plan_summary: '플랜 요약',
+    calendar_schedule: '일정 캘린더',
   };
 
   /** @type {Record<string, React.ComponentType<any>>} */
@@ -141,6 +145,8 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
     ai_nudge:         AiNudgeWidget,
     income_savings:   IncomeSavingsWidget,
     fixed_list:       FixedExpenseWidget,
+    plan_summary:     PlanSummaryWidget,
+    calendar_schedule: CalendarWidget,
   }), []);
 
   // 전체 가능한 위젯 리스트

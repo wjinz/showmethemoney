@@ -93,6 +93,8 @@ export const DEFAULT_WIDGET_LAYOUT = {
     { i: 'ai_nudge',         x: 0, y: 29, w: 1, h: 3, minW: 1, minH: 2 },
     { i: 'income_savings',   x: 0, y: 32, w: 1, h: 4, minW: 1, minH: 3 },
     { i: 'fixed_list',       x: 0, y: 36, w: 1, h: 5, minW: 1, minH: 3 },
+    { i: 'plan_summary',     x: 0, y: 41, w: 1, h: 5, minW: 1, minH: 5 },
+    { i: 'calendar_schedule',x: 0, y: 46, w: 1, h: 7, minW: 1, minH: 6 },
   ],
   desktop: [
     { i: 'sos_status',       x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 2 },
@@ -105,6 +107,8 @@ export const DEFAULT_WIDGET_LAYOUT = {
     { i: 'ai_nudge',         x: 1, y: 16, w: 1, h: 3, minW: 1, minH: 2 },
     { i: 'income_savings',   x: 0, y: 22, w: 1, h: 4, minW: 1, minH: 3 },
     { i: 'fixed_list',       x: 1, y: 19, w: 1, h: 5, minW: 1, minH: 3 },
+    { i: 'plan_summary',     x: 0, y: 26, w: 2, h: 5, minW: 1, minH: 5 },
+    { i: 'calendar_schedule',x: 0, y: 31, w: 2, h: 7, minW: 1, minH: 6 },
   ],
 };
 
