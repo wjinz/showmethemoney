@@ -68,6 +68,41 @@
   --ai-icon-color: #FB7185;
 }
 
+/* ── Kids 테마 (Soft Sunshine & Playful Coral) ── */
+.app-root[data-theme="kids"] {
+  --bg:           #FFF9F0;   /* Warm Cream */
+  --bg2:          #FFFFFF;
+  --bg3:          #FFF3E0;
+  --bg4:          #FFE0B2;
+  --border:       rgba(255, 167, 38, 0.15);
+  --border2:      rgba(255, 167, 38, 0.3);
+  --border-solid: #FFE0B2;
+
+  --gold:       #FF9800; /* Vivid Orange */
+  --goldL:      #FFB74D;
+  --goldD:      rgba(255, 152, 0, 0.15);
+
+  --red:        #E53935;
+  --green:      #43A047;
+
+  --text:       #3E2723;   /* Warm Brown */
+  --text2:      #795548;
+  --text3:      #A1887F;
+
+  --nav-bg:     rgba(255, 249, 240, 0.92);
+  --theme-accent: #FF9800;
+  --theme-accent-soft: rgba(255, 152, 0, 0.12);
+
+  /* AI 코치 말풍선 */
+  --ai-bubble-from: rgba(255, 243, 224, 0.9);
+  --ai-bubble-to:   rgba(255, 249, 240, 0.95);
+  --ai-bubble-border: rgba(255, 152, 0, 0.3);
+  --ai-bubble-text: #3E2723;
+  --ai-bubble-title: #E65100;
+  --ai-icon-bg: #FFF3E0;
+  --ai-icon-color: #FF9800;
+}
+
 /* ── Light Mode 오버라이드 (Stark Contrast) ── */
 .app-root.light[data-theme="joint"] {
   --bg:           #F8FAFC;

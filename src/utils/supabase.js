@@ -290,4 +290,117 @@ export const db = {
     this._channels.set(channelName, ch);
     return ch;
   },
+
+  // ── Kids CRUD ─────────────────────────────────────────────────────────────
+
+  /**
+   * 아이 프로필 생성
+   * @param {string} hid
+   * @param {Omit<import('../context/BudgetContext.jsx').KidProfile, 'id'|'created_at'|'household_id'>} profile
+   * @returns {Promise<import('../context/BudgetContext.jsx').KidProfile>}
+   */
+  async createKidProfile(hid, profile) {
+    const { data, error } = await supabase
+      .from('kids_profiles')
+      .insert({ household_id: hid, ...profile })
+      .select()
+      .single();
+    if (error) throw error;
+    return /** @type {import('../context/BudgetContext.jsx').KidProfile} */ (data);
+  },
+
+  /**
+   * 아이 프로필 업데이트
+   * @param {string} kidId
+   * @param {Partial<Omit<import('../context/BudgetContext.jsx').KidProfile, 'id'|'household_id'|'created_at'>>} updates
+   */
+  async updateKidProfile(kidId, updates) {
+    const { error } = await supabase
+      .from('kids_profiles')
+      .update(updates)
+      .eq('id', kidId);
+    if (error) throw error;
+  },
+
+  /**
+   * 미션 생성
+   * @param {string} kidId
+   * @param {Omit<import('../context/BudgetContext.jsx').KidsMission, 'id'|'created_at'|'completed_at'|'kid_id'>} mission
+   * @returns {Promise<import('../context/BudgetContext.jsx').KidsMission>}
+   */
+  async createMission(kidId, mission) {
+    const { data, error } = await supabase
+      .from('kids_missions')
+      .insert({ kid_id: kidId, ...mission })
+      .select()
+      .single();
+    if (error) throw error;
+    return /** @type {import('../context/BudgetContext.jsx').KidsMission} */ (data);
+  },
+
+  /**
+   * 미션 상태 업데이트 (done | rewarded)
+   * @param {number} missionId
+   * @param {'done'|'rewarded'} status
+   */
+  async completeMission(missionId, status) {
+    const { error } = await supabase
+      .from('kids_missions')
+      .update({ status, completed_at: new Date().toISOString() })
+      .eq('id', missionId);
+    if (error) throw error;
+  },
+
+  /**
+   * complete_and_reward_mission RPC — 원자적으로 미션 완료 + 저금 증감
+   * @param {number} missionId
+   */
+  async completeAndRewardMission(missionId) {
+    const { error } = await supabase.rpc('complete_and_reward_mission', {
+      p_mission_id: missionId,
+    });
+    if (error) throw error;
+  },
+
+  /**
+   * 아이 저금액 증감 (increment_kid_savings RPC)
+   * @param {string} kidId
+   * @param {number} amount
+   */
+  async rewardKid(kidId, amount) {
+    const { error } = await supabase.rpc('increment_kid_savings', {
+      p_kid_id: kidId,
+      p_amount: amount,
+    });
+    if (error) throw error;
+  },
+
+  /**
+   * 가계부의 아이 프로필 목록 로드
+   * @param {string} hid
+   * @returns {Promise<import('../context/BudgetContext.jsx').KidProfile[]>}
+   */
+  async loadKidProfiles(hid) {
+    const { data, error } = await supabase
+      .from('kids_profiles')
+      .select('*')
+      .eq('household_id', hid);
+    if (error) throw error;
+    return /** @type {import('../context/BudgetContext.jsx').KidProfile[]} */ (data ?? []);
+  },
+
+  /**
+   * 아이 목록에 해당하는 미션 전체 로드
+   * @param {string[]} kidIds
+   * @returns {Promise<import('../context/BudgetContext.jsx').KidsMission[]>}
+   */
+  async loadKidsMissions(kidIds) {
+    if (!kidIds.length) return [];
+    const { data, error } = await supabase
+      .from('kids_missions')
+      .select('*')
+      .in('kid_id', kidIds);
+    if (error) throw error;
+    return /** @type {import('../context/BudgetContext.jsx').KidsMission[]} */ (data ?? []);
+  },
 };

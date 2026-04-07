@@ -1,9 +1,11 @@
 // Vercel Serverless Function — AI 지출 패턴 조언 (Nudge)
+import { kv } from '@vercel/kv';
+
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
 
 /**
- * @param {import('http').IncomingMessage & {body: { spent: number, total: number, txSummary: string }}} req
+ * @param {import('http').IncomingMessage & {body: { spent: number, total: number, txSummary: string, householdId?: string }}} req
  * @param {import('http').ServerResponse & {status: (code: number) => {json: (body: object) => void, end: () => void}}} res
  */
 export default async function handler(req, res) {
@@ -16,8 +18,20 @@ export default async function handler(req, res) {
   const apiKey = process.env.GOOGLE_API_KEY?.trim();
   if (!apiKey) return res.status(500).json({ error: 'API 키가 서버에 설정되지 않았습니다.' });
 
-  const { spent, total, txSummary } = req.body;
+  const { spent, total, txSummary, householdId = '' } = req.body;
   const pct = total > 0 ? Math.round((spent / total) * 100) : 0;
+
+  // pct를 5% 단위로 버림 → 캐시 히트율 향상 (TTL 1h)
+  const pctBucket = Math.floor(pct / 5) * 5;
+  const yearMonth = new Date().toISOString().slice(0, 7);
+  const cacheKey = `nudge:${householdId}:${yearMonth}:${pctBucket}`;
+
+  try {
+    const cached = await kv.get(cacheKey);
+    if (cached) return res.status(200).json({ message: cached, fromCache: true });
+  } catch {
+    // KV 실패 시 캐시 건너뜀
+  }
 
   const prompt = `당신은 까칠하지만 츤데레인 가계부 관리 AI입니다.
 이번 달 예산 총액: ${total.toLocaleString()}원
@@ -48,6 +62,9 @@ ${txSummary || '지출 내역 없음'}
     const data = await resp.json();
     let text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '이번 달 지출, 꼼꼼히 관리해 봅시다!';
     text = text.trim().replace(/^"|"$/g, '');
+
+    // 캐시 저장 (TTL 1시간)
+    try { await kv.set(cacheKey, text, { ex: 3600 }); } catch {}
 
     return res.status(200).json({ message: text });
   } catch (err) {

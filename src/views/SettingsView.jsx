@@ -3,6 +3,8 @@ import { Card, SectionHeader } from "../components/UI";
 import { SliderRow } from "../components/SliderRow";
 import { fmtS } from "../utils/helpers";
 import { exportTransactions } from "../utils/export";
+import { useBudget } from "../context/BudgetContext.jsx";
+import { useKidsStore } from "../stores/kidsStore.js";
 
 export function SettingsView({
   names, setNames, budgets, setBudgets, sliderCfg, setSliderCfg, theme, setTheme,
@@ -11,6 +13,8 @@ export function SettingsView({
 }) {
   const [clickCount, setClickCount] = useState(0);
   const updateName = (role, v) => setNames(prev => ({ ...prev, [role]: v }));
+  const { kidsMode, setKidsMode } = useBudget();
+  const { kidsProfiles } = useKidsStore();
 
   return (
     <div style={{ padding: "0 16px 96px", overflowY: "auto", height: "100%", background: "var(--bg)" }}>
@@ -73,6 +77,46 @@ export function SettingsView({
           formatVal={v => fmtS(v) + "원"} 
           showReset onReset={() => setSliderCfg(p => ({ ...p, budgetSliderMax: 2000000 }))} 
         />
+      </Card>
+
+      {/* Kids Mode 토글 */}
+      <Card style={{ padding: "18px", marginBottom: 12 }}>
+        <div style={{ fontSize: 11, color: "var(--text2)", letterSpacing: ".06em", marginBottom: 16 }}>■ 아이 모드</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: kidsMode ? 12 : 0 }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Kids Mode</div>
+            <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>
+              활성화 시 아이 전용 UI로 전환됩니다
+            </div>
+          </div>
+          <button
+            onClick={() => setKidsMode(!kidsMode)}
+            style={{
+              width: 50, height: 28, borderRadius: 99, border: "none", cursor: "pointer",
+              background: kidsMode ? "var(--gold)" : "var(--bg4)",
+              position: "relative", transition: "background 0.2s", flexShrink: 0,
+            }}
+          >
+            <div style={{
+              position: "absolute", top: 3, left: kidsMode ? 24 : 4,
+              width: 22, height: 22, borderRadius: "50%", background: "#fff",
+              transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+            }} />
+          </button>
+        </div>
+        {kidsMode && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {kidsProfiles.length === 0 ? (
+              <div style={{ fontSize: 11, color: "var(--text3)" }}>아이 프로필이 없습니다. 아이 관리 화면에서 추가해주세요.</div>
+            ) : (
+              kidsProfiles.map(kid => (
+                <div key={kid.id} style={{ background: "var(--bg3)", borderRadius: 10, padding: "6px 12px", fontSize: 12, color: "var(--text2)" }}>
+                  {kid.avatar} {kid.name}
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </Card>
 
       <Card className="u3" style={{ padding: "18px", marginBottom: 14 }}>

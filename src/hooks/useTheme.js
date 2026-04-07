@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
 
 /**
- * 현재 뷰에 따라 data-theme 속성을 document.documentElement에 적용
+ * 현재 뷰와 kidsMode에 따라 data-theme 속성을 .app-root에 적용
  * @param {string} view
+ * @param {boolean} [kidsMode]
  */
-export function useTheme(view) {
+export function useTheme(view, kidsMode) {
   useEffect(() => {
-    const theme = view === 'private' ? 'private' : 'joint';
+    const theme = kidsMode ? 'kids' : view === 'private' ? 'private' : 'joint';
     document.documentElement.setAttribute('data-theme', theme);
     return () => {
-      // cleanup: 기본 joint로 복원
       document.documentElement.setAttribute('data-theme', 'joint');
     };
-  }, [view]);
+  }, [view, kidsMode]);
 }

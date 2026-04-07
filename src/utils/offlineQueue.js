@@ -104,3 +104,59 @@ export const clear = () => {
     console.error('[offlineQueue] clear 실패:', e);
   }
 };
+
+// ── tx 단건/다건 큐 ───────────────────────────────────────────────────────────
+
+const TX_QUEUE_KEY = 'budget_offline_tx_queue';
+
+/**
+ * 오프라인 중 insertTx 단건 큐 등록
+ * @param {import('../constants/index.js').TxItem & { is_private?: boolean }} tx
+ */
+export const enqueueTx = (tx) => {
+  try {
+    const raw = localStorage.getItem(TX_QUEUE_KEY);
+    /** @type {Array<import('../constants/index.js').TxItem & { is_private?: boolean, _ts: number }>} */
+    const q = raw ? JSON.parse(raw) : [];
+    q.push({ ...tx, _ts: Date.now() });
+    localStorage.setItem(TX_QUEUE_KEY, JSON.stringify(q));
+  } catch (e) {
+    console.error('[offlineQueue] enqueueTx 실패:', e);
+  }
+};
+
+/**
+ * 오프라인 tx 큐에 쌓인 항목이 있는지 확인
+ * @returns {boolean}
+ */
+export const hasTxQueued = () => {
+  try {
+    const raw = localStorage.getItem(TX_QUEUE_KEY);
+    const q = raw ? JSON.parse(raw) : [];
+    return q.length > 0;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * 오프라인 tx 큐를 transactions 테이블로 flush
+ * @param {{ insertTxBatch: (hid: string, rows: object[]) => Promise<void> }} db
+ * @param {string} householdId
+ * @returns {Promise<number>}
+ */
+export const flushTxQueue = async (db, householdId) => {
+  if (!householdId) return 0;
+  try {
+    const raw = localStorage.getItem(TX_QUEUE_KEY);
+    /** @type {Array<import('../constants/index.js').TxItem & { is_private?: boolean, _ts: number }>} */
+    const q = raw ? JSON.parse(raw) : [];
+    if (!q.length) return 0;
+    await db.insertTxBatch(householdId, q);
+    localStorage.removeItem(TX_QUEUE_KEY);
+    return q.length;
+  } catch (e) {
+    console.error('[offlineQueue] flushTxQueue 실패:', e);
+    return 0;
+  }
+};

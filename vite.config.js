@@ -1,10 +1,18 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig({
-  plugins: [react()],
-  base: '/',
-  build: {
-    chunkSizeWarningLimit: 1000,
-  },
-})
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+    plugins: [react()],
+    base: '/',
+    build: {
+      chunkSizeWarningLimit: 1000,
+    },
+    // Service Worker에서 사용하는 Supabase 환경변수 주입
+    define: {
+      __SUPABASE_URL__: JSON.stringify(env.VITE_SUPABASE_URL ?? ''),
+      __SUPABASE_KEY__: JSON.stringify(env.VITE_SUPABASE_ANON_KEY ?? ''),
+    },
+  };
+});

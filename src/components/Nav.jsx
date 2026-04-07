@@ -21,11 +21,21 @@ const RIGHT_ITEMS = [
  * @param {{
  *   view: string,
  *   setView: (v: string) => void,
- *   syncStatus: string
+ *   syncStatus: string,
+ *   kidsMode?: boolean,
  * }} props
  */
-export function Nav({ view, setView, syncStatus }) {
+export function Nav({ view, setView, syncStatus, kidsMode = false }) {
   const isEntry = view === "entry" || view === "quickEntry";
+
+  /** @type {NavItem[]} */
+  const leftItems = kidsMode
+    ? [{ id: "home", Icon: Home, label: "홈" }]
+    : LEFT_ITEMS;
+  /** @type {NavItem[]} */
+  const rightItems = kidsMode
+    ? [{ id: "settings", Icon: Menu, label: "설정" }]
+    : RIGHT_ITEMS;
 
   /**
    * @param {{ id: string, Icon: import('lucide-react').LucideIcon, label: string }} item
@@ -92,7 +102,7 @@ export function Nav({ view, setView, syncStatus }) {
         zIndex: 100,
       }}
     >
-      {/* FAB */}
+      {/* FAB — kids 모드에서 숨김 */}
       <div
         style={{
           position: "absolute",
@@ -100,6 +110,7 @@ export function Nav({ view, setView, syncStatus }) {
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 101,
+          display: kidsMode ? "none" : "block",
         }}
       >
         <button
@@ -154,11 +165,11 @@ export function Nav({ view, setView, syncStatus }) {
           padding: "8px 0 14px",
         }}
       >
-        {LEFT_ITEMS.map(item => (
+        {leftItems.map(item => (
           <NavBtn key={item.id} id={item.id} Icon={item.Icon} label={item.label} />
         ))}
-        <div style={{ flex: 1 }} />
-        {RIGHT_ITEMS.map(item => (
+        {!kidsMode && <div style={{ flex: 1 }} />}
+        {rightItems.map(item => (
           <NavBtn key={item.id} id={item.id} Icon={item.Icon} label={item.label} />
         ))}
       </div>

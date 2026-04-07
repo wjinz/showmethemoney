@@ -1341,11 +1341,11 @@ export function Nav({ view, setView, syncStatus, kidsMode }) {
 
 ## 체크리스트
 
-### Phase 0
-- [ ] `budget-v2/` 삭제
-- [ ] `archive/` 삭제
+### Phase 0 ✅
+- [x] `budget-v2/` 삭제
+- [x] `archive/` 삭제
 
-### Phase 1 (Supabase + RLS 보강)
+### Phase 1 (Supabase + RLS 보강) — 수동 작업 필요
 - [ ] `transactions` 테이블 RLS 활성화 및 household 정책 확인
 - [ ] `sos_requests` 테이블 RLS 활성화 및 household 정책 확인
 - [ ] `kids_profiles` 테이블 생성 + RLS
@@ -1354,64 +1354,64 @@ export function Nav({ view, setView, syncStatus, kidsMode }) {
 - [ ] `increment_kid_savings` RPC 생성
 - [ ] `complete_and_reward_mission` RPC 생성 (`GREATEST(0, saved_amount + v_reward)` 패널티 보호 포함)
 
-### Phase 2 (Context)
-- [ ] `BudgetContext.jsx` typedef 확장 (KidProfile, KidsMission)
-- [ ] `App.jsx` — kidsMode state 추가 (kidsProfiles/kidsMissions는 P10 kidsStore로 이전)
-- [ ] `App.jsx` — loadShared에 kidsMode 로드 추가
-- [ ] `App.jsx` — updateSharedState에 kidsMode 케이스 추가
-- [ ] `App.jsx` — budgetContextValue에 kidsMode + addTx/deleteTx/editTx 추가
+### Phase 2 (Context) ✅
+- [x] `BudgetContext.jsx` typedef 확장 (KidProfile, KidsMission)
+- [x] `App.jsx` — kidsMode state 추가
+- [x] `App.jsx` — loadShared에 kidsMode 로드 추가
+- [x] `App.jsx` — updateSharedState에 kidsMode 케이스 추가
+- [x] `App.jsx` — budgetContextValue에 kidsMode + addTx/deleteTx/editTx 추가
 
-### Phase 3 (Offline + IndexedDB + Background Sync)
-- [ ] `utils/offlineIDB.js` 신규 생성 (openDB, idbEnqueue, idbDequeueAll, idbRemove)
-- [ ] `utils/offlineQueue.js` — localStorage 큐를 IDB 큐 호출로 전환
-- [ ] `public/sw.js` — `sync` 이벤트 핸들러: IDB 직접 읽고 Supabase REST 호출
-- [ ] `App.jsx` — `enqueueWithSync` 헬퍼로 기존 enqueue 교체 + IDB flush 지원 handleOnline 수정
+### Phase 3 (Offline + IndexedDB + Background Sync) ✅
+- [x] `utils/offlineIDB.js` 신규 생성 (openDB, idbEnqueue, idbDequeueAll, idbRemove)
+- [x] `utils/offlineQueue.js` — enqueueTx, flushTxQueue 추가
+- [x] `public/sw.js` — `sync` 이벤트 핸들러: IDB 직접 읽고 Supabase REST 호출
+- [x] `App.jsx` — `enqueueWithSync` 헬퍼 추가 + handleOnline flushTxQueue 연동
 
-### Phase 4 (Theme)
-- [ ] `theme.css` — kids 테마 추가
-- [ ] `useTheme.js` — kidsMode 파라미터 추가
-- [ ] `App.jsx` — useTheme(view, kidsMode) 호출 수정
+### Phase 4 (Theme) ✅
+- [x] `theme.css` — kids 테마 추가
+- [x] `useTheme.js` — kidsMode 파라미터 추가
+- [x] `App.jsx` — useTheme(view, kidsMode) 호출 수정
 
-### Phase 5 (DB 메서드)
-- [ ] `supabase.js` — createKidProfile, updateKidProfile
-- [ ] `supabase.js` — createMission, completeMission, rewardKid
+### Phase 5 (DB 메서드) ✅
+- [x] `supabase.js` — createKidProfile, updateKidProfile
+- [x] `supabase.js` — createMission, completeMission, rewardKid, completeAndRewardMission
+- [x] `supabase.js` — loadKidProfiles, loadKidsMissions
 
-### Phase 6 (ParentKidsMgmtView)
-- [ ] 파일 생성
-- [ ] KidSelector 탭 구현
-- [ ] KidGoalCard 게이지 구현
-- [ ] MissionList + 보상 지급 구현
-- [ ] AddMissionSheet 구현
+### Phase 6 (ParentKidsMgmtView) ✅
+- [x] 파일 생성
+- [x] KidSelector 탭 + 아이 추가(AddKidSheet) 구현
+- [x] KidGoalCard 게이지 구현
+- [x] MissionList + 완료 확인 + 보상 지급 구현
+- [x] AddMissionSheet (패널티 미션 토글 포함) 구현
 
-### Phase 7 (KidsView)
-- [ ] 파일 생성
-- [ ] 돼지저금통 SVG 원형 게이지 구현
-- [ ] AI 응원 메시지 연동
-- [ ] 탭-투-레코드 카테고리 그리드 구현
-- [ ] 100% 달성 축하 오버레이 구현
+### Phase 7 (KidsView) ✅
+- [x] 파일 생성
+- [x] 돼지저금통 bounce 애니메이션 + SVG 원형 게이지 구현
+- [x] AI 응원 메시지 연동 (api/kids-coach.js)
+- [x] 탭-투-레코드 카테고리 그리드 구현
+- [x] 100% 달성 축하 오버레이 구현
 
-### Phase 8 (Kids Coach API)
-- [ ] `api/kids-coach.js` 생성
+### Phase 8 (Kids Coach API) ✅
+- [x] `api/kids-coach.js` 생성 (Gemini + Fallback + KV 캐싱)
 
-### Phase 9 (AI 캐싱 + Fallback)
-- [ ] `@vercel/kv` 패키지 설치
-- [ ] `api/budget-ai.js` — KV 캐싱 (top2cat 포함 키) + localBudgetFallback 추가
-- [ ] `api/nudge.js` — KV 캐싱 (TTL 1h, pct 5% 단위 버림) 추가
-- [ ] `api/kids-coach.js` — KV 캐싱 (TTL 30min) 추가
+### Phase 9 (AI 캐싱 + Fallback) ✅
+- [x] `@vercel/kv` 패키지 설치
+- [x] `api/budget-ai.js` — KV 캐싱 (top2cat 포함 키) + localBudgetFallback 추가
+- [x] `api/nudge.js` — KV 캐싱 (TTL 1h, pct 5% 단위 버림) 추가
+- [x] `api/kids-coach.js` — KV 캐싱 (TTL 30min) 추가
 
-### Phase 10 (렌더링 최적화)
-- [ ] `context/TxContext.jsx` 분리 생성
-- [ ] `src/stores/kidsStore.js` 신규 생성 (Zustand, KidsContext 대체)
-- [ ] `App.jsx` — React.lazy + Suspense로 뷰 컴포넌트 전환
-- [ ] `ParentKidsMgmtView`, `KidsView` — `useBudget` 대신 `useKidsStore` 사용
-- [ ] (중장기) Zustand `txStore.js` 도입 검토
+### Phase 10 (렌더링 최적화) ✅
+- [x] `src/stores/kidsStore.js` 신규 생성 (Zustand)
+- [x] `App.jsx` — React.lazy + Suspense로 뷰 컴포넌트 전환
+- [x] `ParentKidsMgmtView`, `KidsView` — `useKidsStore` 사용
+- [ ] (중장기) `context/TxContext.jsx` 분리, Zustand `txStore.js` 도입 검토
 
-### Phase 11 (Settings)
-- [ ] SettingsView에 Kids Mode 토글 추가
+### Phase 11 (Settings) ✅
+- [x] SettingsView에 Kids Mode 토글 추가
 
-### Phase 12 (Routing)
-- [ ] App.jsx — kidsMode 라우팅 가드
-- [ ] Nav.jsx — kidsMode props 추가 + 조건부 렌더링
+### Phase 12 (Routing) ✅
+- [x] App.jsx — kidsMode 라우팅 가드 (private 차단, settings만 허용)
+- [x] Nav.jsx — kidsMode props 추가 + 조건부 렌더링 (FAB 숨김, 탭 최소화)
 
 ---
 

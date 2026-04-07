@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from "react";
 
 /**
  * @typedef {import('./constants/index.js').TxItem} TxItem
@@ -11,7 +11,9 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { G } from "./styles/globalStyles.js";
 import "./styles/theme.css";
 import { validate } from "./utils/validate.js";
-import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued } from "./utils/offlineQueue.js";
+import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued, flushTxQueue, hasTxQueued } from "./utils/offlineQueue.js";
+import { idbEnqueue } from "./utils/offlineIDB.js";
+import { useKidsStore } from "./stores/kidsStore.js";
 import {
   CATS, INIT_BUDGETS, DEFAULT_SLIDER_CFG, DEFAULT_TAX_CONFIG,
   EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS, EMPTY_PLAN,
@@ -19,15 +21,18 @@ import {
   getYear,
 } from "./constants/index.js";
 import { useTheme } from "./hooks/useTheme.js";
-import { HomeView } from "./views/HomeView.jsx";
-import { EntryView } from "./views/EntryView.jsx";
-import { ReportView } from "./views/ReportView.jsx";
-import { SettingsView } from "./views/SettingsView.jsx";
-import { AssetView } from "./views/AssetView.jsx";
 import { SyncSetup } from "./views/SyncSetup.jsx";
-import { WidgetView } from "./views/WidgetView.jsx";
-import { DashboardView } from "./views/DashboardView.jsx";
-import { PrivateWalletView } from "./views/PrivateWalletView.jsx";
+const HomeView           = lazy(() => import("./views/HomeView.jsx").then(m => ({ default: m.HomeView })));
+const EntryView          = lazy(() => import("./views/EntryView.jsx").then(m => ({ default: m.EntryView })));
+const ReportView         = lazy(() => import("./views/ReportView.jsx").then(m => ({ default: m.ReportView })));
+const SettingsView       = lazy(() => import("./views/SettingsView.jsx").then(m => ({ default: m.SettingsView })));
+const WidgetView         = lazy(() => import("./views/WidgetView.jsx").then(m => ({ default: m.WidgetView })));
+const DashboardView      = lazy(() => import("./views/DashboardView.jsx").then(m => ({ default: m.DashboardView })));
+const PrivateWalletView  = lazy(() => import("./views/PrivateWalletView.jsx").then(m => ({ default: m.PrivateWalletView })));
+const BudgetView         = lazy(() => import("./views/BudgetView.jsx").then(m => ({ default: m.BudgetView })));
+const AdminView          = lazy(() => import("./views/AdminView.jsx").then(m => ({ default: m.AdminView })));
+const KidsView           = lazy(() => import("./views/KidsView.jsx").then(m => ({ default: m.KidsView })));
+const ParentKidsMgmtView = lazy(() => import("./views/ParentKidsMgmtView.jsx").then(m => ({ default: m.ParentKidsMgmtView })));
 import { Nav } from "./components/Nav.jsx";
 import { InputModal } from "./components/InputModal.jsx";
 import { BugReportModal } from "./components/BugReportModal.jsx";
@@ -38,8 +43,6 @@ import { SosRequestSheet } from "./components/SosRequestSheet.jsx";
 import { useToast, ToastContainer } from "./components/Toast.jsx";
 import { db, isSupabaseConfigured } from "./utils/supabase.js";
 import { BudgetContext } from "./context/BudgetContext.jsx";
-import { AdminView } from "./views/AdminView.jsx";
-import { BudgetView } from "./views/BudgetView.jsx";
 import { CardScanSheet } from "./components/CardScanSheet.jsx";
 
 export default function App() {
@@ -74,8 +77,11 @@ export default function App() {
     [sosRequests, myRole]
   );
 
-  // 뷰에 따른 테마 전환 (joint ↔ private)
-  useTheme(view);
+  // Kids Mode 상태 (useTheme보다 먼저 선언)
+  const [kidsMode, setKidsModeRaw] = useState(false);
+
+  // 뷰에 따른 테마 전환 (joint ↔ private ↔ kids)
+  useTheme(view, kidsMode);
 
   // 공유 데이터 필드들
   const [tx, setTxRaw] = useState(EMPTY_TX);
@@ -99,6 +105,13 @@ export default function App() {
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [showCardScan, setShowCardScan] = useState(false);
   const { toasts, addToast } = useToast();
+
+  // kidsMode 토글 — localStorage + DB에 동기화
+  const setKidsMode = useCallback(/** @param {boolean} v */ (v) => {
+    setKidsModeRaw(v);
+    try { localStorage.setItem('kidsMode', JSON.stringify(v)); } catch {}
+    if (householdId) db.save(householdId, 'kidsMode', v).catch(console.error);
+  }, [householdId]);
 
   // 로컬/비공개 데이터 저장소
   const savePrivate = useCallback((key, value) => {
@@ -143,6 +156,7 @@ export default function App() {
       case 'taxConfig': setTaxConfigRaw(value); break;
       case 'widgetLayout': setWidgetLayoutRaw(value); break;
       case 'homeLayout': setHomeLayoutRaw(value || DEFAULT_HOME_LAYOUT); break;
+      case 'kidsMode': setKidsModeRaw(value); break;
       default: break;
     }
     setLastSync(new Date());
@@ -216,6 +230,7 @@ export default function App() {
       if (allData.taxConfig) setTaxConfigRaw(allData.taxConfig);
       if (allData.widgetLayout) setWidgetLayoutRaw(allData.widgetLayout);
       if (allData.homeLayout) setHomeLayoutRaw(allData.homeLayout);
+      if (typeof allData.kidsMode === 'boolean') setKidsModeRaw(allData.kidsMode);
 
       // SOS 요청 초기 로드
       const sosData = await db.loadPendingSos(hid);
@@ -267,6 +282,8 @@ export default function App() {
         }
         if (savedTheme) setThemeRaw(savedTheme);
         if (savedIsAdmin) setIsAdmin(true);
+        const savedKidsMode = safeGet('kidsMode');
+        if (typeof savedKidsMode === 'boolean') setKidsModeRaw(savedKidsMode);
         if (savedHid) {
           setHouseholdId(savedHid);
           setMyRole(savedRole || "husband");
@@ -292,14 +309,17 @@ export default function App() {
     if (!setupDone || !householdId) return;
 
     const handleOnline = async () => {
-      if (!hasQueued()) return;
+      if (!hasQueued() && !hasTxQueued()) return;
       console.log('[offlineQueue] 온라인 복구 감지 — 큐 flush 시작');
       setSyncStatus("syncing");
-      const count = await flushOfflineQueue(db, householdId);
-      if (count > 0) {
+      const [kvCount, txCount] = await Promise.all([
+        flushOfflineQueue(db, householdId),
+        flushTxQueue(db, householdId),
+      ]);
+      const total = kvCount + txCount;
+      if (total > 0) {
         setSyncStatus("ok");
-        addToast(`☁ 오프라인 내역 ${count}건 동기화 완료`, "success");
-        // 파트너 기기와 동기화 위해 최신 데이터 재로드
+        addToast(`☁ 오프라인 내역 ${total}건 동기화 완료`, "success");
         await loadShared(householdId);
       } else {
         setSyncStatus("error");
@@ -338,6 +358,13 @@ export default function App() {
     window.addEventListener('sw-share', handleShare);
     return () => window.removeEventListener('sw-share', handleShare);
   }, [addToast]);
+
+  // Kids 데이터 로드 (setupDone 이후)
+  const loadKids = useKidsStore(s => s.loadKids);
+  useEffect(() => {
+    if (!setupDone || !householdId) return;
+    loadKids(householdId);
+  }, [setupDone, householdId, loadKids]);
 
   // SOS Realtime 구독 — 파트너의 가불 요청 수신
   useEffect(() => {
@@ -521,6 +548,21 @@ export default function App() {
     /** @param {{ mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }} v */
     v => setShared("homeLayout", v, setHomeLayoutRaw),
     [setShared]
+  );
+
+  // IDB 큐에 항목 저장 후 Background Sync 등록 (SyncManager 미지원 시 handleOnline fallback)
+  const enqueueWithSync = useCallback(
+    /** @param {import('./utils/offlineIDB.js').IDBQueueItem} item */
+    async (item) => {
+      await idbEnqueue(item);
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        try {
+          const reg = /** @type {ServiceWorkerRegistration & { sync: { register: (tag: string) => Promise<void> } }} */ (await navigator.serviceWorker.ready);
+          await reg.sync.register('offline-queue-flush');
+        } catch {}
+      }
+    },
+    []
   );
 
   // B4: id = ms * 1000 + 난수 → 동시 다건 추가 시 충돌 방지
@@ -745,45 +787,64 @@ export default function App() {
   );
 
   const budgetContextValue = {
-    tx, setTx, loadTxYear, budgets, setBudgets, plan, setPlan, names, setNames,
+    tx, setTx, addTx, deleteTx, editTx, addTxBatch, loadTxYear,
+    budgets, setBudgets, plan, setPlan, names, setNames,
     fixed, setFixed, install, setInstall, cards, setCards, assets, setAssets,
     syncStatus, householdId, myRole,
+    kidsMode, setKidsMode,
   };
+
+  const lazyFallback = (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text3)", fontSize: 24 }}>
+      ⟳
+    </div>
+  );
 
   return (
     <BudgetContext.Provider value={budgetContextValue}>
       <style dangerouslySetInnerHTML={{ __html: G }} />
       <div className={`app-root ${theme === "light" ? "light" : ""}`.trim()}
-        data-theme={view === "private" ? "private" : "joint"}
+        data-theme={kidsMode ? "kids" : view === "private" ? "private" : "joint"}
         data-color-scheme={theme}
         style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
-          {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />}
-          {view === "entry" && <EntryView names={names} plan={plan} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
-          {view === "budget" && <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />}
-          {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />}
-          {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />}
-          {view === "admin" && isAdmin && <AdminView onClose={handleAdminLogout} addToast={addToast} />}
-          {view === "dashboard" && (
-            <DashboardView
-              plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} names={names}
-              myRole={myRole}
-              mySosPending={mySosPending}
-              widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout}
-              onSettings={() => setView("settings")}
-            />
-          )}
-          {view === "private" && (
-            <PrivateWalletView
-              plan={plan} tx={tx} myRole={myRole} names={names}
-              householdId={householdId} onSosSubmit={handleSosSubmit}
-              onAdd={() => setModal({ who: myRole, isPrivate: true })} onSettings={() => setView("settings")}
-              onSosRequest={() => setShowSosRequest(true)}
-            />
-          )}
+          <Suspense fallback={lazyFallback}>
+            {kidsMode ? (
+              // Kids Mode 라우팅 가드: settings만 허용, 나머지는 KidsView로
+              view === "settings"
+                ? <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />
+                : <KidsView />
+            ) : (
+              <>
+                {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />}
+                {view === "entry" && <EntryView names={names} plan={plan} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
+                {view === "budget" && <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />}
+                {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />}
+                {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />}
+                {view === "admin" && isAdmin && <AdminView onClose={handleAdminLogout} addToast={addToast} />}
+                {view === "dashboard" && (
+                  <DashboardView
+                    plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} names={names}
+                    myRole={myRole} mySosPending={mySosPending}
+                    widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout}
+                    onSettings={() => setView("settings")}
+                  />
+                )}
+                {view === "private" && (
+                  <PrivateWalletView
+                    plan={plan} tx={tx} myRole={myRole} names={names}
+                    householdId={householdId} onSosSubmit={handleSosSubmit}
+                    onAdd={() => setModal({ who: myRole, isPrivate: true })} onSettings={() => setView("settings")}
+                    onSosRequest={() => setShowSosRequest(true)}
+                  />
+                )}
+                {view === "kids-mgmt" && <ParentKidsMgmtView />}
+              </>
+            )}
+          </Suspense>
         </div>
-        <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} />
+        <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} kidsMode={kidsMode} />
         {modal && (
           <InputModal 
             defaultWho={typeof modal === 'string' ? modal : modal.who} 

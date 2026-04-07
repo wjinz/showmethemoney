@@ -8,26 +8,56 @@
 import { createContext, useContext } from "react";
 
 /**
+ * @typedef {Object} KidProfile
+ * @property {string} id
+ * @property {string} household_id
+ * @property {string} name
+ * @property {string} avatar
+ * @property {string} goal_label
+ * @property {number} goal_amount
+ * @property {number} saved_amount
+ * @property {string} [created_at]
+ */
+
+/**
+ * @typedef {Object} KidsMission
+ * @property {number} id
+ * @property {string} kid_id
+ * @property {string} title
+ * @property {number} reward
+ * @property {'pending'|'done'|'rewarded'} status
+ * @property {string|null} [completed_at]
+ * @property {string} [created_at]
+ */
+
+/**
  * @typedef {Object} BudgetContextValue
  * @property {import('../constants').TxItem[]} tx
  * @property {(v: import('../constants').TxItem[] | ((prev: import('../constants').TxItem[]) => import('../constants').TxItem[])) => void} setTx
+ * @property {(t: Omit<import('../constants').TxItem, 'id'>) => void} addTx
+ * @property {(id: number) => void} deleteTx
+ * @property {(id: number, updates: Partial<import('../constants').TxItem>) => void} editTx
+ * @property {(items: Omit<import('../constants').TxItem, 'id'>[]) => void} addTxBatch
+ * @property {(year: number) => Promise<void>} loadTxYear
  * @property {object} budgets
  * @property {(v: object | ((prev: object) => object)) => void} setBudgets
  * @property {object} plan
  * @property {(v: object | ((prev: object) => object)) => void} setPlan
  * @property {object} names
  * @property {(v: object) => void} setNames
- * @property {object[]} fixed
- * @property {(v: object[] | ((prev: object[]) => object[])) => void} setFixed
- * @property {object[]} install
- * @property {(v: object[] | ((prev: object[]) => object[])) => void} setInstall
- * @property {object[]} cards
- * @property {(v: object[] | ((prev: object[]) => object[])) => void} setCards
+ * @property {import('../constants').FixedItem[]} fixed
+ * @property {(v: import('../constants').FixedItem[] | ((prev: import('../constants').FixedItem[]) => import('../constants').FixedItem[])) => void} setFixed
+ * @property {import('../constants').InstallItem[]} install
+ * @property {(v: import('../constants').InstallItem[] | ((prev: import('../constants').InstallItem[]) => import('../constants').InstallItem[])) => void} setInstall
+ * @property {import('../constants').CardItem[]} cards
+ * @property {(v: import('../constants').CardItem[] | ((prev: import('../constants').CardItem[]) => import('../constants').CardItem[])) => void} setCards
  * @property {object[]} assets
  * @property {(v: object[] | ((prev: object[]) => object[])) => void} setAssets
  * @property {string} syncStatus
  * @property {string} householdId
  * @property {string} myRole
+ * @property {boolean} kidsMode
+ * @property {(v: boolean) => void} setKidsMode
  */
 
 /** @type {import('react').Context<BudgetContextValue | null>} */

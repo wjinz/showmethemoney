@@ -1,10 +1,41 @@
 // Vercel Serverless Function — AI 예산 자동 배분
 // Gemini를 사용해 급여 기반 카테고리별 예산을 추천
+import { kv } from '@vercel/kv';
 
 /** @type {string} */
 const GEMINI_MODEL = 'gemini-2.5-flash';
 /** @type {string} */
 const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
+
+/** 9개 카테고리 기본 비율 (합산 1.0) */
+const DEFAULT_RATIOS = {
+  food: 0.30, transport: 0.10, medical: 0.08,
+  education: 0.15, housing: 0.05, culture: 0.08,
+  clothing: 0.07, sub: 0.05, etc: 0.12,
+};
+
+/**
+ * Gemini 오류 시 로컬 규칙 기반 예산 배분
+ * @param {number} salary
+ * @param {number} fixedTotal
+ * @param {number} available
+ * @returns {{ budgets: Record<string, number>, message: string }}
+ */
+function localBudgetFallback(salary, fixedTotal, available) {
+  if (available <= 0) return {
+    budgets: Object.fromEntries(Object.keys(DEFAULT_RATIOS).map(k => [k, 0])),
+    message: '고정비가 소득을 초과합니다.',
+  };
+  const budgets = Object.fromEntries(
+    Object.entries(DEFAULT_RATIOS).map(([cat, ratio]) => [
+      cat, Math.round((available * ratio) / 10000) * 10000,
+    ])
+  );
+  // 반올림 오차 보정
+  const sum = Object.values(budgets).reduce((a, b) => a + b, 0);
+  budgets.etc = Math.max(0, (budgets.etc ?? 0) + (available - sum));
+  return { budgets, message: 'AI 서버 응답 불가로 기본 배분을 적용했습니다.' };
+}
 
 /**
  * @param {import('http').IncomingMessage & {body: Record<string, number|object>}} req
@@ -26,7 +57,7 @@ export default async function handler(req, res) {
   const apiKey = process.env.GOOGLE_API_KEY?.trim();
   if (!apiKey) return res.status(500).json({ error: 'API 키가 서버에 설정되지 않았습니다. Vercel 환경 변수 GOOGLE_API_KEY를 설정해 주세요.' });
 
-  const { totalSalary, fixedTotal, installTotal, savingsTarget, catHistory, utilizationTarget } = req.body;
+  const { totalSalary, fixedTotal, installTotal, savingsTarget, catHistory, utilizationTarget, txSummary } = req.body;
 
   if (!totalSalary || totalSalary <= 0) {
     return res.status(400).json({ error: '급여 정보가 없습니다. 먼저 급여를 입력해주세요.' });
@@ -35,6 +66,23 @@ export default async function handler(req, res) {
   const utilPct = Math.min(Math.max(utilizationTarget || 100, 50), 100) / 100;
   const rawAvailable = Math.max(totalSalary - (fixedTotal || 0) - (installTotal || 0) - (savingsTarget || 0), 0);
   const available = Math.round(rawAvailable * utilPct);
+
+  // 캐시 키: txSummary 상위 2개 카테고리명만 포함 (키 폭발 방지)
+  const top2cat = (typeof txSummary === 'string' ? txSummary : '')
+    .split('\n')
+    .slice(0, 2)
+    .map(line => line.split(' ')[0])
+    .join('-') || 'none';
+  const month = new Date().toISOString().slice(0, 7);
+  const cacheKey = `budget:${totalSalary}:${fixedTotal || 0}:${top2cat}:${month}`;
+
+  // 1. 캐시 히트 (TTL 24h)
+  try {
+    const cached = await kv.get(cacheKey);
+    if (cached) return res.status(200).json({ .../** @type {object} */ (cached), fromCache: true });
+  } catch {
+    // KV 실패 시 캐시 건너뜀
+  }
 
   // 최근 지출 패턴 컨텍스트 구성
   let historyCtx = '';
@@ -69,6 +117,7 @@ food(식비), housing(주거/관리비), education(교육), transport(교통), m
 ## 응답 형식 (JSON만, 설명 없이)
 {"budgets":{"food":숫자,"housing":숫자,"education":숫자,"transport":숫자,"medical":숫자,"culture":숫자,"clothing":숫자,"sub":숫자,"etc":숫자},"reasons":{"food":"이유","housing":"이유","education":"이유","transport":"이유","medical":"이유","culture":"이유","clothing":"이유","sub":"이유","etc":"이유"},"tip":"전체 조언 한마디"}`;
 
+  let result;
   try {
     const resp = await fetch(`${GEMINI_BASE_URL}?key=${apiKey}`, {
       method: 'POST',
@@ -82,35 +131,41 @@ food(식비), housing(주거/관리비), education(교육), transport(교통), m
     if (!resp.ok) {
       const errText = await resp.text();
       console.error('Gemini API 오류:', errText);
-      try {
-        const errJson = JSON.parse(errText);
-        const detail = errJson.error?.message || 'Unknown Gemini error';
-        return res.status(resp.status).json({ error: `Gemini API 오류: ${detail} (Code: ${resp.status})` });
-      } catch (e) {
-        return res.status(resp.status).json({ error: `Gemini API 오류: ${resp.status}` });
-      }
+      // Fallback 적용
+      const fb = localBudgetFallback(totalSalary, fixedTotal || 0, available);
+      return res.status(200).json({ ...fb, fromFallback: true });
     }
 
     const data = await resp.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
     const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return res.status(422).json({ error: '응답 파싱 실패' });
+    if (!match) {
+      const fb = localBudgetFallback(totalSalary, fixedTotal || 0, available);
+      return res.status(200).json({ ...fb, fromFallback: true });
+    }
 
-    const result = JSON.parse(match[0]);
+    result = JSON.parse(match[0]);
 
     // 합계 검증 및 보정 (반올림 오차 보정)
     if (result.budgets) {
-      const sum = Object.values(result.budgets).reduce((s, v) => s + (v || 0), 0);
+      const sum = Object.values(/** @type {Record<string, number>} */ (result.budgets)).reduce((s, v) => s + (v || 0), 0);
       const diff = available - sum;
       if (Math.abs(diff) > 0 && Math.abs(diff) <= 100000) {
-        // 오차가 10만원 이내면 etc에 보정 (Gemini는 가끔 오차가 발생할 수 있음)
         result.budgets.etc = (result.budgets.etc || 0) + diff;
       }
     }
-
-    return res.status(200).json(result);
   } catch (err) {
     console.error('budget-ai 오류:', err);
-    return res.status(500).json({ error: err.message ?? '처리 중 오류가 발생했습니다.' });
+    const fb = localBudgetFallback(totalSalary, fixedTotal || 0, available);
+    return res.status(200).json({ ...fb, fromFallback: true });
   }
+
+  // 2. 캐시 저장 (TTL 24시간)
+  try {
+    await kv.set(cacheKey, result, { ex: 86400 });
+  } catch {
+    // KV 실패 시 무시
+  }
+
+  return res.status(200).json(result);
 }
