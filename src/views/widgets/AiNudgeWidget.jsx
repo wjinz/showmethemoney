@@ -42,7 +42,7 @@ export function AiNudgeWidget({ budgets, tx }) {
         body: JSON.stringify({ spent, total, txSummary })
       });
       const data = await res.json();
-      if (data.message) setNudgeMsg(data.message);
+      if (data.text) setNudgeMsg(data.text);
       else setNudgeMsg("AI 조언을 생성하지 못했습니다.");
     } catch (e) {
       setNudgeMsg("네트워크 오류로 생성 실패");
@@ -52,7 +52,7 @@ export function AiNudgeWidget({ budgets, tx }) {
   };
 
   return (
-    <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6, height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 11, color: 'var(--text2)', fontWeight: 700 }}>AI Nudge</div>
         <button onClick={fetchNudge} disabled={isLoading} style={{
@@ -62,11 +62,15 @@ export function AiNudgeWidget({ budgets, tx }) {
         </button>
       </div>
       
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4 }}>
-        <span style={{ fontSize: 24 }}>{nudgeMsg ? '🤖' : defaultIcon}</span>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginTop: 4, flex: 1 }}>
+        <span style={{ fontSize: 24, marginTop: -2 }}>{nudgeMsg ? '🤖' : defaultIcon}</span>
         <span style={{ fontSize: 12, color: nudgeMsg ? 'var(--gold)' : defaultColor, fontWeight: 600, lineHeight: 1.4 }}>
           {nudgeMsg || defaultMsg}
         </span>
+      </div>
+      
+      <div style={{ fontSize: 9, color: 'var(--text3)', textAlign: 'right', marginTop: 'auto' }}>
+        분석 기준: 이번 달 최근 10건 내역
       </div>
     </div>
   );

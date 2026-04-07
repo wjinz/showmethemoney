@@ -13,6 +13,8 @@ import { AiNudgeWidget }     from './widgets/AiNudgeWidget.jsx';
 import { SosStatusWidget }   from './widgets/SosStatusWidget.jsx';
 import { AllowanceInsightWidget } from './widgets/AllowanceInsightWidget.jsx';
 import { Edit2, Check, Sparkles } from 'lucide-react';
+import { IncomeSavingsWidget } from './widgets/IncomeSavingsWidget.jsx';
+import { FixedExpenseWidget } from './widgets/FixedExpenseWidget.jsx';
 
 /**
  * @typedef {import('../constants/index.js').TxItem} TxItem
@@ -20,6 +22,8 @@ import { Edit2, Check, Sparkles } from 'lucide-react';
  * @typedef {import('../constants/index.js').WidgetLayoutItem} WidgetLayoutItem
  * @typedef {import('react-grid-layout').LayoutItem} RGLItem
  * @typedef {import('../constants/index.js').SosRequest} SosRequest
+ * @typedef {import('../constants/index.js').InstallItem} InstallItem
+ * @typedef {import('../constants/index.js').CardItem} CardItem
  */
 
 /**
@@ -28,6 +32,8 @@ import { Edit2, Check, Sparkles } from 'lucide-react';
  *   budgets: Record<string, number>,
  *   tx: TxItem[],
  *   fixed: FixedItem[],
+ *   install?: InstallItem[],
+ *   cards?: CardItem[],
  *   names: Record<string, string>,
  *   myRole: string,
  *   mySosPending?: SosRequest[],
@@ -37,7 +43,7 @@ import { Edit2, Check, Sparkles } from 'lucide-react';
  *   setPlan: (v: any) => void
  * }} props
  */
-export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending = [], widgetLayout, setWidgetLayout, onSettings: _onSettings }) {
+export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [], cards = [], names, myRole, mySosPending = [], widgetLayout, setWidgetLayout, onSettings: _onSettings }) {
   const [isEditMode, setIsEditMode] = useState(false);
   const layouts = widgetLayout ?? DEFAULT_WIDGET_LAYOUT;
   const { containerRef, width } = useContainerWidth();
@@ -104,7 +110,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
     }
   };
 
-  const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending }), [plan, setPlan, budgets, tx, fixed, names, myRole, mySosPending]);
+  const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, install, cards, names, myRole, mySosPending }), [plan, setPlan, budgets, tx, fixed, install, cards, names, myRole, mySosPending]);
 
   /** @type {Record<string, string>} */
   const DISPLAY_NAMES = {
@@ -116,6 +122,8 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
     goal: '저축 목표',
     tax_guide: '세금 가이드',
     ai_nudge: 'AI 추천',
+    income_savings: '수입 및 저축 목표',
+    fixed_list: '고정비 및 할부 요약',
   };
 
   /** @type {Record<string, React.ComponentType<any>>} */
@@ -128,6 +136,8 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
     goal:             GoalWidget,
     tax_guide:        TaxGuideWidget,
     ai_nudge:         AiNudgeWidget,
+    income_savings:   IncomeSavingsWidget,
+    fixed_list:       FixedExpenseWidget,
   }), []);
 
   // 전체 가능한 위젯 리스트
@@ -140,10 +150,11 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, names, myRole
   // 실제 렌더링할 위젯 키들 (데이터 유무에 따라 필터링)
   const visibleWidgetKeys = useMemo(() => {
     return currentKeys.filter(key => {
+      if (!WIDGET_MAP[key]) return false; // 방어 로직
       if (key === 'sos_status') return (mySosPending?.length ?? 0) > 0;
       return true;
     });
-  }, [currentKeys, mySosPending]);
+  }, [currentKeys, mySosPending, WIDGET_MAP]);
 
   return (
     <div ref={containerRef} style={{ padding: '0 4px 120px', overflowY: 'auto', height: '100%', background: 'var(--bg)' }}>

@@ -2,7 +2,7 @@
  * @typedef {{ id: number, date: string, amount: number, cat: string, memo: string, who: string, payMethod: string, type?: string, cardId?: string, is_private?: boolean, kid_id?: string }} TxItem
  * @typedef {{ id: string|number, label: string, amount: number, cat?: string, day?: number, cardId?: string }} FixedItem
  * @typedef {{ id: string|number, label: string, totalAmount: number, months: number, monthly: number, cardId?: string, date?: string }} InstallItem
- * @typedef {{ id: string|number, label: string, type: string, color?: string, icon?: string }} CardItem
+ * @typedef {{ id: string|number, label: string, type: string, color?: string, icon?: string, paymentDay?: number, billingStartDay?: number, billingEndDay?: number, billingEndNextMonth?: boolean }} CardItem
  * @typedef {{ id: number, household_id: string, requester: string, amount: number, reason: string, repay_plan: string, status: string, created_at: string, resolved_at?: string }} SosRequest
  * @typedef {{ label: string, target: number, saved: number }} GoalItem
  */
@@ -91,6 +91,8 @@ export const DEFAULT_WIDGET_LAYOUT = {
     { i: 'goal',             x: 0, y: 22, w: 1, h: 3, minW: 1, minH: 2 },
     { i: 'tax_guide',        x: 0, y: 25, w: 1, h: 4, minW: 1, minH: 3 },
     { i: 'ai_nudge',         x: 0, y: 29, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'income_savings',   x: 0, y: 32, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'fixed_list',       x: 0, y: 36, w: 1, h: 5, minW: 1, minH: 3 },
   ],
   desktop: [
     { i: 'sos_status',       x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 2 },
@@ -101,6 +103,8 @@ export const DEFAULT_WIDGET_LAYOUT = {
     { i: 'goal',             x: 1, y: 13, w: 1, h: 3, minW: 1, minH: 2 },
     { i: 'tax_guide',        x: 0, y: 18, w: 1, h: 4, minW: 1, minH: 3 },
     { i: 'ai_nudge',         x: 1, y: 16, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'income_savings',   x: 0, y: 22, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'fixed_list',       x: 1, y: 19, w: 1, h: 5, minW: 1, minH: 3 },
   ],
 };
 
