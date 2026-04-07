@@ -15,7 +15,7 @@ import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued } from
 import {
   CATS, INIT_BUDGETS, DEFAULT_SLIDER_CFG, DEFAULT_TAX_CONFIG,
   EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS, EMPTY_PLAN,
-  DEFAULT_WIDGET_LAYOUT,
+  DEFAULT_WIDGET_LAYOUT, DEFAULT_HOME_LAYOUT,
   getYear,
 } from "./constants/index.js";
 import { useTheme } from "./hooks/useTheme.js";
@@ -56,6 +56,7 @@ export default function App() {
 
   // 위젯 레이아웃 상태
   const [widgetLayout, setWidgetLayoutRaw] = useState(DEFAULT_WIDGET_LAYOUT);
+  const [homeLayout, setHomeLayoutRaw] = useState(DEFAULT_HOME_LAYOUT);
 
   // SOS 상태 통합 관리 (내가 보낸 요청 & 받은 요청 모두)
   const [sosRequests, setSosRequests] = useState(/** @type {SosRequest[]} */ ([]));
@@ -140,6 +141,8 @@ export default function App() {
       case 'names': setNamesRaw(value); break;
       case 'plan': setPlanRaw(value); break;
       case 'taxConfig': setTaxConfigRaw(value); break;
+      case 'widgetLayout': setWidgetLayoutRaw(value); break;
+      case 'homeLayout': setHomeLayoutRaw(value || DEFAULT_HOME_LAYOUT); break;
       default: break;
     }
     setLastSync(new Date());
@@ -212,6 +215,7 @@ export default function App() {
       }
       if (allData.taxConfig) setTaxConfigRaw(allData.taxConfig);
       if (allData.widgetLayout) setWidgetLayoutRaw(allData.widgetLayout);
+      if (allData.homeLayout) setHomeLayoutRaw(allData.homeLayout);
 
       // SOS 요청 초기 로드
       const sosData = await db.loadPendingSos(hid);
@@ -512,6 +516,13 @@ export default function App() {
     [setShared]
   );
 
+  // 홈 화면 레이아웃 저장
+  const setHomeLayout = useCallback(
+    /** @param {{ mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }} v */
+    v => setShared("homeLayout", v, setHomeLayoutRaw),
+    [setShared]
+  );
+
   // B4: id = ms * 1000 + 난수 → 동시 다건 추가 시 충돌 방지
   // setTx가 functional update이므로 연속 호출 시 prev가 항상 최신 상태 (B1 fix)
   const addTx = useCallback(/** @param {Omit<TxItem, 'id'>} t */ t =>
@@ -748,7 +759,7 @@ export default function App() {
         style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
-          {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} />}
+          {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />}
           {view === "entry" && <EntryView names={names} plan={plan} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
           {view === "budget" && <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />}
           {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />}

@@ -104,6 +104,35 @@ export const DEFAULT_WIDGET_LAYOUT = {
   ],
 };
 
+export const DEFAULT_HOME_LAYOUT = {
+  mobile: [
+    { i: 'hero',             x: 0, y: 0,  w: 1, h: 2, minW: 1, minH: 1 },
+    { i: 'progress_ring',    x: 0, y: 2,  w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'summary_bars',     x: 0, y: 5,  w: 1, h: 1, minW: 1, minH: 1 },
+    { i: 'scan_banner',      x: 0, y: 6,  w: 1, h: 1, minW: 1, minH: 1 },
+    { i: 'ai_nudge',         x: 0, y: 7,  w: 1, h: 2, minW: 1, minH: 2 },
+    { i: 'sos_pending',      x: 0, y: 9,  w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'pace_predictor',   x: 0, y: 12, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'scenario_slider',  x: 0, y: 15, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'limit_status',     x: 0, y: 19, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'partner_spending', x: 0, y: 23, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'recent_tx',        x: 0, y: 27, w: 1, h: 8, minW: 1, minH: 4 },
+  ],
+  desktop: [
+    { i: 'hero',             x: 0, y: 0, w: 2, h: 2, minW: 1, minH: 1 },
+    { i: 'progress_ring',    x: 0, y: 2, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'summary_bars',     x: 1, y: 2, w: 1, h: 1, minW: 1, minH: 1 },
+    { i: 'scan_banner',      x: 1, y: 3, w: 1, h: 1, minW: 1, minH: 1 },
+    { i: 'ai_nudge',         x: 1, y: 4, w: 1, h: 2, minW: 1, minH: 2 },
+    { i: 'sos_pending',      x: 0, y: 5, w: 2, h: 3, minW: 1, minH: 2 },
+    { i: 'pace_predictor',   x: 0, y: 8, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'scenario_slider',  x: 1, y: 8, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'limit_status',     x: 0, y: 11, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'partner_spending', x: 1, y: 12, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'recent_tx',        x: 0, y: 15, w: 2, h: 8, minW: 1, minH: 4 },
+  ],
+};
+
 export const PAY_METHODS = [
   {id:"credit", label:"신용카드"},
   {id:"debit",  label:"체크카드"},
