@@ -32,7 +32,7 @@ const PrivateWalletView  = lazy(() => import("./views/PrivateWalletView.jsx").th
 const BudgetView         = lazy(() => import("./views/BudgetView.jsx").then(m => ({ default: m.BudgetView })));
 const AdminView          = lazy(() => import("./views/AdminView.jsx").then(m => ({ default: m.AdminView })));
 const KidsView           = lazy(() => import("./views/KidsView.jsx").then(m => ({ default: m.KidsView })));
-const ParentKidsMgmtView = lazy(() => import("./views/ParentKidsMgmtView.jsx").then(m => ({ default: m.ParentKidsMgmtView })));
+import { ParentKidsMgmtView } from "./views/ParentKidsMgmtView.jsx";
 import { Nav } from "./components/Nav.jsx";
 import { InputModal } from "./components/InputModal.jsx";
 import { BugReportModal } from "./components/BugReportModal.jsx";
@@ -810,41 +810,33 @@ export default function App() {
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
           <Suspense fallback={lazyFallback}>
-            {kidsMode ? (
-              // Kids Mode 라우팅 가드: settings, kids-mgmt만 허용, 나머지는 KidsView로
-              (view === "settings" || view === "kids-mgmt")
-                ? (view === "settings" 
-                    ? <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />
-                    : <ParentKidsMgmtView />
-                  )
-                : <KidsView />
-            ) : (
-              <>
-                {view === "home" && <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />}
-                {view === "entry" && <EntryView names={names} plan={plan} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />}
-                {view === "budget" && <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />}
-                {view === "report" && <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />}
-                {view === "settings" && <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />}
-                {view === "admin" && isAdmin && <AdminView onClose={handleAdminLogout} addToast={addToast} />}
-                {view === "dashboard" && (
-                  <DashboardView
-                    plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} names={names}
-                    myRole={myRole} mySosPending={mySosPending}
-                    widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout}
-                    onSettings={() => setView("settings")}
-                  />
-                )}
-                {view === "private" && (
-                  <PrivateWalletView
-                    plan={plan} tx={tx} myRole={myRole} names={names}
-                    householdId={householdId} onSosSubmit={handleSosSubmit}
-                    onAdd={() => setModal({ who: myRole, isPrivate: true })} onSettings={() => setView("settings")}
-                    onSosRequest={() => setShowSosRequest(true)}
-                  />
-                )}
-                {view === "kids-mgmt" && <ParentKidsMgmtView />}
-              </>
-            )}
+            {(() => {
+              console.log("[App Routing] view:", view, "kidsMode:", kidsMode);
+              
+              // 1. 아이 관리 화면은 어떤 모드에서든 최우선으로 보여줌
+              if (view === "kids-mgmt") return <ParentKidsMgmtView />;
+              
+              // 2. 키즈 모드인 경우
+              if (kidsMode) {
+                if (view === "settings") {
+                  return <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />;
+                }
+                return <KidsView />;
+              }
+
+              // 3. 일반 모드인 경우
+              switch (view) {
+                case "home":      return <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />;
+                case "entry":     return <EntryView names={names} plan={plan} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />;
+                case "budget":    return <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />;
+                case "report":    return <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />;
+                case "settings":  return <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />;
+                case "admin":     return isAdmin ? <AdminView onClose={handleAdminLogout} addToast={addToast} /> : null;
+                case "dashboard": return <DashboardView plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} names={names} myRole={myRole} mySosPending={mySosPending} widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout} onSettings={() => setView("settings")} />;
+                case "private":   return <PrivateWalletView plan={plan} tx={tx} myRole={myRole} names={names} householdId={householdId} onSosSubmit={handleSosSubmit} onAdd={() => setModal({ who: myRole, isPrivate: true })} onSettings={() => setView("settings")} onSosRequest={() => setShowSosRequest(true)} />;
+                default:          return <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />;
+              }
+            })()}
           </Suspense>
         </div>
         <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} kidsMode={kidsMode} />
