@@ -37,8 +37,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'image와 mediaType 필드가 필요합니다.' });
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const currentYear = today.slice(0, 4);
+  // 서버 사이드 날짜 계산 (안전한 자정 계산 방지)
+  const now = new Date();
+  const todayDate = now.toISOString().slice(0, 10);
+  const currentYear = todayDate.slice(0, 4);
+  const today = todayDate; // 하위 호환성 유지 별칭
+
+  now.setDate(now.getDate() - 1);
+  const yesterdayDate = now.toISOString().slice(0, 10);
+
   const CAT_GUIDE = `food, housing, education, transport, medical, culture, clothing, sub, etc`;
 
   // 1. 시스템 지시문 (행동 지침 격리)
@@ -50,17 +57,29 @@ No preamble, no postamble.`;
   let promptText = '';
   if (mode === 'bulk') {
     promptText = `CRITICAL: Output ONLY valid JSON array. Start with [ and end with ].
-Extract ALL transaction rows from this Korean card statement screenshot.
+Extract ALL confirmed transaction rows from this Korean card app screenshot.
 
 Each row format: {"date":"YYYY-MM-DD","amount":number,"cat":"category","memo":"merchant"}
 Categories: ${CAT_GUIDE}
 
-Korean card statement patterns:
-- Date column: "04/15" or "2026.04.15" → convert to YYYY-MM-DD using year ${currentYear}
-- Amount: ignore "취소" (cancellation) rows, only include positive charges
-- Merchant names are usually in Korean or English brand names
+IGNORE RULES (highest priority — do NOT include these in output):
+- Any row containing "거래취소", "취소", "가승인", or negative amounts
+- Rows where merchant name ends with "_가승인"
+- Header rows, summary rows, or UI labels
 
-Return ALL visible transaction rows as a JSON array.`;
+Date conversion rules:
+- "오늘" or "TODAY" → ${todayDate}
+- "어제" or "YESTERDAY" → ${yesterdayDate}
+- "26. 4. 12(일)" or "26. 4. 12" format → 2026-04-12 (Ignore days in parentheses like (일) or (월))
+- "04/15" or "2026.04.15" → 2026-04-15
+- If date is missing, use ${todayDate}. If year is missing, use ${currentYear}.
+
+Korean card app layout:
+- Merchant name is usually the largest text in each row
+- Below merchant: time (HH:MM) and card name
+- Amount is on the right side, followed by "원"
+
+Return ONLY confirmed, non-cancelled transactions as a JSON array.`;
   } else if (mode === 'schedule') {
     promptText = `CRITICAL: Output ONLY valid JSON object. Start with { and end with }.
 Extract all names and their work schedules from this image.
@@ -169,8 +188,17 @@ Now extract from this image: {"amount":number,"cat":"category","memo":"merchant_
           const fallbackParsed = JSON.parse(cleaned.slice(startIdx, endIdx + 1));
           return res.status(200).json(normalizeOcrData(fallbackParsed, mode));
         } catch (e2) {
+          if (mode === 'bulk') {
+            const bulkFallback = extractBulkItemsFallback(cleaned);
+            if (bulkFallback) return res.status(200).json({ items: bulkFallback });
+          }
           throw new Error(`JSON 구조 추출 후 파싱 실패: ${e2.message}`);
         }
+      }
+      
+      if (mode === 'bulk') {
+        const bulkFallback = extractBulkItemsFallback(cleaned);
+        if (bulkFallback) return res.status(200).json({ items: bulkFallback });
       }
       throw new Error(`응답에서 JSON 구조(${startChar}...${endChar})를 찾을 수 없습니다.`);
     }
@@ -214,6 +242,22 @@ function extractAmountFallback(rawText) {
   }
   if (candidates.length === 0) return null;
   return Math.max(...candidates); // 가장 큰 숫자 = 최종 합계 가능성 최대
+}
+
+/**
+ * bulk 배열 파싱 최종 폴백 — 개별 객체 추출 (순서 무관 및 필수 키 매칭 적용)
+ * @param {string} text 
+ * @returns {any[] | null}
+ */
+function extractBulkItemsFallback(text) {
+  // date 필수 포함 (순서 무관한 키 배열일 경우도 대처)
+  const itemPattern = /\{[^{}]*"date"\s*:[^{}]+\}/g;
+  const matches = text.match(itemPattern) || [];
+  const items = [];
+  for (const m of matches) {
+    try { items.push(JSON.parse(m)); } catch {}
+  }
+  return items.length > 0 ? items : null;
 }
 
 /**

@@ -5,7 +5,7 @@
  * 전처리 완료된 최적화 이미지 데이터 규격
  * @typedef {Object} OptimizedImage
  * @property {string} base64Image - Base64 인코딩된 이미지 문자열 (헤더 제외)
- * @property {'image/png' | 'image/jpeg'} mediaType - 강제 적용된 MIME 타입
+ * @property {'image/png' | 'image/jpeg' | 'image/webp'} mediaType - 최적화 적용된 MIME 타입
  */
 
 /**
@@ -43,12 +43,12 @@ async function optimizeImage(imageFile, mode = 'single') {
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error('Canvas context 생성 실패'));
       
-      // 1단계: 흑백 변환 및 대비 강화
-      ctx.filter = 'grayscale(1) contrast(1.4) brightness(1.05)';
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
-      // 2단계: 픽셀 레벨 임계값 (이진화 근사) - single 모드
       if (mode === 'single') {
+        // 1단계: 흑백 변환 및 대비 강화
+        ctx.filter = 'grayscale(1) contrast(1.4) brightness(1.05)';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // 2단계: 픽셀 레벨 임계값 (이진화 근사) - single 모드
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const d = imageData.data;
         for (let i = 0; i < d.length; i += 4) {
@@ -57,12 +57,26 @@ async function optimizeImage(imageFile, mode = 'single') {
           d[i] = d[i + 1] = d[i + 2] = bw;
         }
         ctx.putImageData(imageData, 0, 0);
+        
+        // single: 이진화 후 무손실 PNG (링잉 아티팩트 방지)
+        resolve({
+          base64Image: canvas.toDataURL('image/png').split(',')[1],
+          mediaType: 'image/png'
+        });
+      } else {
+        // bulk / schedule: 필터 없이 그대로 리사이즈만 수행 (컬러 보존)
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // WebP 우선 시도 → 미지원 시 JPEG 0.8 폴백 (Antigravity 제안 반영)
+        const webpTest = canvas.toDataURL('image/webp', 0.8);
+        const usesWebP = webpTest.startsWith('data:image/webp');
+        const dataUrl = usesWebP ? webpTest : canvas.toDataURL('image/jpeg', 0.8);
+        
+        resolve({
+          base64Image: dataUrl.split(',')[1],
+          mediaType: usesWebP ? 'image/webp' : 'image/jpeg'
+        });
       }
-      
-      // [Claude/Antigravity 피드백 반영] 이진화 적용 후, 문자 선명도와 용량 효율을 고려해 무손실 PNG 포맷 적용
-      const dataUrl = canvas.toDataURL('image/png');
-      const base64Image = dataUrl.split(',')[1];
-      resolve({ base64Image, mediaType: 'image/png' });
     };
     img.onerror = () => reject(new Error('이미지 로드 중 오류 발생'));
     
