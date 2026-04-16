@@ -2,9 +2,17 @@
 // API 키는 서버 사이드(Vercel 환경 변수 ANTHROPIC_API_KEY)에서만 사용됨
 
 /**
- * 이미지를 리사이징하고 JPEG로 변환하여 용량과 포맷을 최적화합니다.
+ * 전처리 완료된 최적화 이미지 데이터 규격
+ * @typedef {Object} OptimizedImage
+ * @property {string} base64Image - Base64 인코딩된 이미지 문자열 (헤더 제외)
+ * @property {'image/png' | 'image/jpeg'} mediaType - 강제 적용된 MIME 타입
+ */
+
+/**
+ * 이미지를 리사이징하고 PNG/이진화 변환하여 용량과 포맷을 최적화합니다.
  * @param {File} imageFile 
- * @returns {Promise<{base64Image: string, mediaType: string}>}
+ * @param {'single' | 'bulk' | 'schedule'} [mode='single']
+ * @returns {Promise<OptimizedImage>}
  */
 async function optimizeImage(imageFile, mode = 'single') {
   return new Promise((resolve, reject) => {
@@ -14,9 +22,9 @@ async function optimizeImage(imageFile, mode = 'single') {
       let width = img.width;
       let height = img.height;
       
-      // bulk/schedule 모드(텍스트 밀집)는 해상도를 더 높게 설정
-      // [최적화] single 모드는 800px로 하향하여 전송 속도 개선
-      const MAX_SIZE = (mode === 'bulk' || mode === 'schedule') ? 1536 : 800;
+      // bulk/schedule 모드(텍스트 밀집)는 해상도를 유지하되, 약간 축소 (1200px)
+      // [최적화] single 모드는 480px로 극단적 하향하여 전송 속도 개선
+      const MAX_SIZE = (mode === 'bulk' || mode === 'schedule') ? 1200 : 480;
 
       if (width > height) {
         if (width > MAX_SIZE) {
@@ -30,19 +38,31 @@ async function optimizeImage(imageFile, mode = 'single') {
         }
       }
 
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = Math.round(width);
+      canvas.height = Math.round(height);
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error('Canvas context 생성 실패'));
       
-      // [최적화] 흑백 처리를 통해 데이터량 감소 및 텍스트 명암비 확보
-      ctx.filter = 'grayscale(1)';
-      ctx.drawImage(img, 0, 0, width, height);
+      // 1단계: 흑백 변환 및 대비 강화
+      ctx.filter = 'grayscale(1) contrast(1.4) brightness(1.05)';
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       
-      // JPEG 0.75 품질로 압축 (용량 최적화)
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      // 2단계: 픽셀 레벨 임계값 (이진화 근사) - single 모드
+      if (mode === 'single') {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = imageData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const gray = d[i]; // grayscale 후 R=G=B
+          const bw = gray > 160 ? 255 : 0; // 임계값 160
+          d[i] = d[i + 1] = d[i + 2] = bw;
+        }
+        ctx.putImageData(imageData, 0, 0);
+      }
+      
+      // [Claude/Antigravity 피드백 반영] 이진화 적용 후, 문자 선명도와 용량 효율을 고려해 무손실 PNG 포맷 적용
+      const dataUrl = canvas.toDataURL('image/png');
       const base64Image = dataUrl.split(',')[1];
-      resolve({ base64Image, mediaType: 'image/jpeg' });
+      resolve({ base64Image, mediaType: 'image/png' });
     };
     img.onerror = () => reject(new Error('이미지 로드 중 오류 발생'));
     

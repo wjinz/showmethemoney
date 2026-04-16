@@ -50,13 +50,17 @@ No preamble, no postamble.`;
   let promptText = '';
   if (mode === 'bulk') {
     promptText = `CRITICAL: Output ONLY valid JSON array. Start with [ and end with ].
-Extract all transactions from this card statement screenshot.
-Format: [{"date":"YYYY-MM-DD","amount":number,"cat":"category","memo":"merchant"}]
-Rules:
-- Category must be one of: ${CAT_GUIDE}
-- Amount must be a positive number (no commas, no currency signs)
-- If date is missing, use ${today}. If year is missing, use ${currentYear}.
-- Example: [{"date":"2026-04-01","amount":15000,"cat":"food","memo":"스타벅스"}]`;
+Extract ALL transaction rows from this Korean card statement screenshot.
+
+Each row format: {"date":"YYYY-MM-DD","amount":number,"cat":"category","memo":"merchant"}
+Categories: ${CAT_GUIDE}
+
+Korean card statement patterns:
+- Date column: "04/15" or "2026.04.15" → convert to YYYY-MM-DD using year ${currentYear}
+- Amount: ignore "취소" (cancellation) rows, only include positive charges
+- Merchant names are usually in Korean or English brand names
+
+Return ALL visible transaction rows as a JSON array.`;
   } else if (mode === 'schedule') {
     promptText = `CRITICAL: Output ONLY valid JSON object. Start with { and end with }.
 Extract all names and their work schedules from this image.
@@ -67,11 +71,22 @@ Rules:
 - IMPORTANT: If scanning in December but the schedule is for January, use ${parseInt(currentYear) + 1}.
 - Example: {"names":["홍길동"],"schedules":{"홍길동":[{"date":"2026-04-01","type":"Day"}]}}`;
   } else {
-    promptText = `CRITICAL: Output ONLY valid JSON object. Start with { and end with }.
-Extract the total amount, category, and merchant from this receipt.
-Format: {"amount":number,"cat":"category","memo":"merchant"}
-- Category: one of [${CAT_GUIDE}]
-- Example: {"amount":12000,"cat":"food","memo":"김밥천국"}`;
+    promptText = `CRITICAL: Output ONLY valid JSON. Start with { and end with }.
+You are analyzing a Korean receipt or payment slip.
+
+Rules (strictly follow):
+1. amount: The FINAL total paid (look for "합계", "결제금액", "승인금액", "청구금액" — pick the LARGEST or final total). Must be a positive integer. No commas.
+2. cat: Classify into ONE of [${CAT_GUIDE}] based on merchant type.
+3. memo: The merchant name only (store name, not items).
+
+Korean receipt keywords: 합계=total, 승인금액=approved amount, 부가세=VAT, 가맹점=merchant
+
+Examples:
+- Receipt showing "합계 15,000" at GS25 → {"amount":15000,"cat":"food","memo":"GS25"}
+- Card slip showing "승인금액 52,000" at 올리브영 → {"amount":52000,"cat":"clothing","memo":"올리브영"}
+- Receipt showing "결제금액 8,500" at 카페베네 → {"amount":8500,"cat":"food","memo":"카페베네"}
+
+Now extract from this image: {"amount":number,"cat":"category","memo":"merchant_name"}`;
   }
 
 
@@ -97,8 +112,8 @@ Format: {"amount":number,"cat":"category","memo":"merchant"}
           }],
           generationConfig: {
             temperature: 0.0,
-            // [최적화] single 모드는 256 토큰이면 충분함 (추론 시간 단축)
-            maxOutputTokens: mode === 'single' ? 256 : (mode === 'bulk' ? 4096 : 1024),
+            // [최적화] single 128, bulk 2048 추론 시간 단축
+            maxOutputTokens: mode === 'single' ? 128 : (mode === 'bulk' ? 2048 : 512),
             response_mime_type: "application/json"
           }
         }),
@@ -162,11 +177,43 @@ Format: {"amount":number,"cat":"category","memo":"merchant"}
 
   } catch (err) {
     console.error('OCR 파싱 오류:', err);
+    // [Antigravity 적용] 폴백 파서: AI가 실패해도 금액만이라도 안전하게 복구
+    const fallbackAmount = extractAmountFallback(text);
+    if (fallbackAmount) {
+      return res.status(200).json({ amount: fallbackAmount, cat: 'etc', memo: '' });
+    }
     return res.status(500).json({ 
-      error: `OCR 파싱 오류: ${err.message}`,
+      error: `OCR 파싱 오류: ${err instanceof Error ? err.message : String(err)}`,
       raw: text.slice(0, 300)
     });
   }
+}
+
+/**
+ * 텍스트 기반 폴백 파서: AI 구조 실패 시 모든 금액 후보군을 추출하여 최대값을 반환
+ * @param {string} rawText 
+ * @returns {number|null}
+ */
+function extractAmountFallback(rawText) {
+  // "합계 15,000", "결제금액 52000", "₩15,000" 등에서 숫자 추출
+  // 단순 첫 매치 대신 모든 후보를 배열로 추출 후 최대값 선택
+  const patterns = [
+    /(?:합계|결제금액|승인금액|청구금액|total)[^\d]*(\d[\d,]+)/gi,
+    /₩\s*(\d[\d,]+)/g,
+    /(\d[\d,]{4,})/g,  // 5자리 이상 숫자 (카드번호 4자리 오인 방지)
+  ];
+  /** @type {number[]} */
+  const candidates = [];
+  for (const re of patterns) {
+    let m;
+    while ((m = re.exec(rawText)) !== null) {
+      const val = parseInt(m[1].replace(/,/g, ''), 10);
+      if (!isNaN(val)) candidates.push(val);
+    }
+    if (candidates.length > 0) break; // 우선순위 높은 패턴에서 찾으면 중단
+  }
+  if (candidates.length === 0) return null;
+  return Math.max(...candidates); // 가장 큰 숫자 = 최종 합계 가능성 최대
 }
 
 /**

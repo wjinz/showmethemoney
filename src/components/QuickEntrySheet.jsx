@@ -1,11 +1,47 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { CATS, getYear, getMonth } from "../constants";
 import { toDateStr, getContrastText } from "../utils/helpers";
 import { NumPad } from "./NumPad";
-import { CardScanSheet } from "./CardScanSheet";
 import { CAT } from "../constants";
 import { BottomSheet } from "./BottomSheet.jsx";
-import { Camera, AlertCircle, Edit3, X, ChevronRight } from "lucide-react";
+import { Camera, AlertCircle, Edit3, X, ChevronRight, FileDigit } from "lucide-react";
+import { useOcrScan } from "../hooks/useOcrScan.js";
+import { runOCR } from "../utils/ocr.js";
+
+/**
+ * 이번 달 자주 사용하는 지출 패턴
+ * @typedef {Object} FrequentPattern
+ * @property {number} count - 출현 빈도수
+ * @property {number} amount - 가장 마지막(최신) 거래 금액
+ * @property {string} cat - 카테고리 ID
+ * @property {string} memo - 가맹점 이름
+ */
+
+/**
+ * @param {any[]} tx
+ * @returns {FrequentPattern[]}
+ */
+function getFrequentPatterns(tx) {
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  /** @type {Record<string, FrequentPattern>} */
+  const freq = {};
+  
+  const filtered = tx.filter(t => t?.date?.startsWith(thisMonth));
+  filtered.sort((a, b) => (a.date > b.date ? 1 : -1));
+  
+  filtered.forEach(t => {
+    const key = `${t.cat}:${t.memo}`;
+    if (!freq[key]) {
+      freq[key] = { count: 0, amount: t.amount, cat: t.cat, memo: t.memo };
+    }
+    freq[key].count++;
+    freq[key].amount = t.amount;
+  });
+  
+  return Object.values(freq)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+}
 
 /**
  * @param {{ 
@@ -32,6 +68,11 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
   const [expanded,  setExpanded]  = useState(false);
   const [saved,     setSaved]     = useState(false);
 
+  const { phase: ocrPhase, data: ocrData, error: ocrError, startScan, reset: resetOcr } = useOcrScan(runOCR, 'single');
+  const fileInputRef = useRef(null);
+  
+  const frequentPatterns = useMemo(() => getFrequentPatterns(tx || []), [tx]);
+
   const partnerName = myRole === 'husband' ? (names.wife || '와이프') : (names.husband || '남편');
   
   // PWA Share Target 텍스트 처리
@@ -46,13 +87,37 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
     }
   }, []);
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
+  // [Phase 3] OCR 자동 폼 입력 - phase/data 상태에 의존
+  useEffect(() => {
+    if (ocrPhase === 'review' && ocrData) {
+      if (ocrData.amount) setAmount(String(ocrData.amount));
+      if (ocrData.cat)    setCat(ocrData.cat);
+      if (ocrData.memo)   setMemo(ocrData.memo);
+    } else if (ocrPhase === 'idle' && ocrError) {
+      alert(`AI 인식 실패: ${ocrError}`);
+    }
+  }, [ocrPhase, ocrData, ocrError]);
+
+  const handleReceiptFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEntryStep('form');
+    startScan(file);
+  };
+
+  const handleBulkFile = (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     // @ts-ignore
     window.__sharedFile = file;
     onClose();
-    onCardScan();
+    onCardScan(); // 상위 컴포넌트(Dashboard 등)에서 처리
+  };
+
+  const handleRetake = () => {
+    resetOcr();
+    setAmount(""); setCat(""); setMemo("");
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
   const handleSave = () => {
@@ -77,55 +142,53 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
 
   if (entryStep === 'select') {
     return (
-      <BottomSheet isOpen onClose={onClose} title="무엇을 기록할까요?" maxHeight="70dvh">
+      <BottomSheet isOpen onClose={onClose} title="무엇을 기록할까요?" maxHeight="75dvh">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '8px 0 20px' }}>
           
           <label style={{ cursor: 'pointer', display: 'block' }}>
-            <input type="file" accept="image/*" onChange={handleFileSelect} style={{ display: "none" }} />
+            <input type="file" accept="image/*" onChange={handleReceiptFile} style={{ display: "none" }} />
             <div style={{
               background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
-              borderRadius: 24, padding: '24px 20px', display: 'flex', alignItems: 'center', gap: 18,
+              borderRadius: 24, padding: '20px 20px', display: 'flex', alignItems: 'center', gap: 18,
               transition: 'transform 0.2s'
             }}>
               <div style={{ 
-                width: 56, height: 56, background: '#3B82F6', borderRadius: 16, 
+                width: 50, height: 50, background: '#3B82F6', borderRadius: 16, 
                 display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
                 boxShadow: '0 8px 16px rgba(59,130,246,0.3)'
               }}>
-                <Camera size={28} />
+                <Camera size={26} />
               </div>
               <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>AI 영수증 스캔</p>
-                <p style={{ fontSize: 13, color: '#3B82F6', fontWeight: 500 }}>영수증/카드내역 자동 입력 ✨</p>
+                <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 2 }}>AI 영수증 스캔</p>
+                <p style={{ fontSize: 12, color: '#3B82F6', fontWeight: 500 }}>사진 1장 → 금액·카테고리 자동 입력</p>
               </div>
               <ChevronRight size={20} color="var(--text3)" />
             </div>
           </label>
 
-          {/* SOS 긴급 결재 */}
-          <div 
-            onClick={() => { onClose(); onSosRequest(); }}
-            style={{
-              background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)',
-              borderRadius: 24, padding: '24px 20px', display: 'flex', alignItems: 'center', gap: 18,
-              cursor: 'pointer'
-            }}
-          >
-            <div style={{ 
-              width: 56, height: 56, background: '#EF4444', borderRadius: 16, 
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
-              boxShadow: '0 8px 16px rgba(239,68,68,0.25)'
+          <label style={{ cursor: 'pointer', display: 'block' }}>
+            <input type="file" accept="image/*" onChange={handleBulkFile} style={{ display: "none" }} />
+            <div style={{
+              background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)',
+              borderRadius: 24, padding: '20px 20px', display: 'flex', alignItems: 'center', gap: 18,
+              transition: 'transform 0.2s'
             }}>
-              <AlertCircle size={28} />
+              <div style={{ 
+                width: 50, height: 50, background: '#8B5CF6', borderRadius: 16, 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+                boxShadow: '0 8px 16px rgba(139,92,246,0.3)'
+              }}>
+                <FileDigit size={26} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 2 }}>카드 내역 일괄 입력</p>
+                <p style={{ fontSize: 12, color: '#8B5CF6', fontWeight: 500 }}>명세서 스크린샷 → 여러 건 한꺼번에</p>
+              </div>
+              <ChevronRight size={20} color="var(--text3)" />
             </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>SOS 긴급 결재</p>
-              <p style={{ fontSize: 13, color: '#EF4444', fontWeight: 500 }}>{partnerName}에게 애교있게 조르기 🥺</p>
-            </div>
-            <ChevronRight size={20} color="var(--text3)" />
-          </div>
+          </label>
 
-          {/* 직접 입력하기 */}
           <div 
             onClick={() => setEntryStep('form')}
             style={{
@@ -135,17 +198,39 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
             }}
           >
             <div style={{ 
-              width: 56, height: 56, background: 'var(--gold)', borderRadius: 16, 
+              width: 50, height: 50, background: 'var(--gold)', borderRadius: 16, 
               display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
               boxShadow: '0 8px 16px var(--goldD)'
             }}>
               <Edit3 size={24} />
             </div>
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>직접 입력하기</p>
+              <p style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>직접 입력하기</p>
               <p style={{ fontSize: 12, color: 'var(--text2)' }}>카테고리와 금액을 한 땀 한 땀</p>
             </div>
             <ChevronRight size={18} color="var(--text3)" />
+          </div>
+
+          <div 
+            onClick={() => { onClose(); onSosRequest(); }}
+            style={{
+              background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)',
+              borderRadius: 24, padding: '20px 20px', display: 'flex', alignItems: 'center', gap: 18,
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ 
+              width: 50, height: 50, background: '#EF4444', borderRadius: 16, 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+              boxShadow: '0 8px 16px rgba(239,68,68,0.25)'
+            }}>
+              <AlertCircle size={26} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 2 }}>SOS 긴급 결재</p>
+              <p style={{ fontSize: 12, color: '#EF4444', fontWeight: 500 }}>{partnerName}에게 애교있게 조르기 🥺</p>
+            </div>
+            <ChevronRight size={20} color="var(--text3)" />
           </div>
 
         </div>
@@ -182,6 +267,55 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
             ))}
           </div>
         )}
+
+        <div style={{ position: "relative" }}>
+          {/* [Phase 3] OCR 로딩 오버레이 */}
+          {ocrPhase === 'scanning' && (
+            <div style={{
+              position: 'absolute', inset: -8, zIndex: 10,
+              background: 'rgba(var(--bg2-rgb), 0.85)',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 12,
+              borderRadius: 24, backdropFilter: 'blur(4px)'
+            }}>
+              <div style={{ fontSize: 40 }}>🧠</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>영수증 분석 중...</div>
+            </div>
+          )}
+
+          {/* [Phase 3] 다시 스캔 버튼 */}
+          {(ocrPhase === 'review' || (ocrPhase === 'idle' && ocrError)) && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <button type="button" onClick={handleRetake} style={{ padding: '6px 12px', borderRadius: 8, fontSize: 13, background: 'var(--bg3)', color: 'var(--text)', border: '1px solid var(--border)', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                📸 다시 스캔
+              </button>
+            </div>
+          )}
+          <input type="file" accept="image/*" ref={fileInputRef} onChange={handleReceiptFile} style={{ display: 'none' }} />
+
+          {/* [Phase 6] 최신 금액 우선 빠른 입력 칩 */}
+          {frequentPatterns.length > 0 && ocrPhase !== 'scanning' && (
+            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 12, paddingBottom: 4, scrollbarWidth: 'none' }}>
+              {frequentPatterns.map(p => {
+                const catObj = Object.values(CATS).find(c=>c.id===p.cat);
+                return (
+                  <button
+                    type="button"
+                    key={`${p.cat}:${p.memo}`}
+                    onClick={() => { setCat(p.cat); setMemo(p.memo); setAmount(String(p.amount)); }}
+                    style={{
+                      flexShrink: 0, padding: '7px 14px', borderRadius: 99,
+                      border: '1px solid var(--border)', background: 'var(--bg3)',
+                      fontSize: 12, fontWeight: 600, color: 'var(--text2)', cursor: 'pointer',
+                    }}
+                  >
+                    {catObj?.icon} {p.memo || catObj?.label} 
+                    <span style={{opacity:0.5, marginLeft: 4}}>{(p.amount||0).toLocaleString()}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
         <div style={{
           background: "var(--bg3)", borderRadius: 18,
