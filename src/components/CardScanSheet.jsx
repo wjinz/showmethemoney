@@ -28,8 +28,9 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
 
   // 훅에서 데이터가 넘어오면 초기 처리
   useEffect(() => {
-    if (rawItems && Array.isArray(rawItems.items)) {
-      setItems(rawItems.items.map(r => ({
+    if (rawItems) {
+      const arr = Array.isArray(rawItems) ? rawItems : (Array.isArray(rawItems.items) ? rawItems.items : []);
+      setItems(arr.map(r => ({
         id:       newId(),
         date:     r.date || new Date().toISOString().slice(0, 10),
         amount:   r.amount,

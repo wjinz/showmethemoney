@@ -75,6 +75,8 @@ Date conversion rules:
 - If date is missing, use ${todayDate}. If year is missing, use ${currentYear}.
 
 Korean card app layout:
+- The screen is divided into date sections. A date string (like "어제", "오늘", "26. 4. 12(일)") appears as a section header.
+- ALL transactions listed below that date header belong to that date (until a new date header appears).
 - Merchant name is usually the largest text in each row
 - Below merchant: time (HH:MM) and card name
 - Amount is on the right side, followed by "원"
