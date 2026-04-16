@@ -316,6 +316,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
               })}
             </div>
           )}
+        </div>
 
         <div style={{
           background: "var(--bg3)", borderRadius: 18,
@@ -492,7 +493,7 @@ export function QuickEntrySheet({ names, plan, cards, tx, onSave, onClose, onCar
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
             transition: "background 0.2s"
           }}>
-            <input type="file" accept="image/*" onChange={handleFileSelect} style={{ display: "none" }} />
+            <input type="file" accept="image/*" onChange={handleReceiptFile} style={{ display: "none" }} />
             <span style={{ fontSize: 18, lineHeight: 1 }}>📸</span>
             <span style={{ fontSize: 9, fontWeight: 800, color: "var(--text2)" }}>AI 스캔</span>
           </label>
