@@ -51,6 +51,8 @@ import { createContext, useContext } from "react";
  * @property {(v: import('../constants').InstallItem[] | ((prev: import('../constants').InstallItem[]) => import('../constants').InstallItem[])) => void} setInstall
  * @property {import('../constants').CardItem[]} cards
  * @property {(v: import('../constants').CardItem[] | ((prev: import('../constants').CardItem[]) => import('../constants').CardItem[])) => void} setCards
+ * @property {import('../constants').SettlementItem[]} settlements
+ * @property {(v: import('../constants').SettlementItem[] | ((prev: import('../constants').SettlementItem[]) => import('../constants').SettlementItem[])) => void} setSettlements
  * @property {object[]} assets
  * @property {(v: object[] | ((prev: object[]) => object[])) => void} setAssets
  * @property {string} syncStatus

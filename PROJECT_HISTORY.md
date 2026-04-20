@@ -43,7 +43,7 @@
 - **관련 문서**:
     - [_history/implementation_plan1955.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/implementation_plan1955.md)
     - [_history/implementation_plan2013.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/implementation_plan2013.md)
-    - [implementation_plan2052.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/implementation_plan2052.md)
+    - [_history/implementation_plan2052.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/implementation_plan2052.md)
 
 ---
 
@@ -55,8 +55,34 @@
     - **보안 및 테마**: 3가지 테마(`dark`, `light`, `oldschool`) 시스템과 관리자 모드, 개인 정보 보호 기능을 비즈니스 로직에 완전 통합.
     - **미래 과제 도출**: 다중 자녀 지원, 데이터 무결성 강화를 위한 트랜잭션 처리 등 향후 고도화 로드맵 제시.
 - **관련 문서**:
-    - [research_2026-04-15_1500.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/research_2026-04-15_1500.md)
+    - [_history/research_2026-04-15_1500.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/research_2026-04-15_1500.md)
     - [PROJECT_HISTORY.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/PROJECT_HISTORY.md) (본 문서)
+
+---
+
+### 5단계: 지출 입력 시스템 완성과 Bulk OCR 고도화 (2026.04.16)
+**"다크모드 완벽 대응 및 네트워크 속도 최적화"**
+- **주요 과제**: 카드 앱 스크린샷 인식 실패 해결 및 대용량 이미지 전송 병목 제거.
+- **핵심 성과**: 
+    - **Bulk OCR 혁신**: 다크모드 인식률 저해 요소(흑백 필터) 제거 및 컬러 보존 로직 적용. 요일("(일)", "(월)") 및 상대적 날짜("어제", "오늘") 변환 규칙 완성.
+    - **네트워크 최적화**: 무손실 PNG 대신 WebP/JPEG(0.8) 가변 압축 도입으로 업로드 용량 50~70% 절감.
+    - **데이터 복원력**: AI 파싱 실패 시에도 정규식을 통해 유효한 항목을 긁어내는 `extractBulkItemsFallback` 방어 레이어 구축.
+    - **UX 자동화**: 영수증 스탬프 촬영 즉시 폼으로 진입, 최근 패턴 기반 '빠른 입력 칩' 연동으로 입력 피로도 최소화.
+    - [_history/plan_expense-entry_2026-04-16_0120.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/plan_expense-entry_2026-04-16_0120.md)
+    - [_history/implementation_plan0416_1435.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/implementation_plan0416_1435.md)
+
+---
+
+### 6단계: 자산 통합 관리망 및 모바일 친화적 카드 정산 시스템 완비 (2026.04.20)
+**"오프라인 큐가 지원되는 월간 결제 대금 정산기 구축(Settlement)"**
+- **주요 과제**: 이번 달 예상 카드값과 보유 현금을 기반으로 초과 및 부족액을 사용자에게 직관적으로 제시.
+- **핵심 성과**: 
+    - **통합 설계**: `household_data` 생태계를 파괴하지 않고 `settlements` 상태를 추가하여 오프라인 동기화, 실시간 Realtime 동기화를 단번에 이룩함(App.jsx 의존성 추가).
+    - **가시성**: 과거 달을 비교해 증감액 표기(예: `▲ +15,000원`), 부족 및 흑자 상태 시 UI 백그라운드를 다이내믹하게 교체. 
+    - **UX 자동화**: 고정 지출 내역에서 `cardId`가 없는 현금 고정비용을 산출해 자동 제안값으로 노출시키는 편의성 제공.
+    - **접근성 확장**: `SettingsView` 진입점 버튼 구성 및 `DashboardView` 메인 요약 위젯(`SettlementSummaryWidget`)으로 진입 장벽 완화.
+- **관련 문서**:
+    - [plan_2026-04-20_0932.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/plan_2026-04-20_0932.md)
 
 ---
 

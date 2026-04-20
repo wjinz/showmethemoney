@@ -17,6 +17,7 @@ import { IncomeSavingsWidget } from './widgets/IncomeSavingsWidget.jsx';
 import { FixedExpenseWidget } from './widgets/FixedExpenseWidget.jsx';
 import { PlanSummaryWidget } from './widgets/PlanSummaryWidget.jsx';
 import { CalendarWidget } from './widgets/CalendarWidget.jsx';
+import { SettlementSummaryWidget } from './widgets/SettlementSummaryWidget.jsx';
 
 /**
  * @typedef {import('../constants/index.js').TxItem} TxItem
@@ -131,6 +132,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
     fixed_list: '고정비 및 할부 요약',
     plan_summary: '플랜 요약',
     calendar_schedule: '일정 캘린더',
+    settlement_summary: '결제 정산기',
   };
 
   /** @type {Record<string, React.ComponentType<any>>} */
@@ -147,6 +149,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
     fixed_list:       FixedExpenseWidget,
     plan_summary:     PlanSummaryWidget,
     calendar_schedule: CalendarWidget,
+    settlement_summary: SettlementSummaryWidget,
   }), []);
 
   // 전체 가능한 위젯 리스트
@@ -254,8 +257,8 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
                   </button>
                 </div>
               )}
-              <div style={{ padding: '0' }}>
-                <Widget {...ctx} />
+              <div style={{ padding: '0', width: '100%', height: '100%' }}>
+                <Widget {...ctx} onNavigate={_onSettings} />
               </div>
             </div>
           );

@@ -16,7 +16,7 @@ import { idbEnqueue } from "./utils/offlineIDB.js";
 import { useKidsStore } from "./stores/kidsStore.js";
 import {
   CATS, INIT_BUDGETS, DEFAULT_SLIDER_CFG, DEFAULT_TAX_CONFIG,
-  EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS, EMPTY_PLAN,
+  EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS, EMPTY_PLAN, EMPTY_SETTLEMENTS,
   DEFAULT_WIDGET_LAYOUT, DEFAULT_HOME_LAYOUT,
   getYear,
 } from "./constants/index.js";
@@ -31,6 +31,7 @@ const DashboardView      = lazy(() => import("./views/DashboardView.jsx").then(m
 const PrivateWalletView  = lazy(() => import("./views/PrivateWalletView.jsx").then(m => ({ default: m.PrivateWalletView })));
 const BudgetView         = lazy(() => import("./views/BudgetView.jsx").then(m => ({ default: m.BudgetView })));
 const AdminView          = lazy(() => import("./views/AdminView.jsx").then(m => ({ default: m.AdminView })));
+const SettlementView     = lazy(() => import("./views/SettlementView.jsx").then(m => ({ default: m.SettlementView })));
 const KidsView           = lazy(() => import("./views/KidsView.jsx").then(m => ({ default: m.KidsView })));
 import { ParentKidsMgmtView } from "./views/ParentKidsMgmtView.jsx";
 import { Nav } from "./components/Nav.jsx";
@@ -88,6 +89,7 @@ export default function App() {
   const [fixed, setFixedRaw] = useState(EMPTY_FIXED);
   const [install, setInstallRaw] = useState(EMPTY_INSTALL);
   const [cards, setCardsRaw] = useState(EMPTY_CARDS);
+  const [settlements, setSettlementsRaw] = useState(EMPTY_SETTLEMENTS);
   const [assets, setAssetsRaw] = useState(EMPTY_ASSETS);
   const [plan, setPlanRaw] = useState(EMPTY_PLAN);
   const [budgets, setBudgetsRaw] = useState(INIT_BUDGETS);
@@ -149,6 +151,7 @@ export default function App() {
       case 'fixed': setFixedRaw(value); break;
       case 'install': setInstallRaw(value); break;
       case 'cards': setCardsRaw(value); break;
+      case 'settlements': setSettlementsRaw(value); break;
       case 'assets': setAssetsRaw(value); break;
       case 'budgets': setBudgetsRaw(value); break;
       case 'names': setNamesRaw(value); break;
@@ -206,6 +209,7 @@ export default function App() {
            await db.save(hid, "cards", normalizedCards);
         }
       }
+      if (allData.settlements) setSettlementsRaw(allData.settlements);
       if (allData.assets) setAssetsRaw(allData.assets);
       if (allData.budgets) setBudgetsRaw(allData.budgets);
       if (allData.names) setNamesRaw(allData.names);
@@ -549,6 +553,7 @@ export default function App() {
   const setFixed = useCallback(v => setShared("fixed", typeof v === 'function' ? v(fixed) : v, setFixedRaw), [fixed, setShared]);
   const setInstall = useCallback(v => setShared("install", typeof v === 'function' ? v(install) : v, setInstallRaw), [install, setShared]);
   const setCards = useCallback(v => setShared("cards", typeof v === 'function' ? v(cards) : v, setCardsRaw), [cards, setShared]);
+  const setSettlements = useCallback(v => setShared("settlements", typeof v === 'function' ? v(settlements) : v, setSettlementsRaw), [settlements, setShared]);
   const setAssets = useCallback(v => setShared("assets", typeof v === 'function' ? v(assets) : v, setAssetsRaw), [assets, setShared]);
   const setTaxConfig = useCallback(v => setShared("taxConfig", typeof v === 'function' ? v(taxConfig) : v, setTaxConfigRaw), [taxConfig, setShared]);
   const setPlan = useCallback(v => setShared("plan", typeof v === 'function' ? v(plan) : v, setPlanRaw), [plan, setShared]);
@@ -675,6 +680,7 @@ export default function App() {
       db.save(householdId, "fixed", EMPTY_FIXED),
       db.save(householdId, "install", EMPTY_INSTALL),
       db.save(householdId, "cards", EMPTY_CARDS),
+      db.save(householdId, "settlements", EMPTY_SETTLEMENTS),
       db.save(householdId, "assets", EMPTY_ASSETS),
       db.save(householdId, "plan", {}),
       db.save(householdId, "budgets", INIT_BUDGETS),
@@ -832,7 +838,7 @@ export default function App() {
   const budgetContextValue = {
     tx, setTx, addTx, deleteTx, editTx, addTxBatch, loadTxYear,
     budgets, setBudgets, plan, setPlan, names, setNames,
-    fixed, setFixed, install, setInstall, cards, setCards, assets, setAssets,
+    fixed, setFixed, install, setInstall, cards, setCards, settlements, setSettlements, assets, setAssets,
     syncStatus, householdId, myRole,
     kidsMode, setKidsMode,
   };
@@ -873,6 +879,7 @@ export default function App() {
                 case "entry":     return <EntryView names={names} plan={plan} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />;
                 case "budget":    return <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />;
                 case "report":    return <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />;
+                case "settlement":return <SettlementView />;
                 case "settings":  return <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />;
                 case "admin":     return isAdmin ? <AdminView onClose={handleAdminLogout} addToast={addToast} /> : null;
                 case "dashboard": return <DashboardView plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} install={install} cards={cards} names={names} myRole={myRole} mySosPending={mySosPending} sosRequests={sosRequests} onSosUpdate={handleSosUpdate} onSosCancel={handleSosCancel} widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout} onSettings={() => setView("settings")} />;

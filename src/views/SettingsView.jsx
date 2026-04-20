@@ -22,20 +22,27 @@ export function SettingsView({
         <SectionHeader sub="Control Center" title="메뉴 / 환경 설정" />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
         <button onClick={() => onNavigate && onNavigate("budget")} style={{
-          padding: "20px", borderRadius: 14, background: "var(--bg2)", border: "1px solid var(--border)",
+          padding: "16px 8px", borderRadius: 14, background: "var(--bg2)", border: "1px solid var(--border)",
           boxShadow: "0 4px 15px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer"
         }}>
           <span style={{ fontSize: 24 }}>⚖️</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>예산 및 목표 설정</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text)" }}>예산/목표</span>
         </button>
         <button onClick={() => onNavigate && onNavigate("report")} style={{
-          padding: "20px", borderRadius: 14, background: "var(--bg2)", border: "1px solid var(--border)",
+          padding: "16px 8px", borderRadius: 14, background: "var(--bg2)", border: "1px solid var(--border)",
           boxShadow: "0 4px 15px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer"
         }}>
           <span style={{ fontSize: 24 }}>◈</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>과거 리포트 조회</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text)" }}>과거 리포트</span>
+        </button>
+        <button onClick={() => onNavigate && onNavigate("settlement")} style={{
+          padding: "16px 8px", borderRadius: 14, background: "var(--bg2)", border: "1px solid var(--border)",
+          boxShadow: "0 4px 15px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer"
+        }}>
+          <span style={{ fontSize: 24 }}>💳</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text)" }}>카드 정산</span>
         </button>
       </div>
 

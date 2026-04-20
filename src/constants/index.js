@@ -5,6 +5,8 @@
  * @typedef {{ id: string|number, label: string, type: string, color?: string, icon?: string, paymentDay?: number, billingStartDay?: number, billingEndDay?: number, billingEndNextMonth?: boolean }} CardItem
  * @typedef {{ id: number, household_id: string, requester: string, amount: number, reason: string, repay_plan: string, status: string, created_at: string, resolved_at?: string }} SosRequest
  * @typedef {{ label: string, target: number, saved: number }} GoalItem
+ * @typedef {{ cardId: string, expectedAmount: number }} CardBill
+ * @typedef {{ id: number, date: string, cardBills: CardBill[], fixedCash: number, currentCash: number, expectedShortage: number }} SettlementItem
  */
 
 export const CATS = [
@@ -46,6 +48,8 @@ export const EMPTY_INSTALL = [];
 export const EMPTY_CARDS   = [];
 /** @type {object[]} */
 export const EMPTY_ASSETS  = [];
+/** @type {SettlementItem[]} */
+export const EMPTY_SETTLEMENTS = [];
 export const EMPTY_PLAN    = {
   salary: { husband: 0, wife: 0, savingsTarget: 0 },
   utilizationTarget: 100,
@@ -84,31 +88,33 @@ export const DNAMES = ["일","월","화","수","목","금","토"];
 export const DEFAULT_WIDGET_LAYOUT = {
   mobile: [
     { i: 'sos_status',       x: 0, y: 0,  w: 1, h: 4, minW: 1, minH: 2 },
-    { i: 'today_status',     x: 0, y: 4,  w: 1, h: 4, minW: 1, minH: 3 },
-    { i: 'allowance_insight', x: 0, y: 8,  w: 1, h: 5, minW: 1, minH: 3 },
-    { i: 'spending_insight', x: 0, y: 13, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: 'budget_ring',      x: 0, y: 17, w: 1, h: 5, minW: 1, minH: 4 },
-    { i: 'goal',             x: 0, y: 22, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: 'tax_guide',        x: 0, y: 25, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: 'ai_nudge',         x: 0, y: 29, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: 'income_savings',   x: 0, y: 32, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: 'fixed_list',       x: 0, y: 36, w: 1, h: 5, minW: 1, minH: 3 },
-    { i: 'plan_summary',     x: 0, y: 41, w: 1, h: 5, minW: 1, minH: 5 },
-    { i: 'calendar_schedule',x: 0, y: 46, w: 1, h: 7, minW: 1, minH: 6 },
+    { i: 'settlement_summary', x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'today_status',     x: 0, y: 7,  w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'allowance_insight', x: 0, y: 11, w: 1, h: 5, minW: 1, minH: 3 },
+    { i: 'spending_insight', x: 0, y: 16, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'budget_ring',      x: 0, y: 20, w: 1, h: 5, minW: 1, minH: 4 },
+    { i: 'goal',             x: 0, y: 25, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'tax_guide',        x: 0, y: 28, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'ai_nudge',         x: 0, y: 32, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'income_savings',   x: 0, y: 35, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'fixed_list',       x: 0, y: 39, w: 1, h: 5, minW: 1, minH: 3 },
+    { i: 'plan_summary',     x: 0, y: 44, w: 1, h: 5, minW: 1, minH: 5 },
+    { i: 'calendar_schedule',x: 0, y: 49, w: 1, h: 7, minW: 1, minH: 6 },
   ],
   desktop: [
     { i: 'sos_status',       x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 2 },
-    { i: 'today_status',     x: 0, y: 4, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: 'spending_insight', x: 1, y: 4, w: 1, h: 4, minW: 1, minH: 3 },
-    { i: 'allowance_insight', x: 0, y: 8, w: 2, h: 5, minW: 1, minH: 3 },
-    { i: 'budget_ring',      x: 0, y: 13, w: 1, h: 5, minW: 1, minH: 4 },
+    { i: 'settlement_summary', x: 0, y: 4, w: 1, h: 3, minW: 1, minH: 2 },
+    { i: 'today_status',     x: 1, y: 4, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'spending_insight', x: 0, y: 7, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'allowance_insight', x: 1, y: 8, w: 1, h: 5, minW: 1, minH: 3 },
+    { i: 'budget_ring',      x: 0, y: 11, w: 1, h: 5, minW: 1, minH: 4 },
     { i: 'goal',             x: 1, y: 13, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: 'tax_guide',        x: 0, y: 18, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'tax_guide',        x: 0, y: 16, w: 1, h: 4, minW: 1, minH: 3 },
     { i: 'ai_nudge',         x: 1, y: 16, w: 1, h: 3, minW: 1, minH: 2 },
-    { i: 'income_savings',   x: 0, y: 22, w: 1, h: 4, minW: 1, minH: 3 },
+    { i: 'income_savings',   x: 0, y: 20, w: 1, h: 4, minW: 1, minH: 3 },
     { i: 'fixed_list',       x: 1, y: 19, w: 1, h: 5, minW: 1, minH: 3 },
-    { i: 'plan_summary',     x: 0, y: 26, w: 2, h: 5, minW: 1, minH: 5 },
-    { i: 'calendar_schedule',x: 0, y: 31, w: 2, h: 7, minW: 1, minH: 6 },
+    { i: 'plan_summary',     x: 0, y: 24, w: 2, h: 5, minW: 1, minH: 5 },
+    { i: 'calendar_schedule',x: 0, y: 29, w: 2, h: 7, minW: 1, minH: 6 },
   ],
 };
 
