@@ -1,17 +1,19 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useBudget } from "../context/BudgetContext.jsx";
 import { useToast } from "../components/Toast.jsx";
-import { G } from "../styles/globalStyles.js";
-
+ 
 /**
  * @typedef {import('../constants/index.js').CardBill} CardBill
  * @typedef {import('../constants/index.js').SettlementItem} SettlementItem
  * @typedef {import('../constants/index.js').CardItem} CardItem
  */
-
-export function SettlementView() {
+ 
+export function SettlementView({ onBack }) {
   const { settlements, setSettlements, cards, fixed } = useBudget();
   const { addToast } = useToast();
+  
+  const [isScanning, setIsScanning] = useState(false);
+  const scanTargetRef = useRef(null);
 
   const autoFixedCash = useMemo(() => {
     return fixed.filter(f => !f.cardId).reduce((sum, f) => sum + f.amount, 0);
@@ -81,12 +83,60 @@ export function SettlementView() {
   const totalCardBillsSum = Object.values(cardBills).reduce((sum, val) => sum + (val || 0), 0);
   const calcShortage = (currentCash || 0) - (fixedCash || 0) - totalCardBillsSum;
   const isSurplus = calcShortage >= 0;
+ 
+  const handleOcrUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const cardId = scanTargetRef.current;
+    if (!cardId) return;
 
+    setIsScanning(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const base64 = ev.target.result.split(',')[1];
+        try {
+          const res = await fetch('/api/ocr?mode=single', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64, type: file.type })
+          });
+          const data = await res.json();
+          if (data?.amount) {
+            handleCardBillChange(cardId, data.amount.toString());
+            addToast(`OCR 인식 성공: ${data.amount.toLocaleString()}원`, "success");
+          } else {
+            addToast("금액을 인식하지 못했습니다.", "error");
+          }
+        } catch (err) {
+          addToast("스캔 오류 발생", "error");
+        } finally {
+          setIsScanning(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setIsScanning(false);
+      addToast("파일 읽기 오류", "error");
+    }
+    e.target.value = '';
+  };
+ 
   return (
     <div style={{ padding: "0 20px 80px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* OCR File Input Hidden */}
+      <input type="file" id="settlement-ocr-input" accept="image/*" style={{ display: 'none' }} onChange={handleOcrUpload} />
+      
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 10 }}>
-        <h2 style={{ fontSize: 24, margin: 0 }}>결제 정산기</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {onBack && (
+            <button onClick={onBack} style={{ background: "transparent", fontSize: 20, padding: "4px 8px" }}>
+              ◀
+            </button>
+          )}
+          <h2 style={{ fontSize: 24, margin: 0 }}>결제 정산기</h2>
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--card-bg)", padding: "4px 8px", borderRadius: 8 }}>
           <button 
             style={{ padding: "4px 8px", fontSize: 16, background: "transparent" }}
@@ -218,15 +268,29 @@ export function SettlementView() {
                 {c.billingStartDay && <span>(청구기간: {c.billingEndNextMonth ? '전월' : '당월'} {c.billingStartDay}일 ~ 당월 {c.billingEndDay}일)</span>}
               </div>
 
-              <div style={{ position: "relative" }}>
-                <input 
-                  type="text" inputMode="numeric"
-                  value={expected === 0 ? "" : expected.toLocaleString()}
-                  onChange={e => handleCardBillChange(c.id, e.target.value)}
-                  style={{ width: "100%", padding: "12px 30px 12px 12px", borderRadius: 8, background: "var(--bg)", color: "var(--text1)", border: "1px solid var(--border)", fontSize: 16, textAlign: "right", fontWeight: 700 }}
-                  placeholder="0"
-                />
-                <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text2)", pointerEvents: "none" }}>원</span>
+              <div style={{ position: "relative", display: "flex", gap: 8 }}>
+                <button
+                  onClick={() => {
+                    scanTargetRef.current = String(c.id);
+                    document.getElementById('settlement-ocr-input')?.click();
+                  }}
+                  style={{
+                    padding: "12px 14px", borderRadius: 8, background: isScanning && scanTargetRef.current === String(c.id) ? "var(--bg)" : "var(--primary)", color: "white", fontSize: 14, fontWeight: 700, border: "none", flexShrink: 0
+                  }}
+                  disabled={isScanning}
+                >
+                  {isScanning && scanTargetRef.current === String(c.id) ? '스캔중...' : '📷 스캔'}
+                </button>
+                <div style={{ position: "relative", flex: 1 }}>
+                  <input 
+                    type="text" inputMode="numeric"
+                    value={expected === 0 ? "" : expected.toLocaleString()}
+                    onChange={e => handleCardBillChange(c.id, e.target.value)}
+                    style={{ width: "100%", padding: "12px 30px 12px 12px", borderRadius: 8, background: "var(--bg)", color: "var(--text1)", border: "1px solid var(--border)", fontSize: 16, textAlign: "right", fontWeight: 700 }}
+                    placeholder="0"
+                  />
+                  <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text2)", pointerEvents: "none" }}>원</span>
+                </div>
               </div>
             </div>
           );

@@ -57,30 +57,29 @@ No preamble, no postamble.`;
   let promptText = '';
   if (mode === 'bulk') {
     promptText = `CRITICAL: Output ONLY valid JSON array. Start with [ and end with ].
-Extract ALL confirmed transaction rows from this Korean card app screenshot.
-
+Extract ALL valid transaction rows from this Korean card app screenshot.
+ 
 Each row format: {"date":"YYYY-MM-DD","amount":number,"cat":"category","memo":"merchant"}
 Categories: ${CAT_GUIDE}
-
+ 
 IGNORE RULES (highest priority — do NOT include these in output):
-- Any row containing "거래취소", "취소", "가승인", or negative amounts
-- Rows where merchant name ends with "_가승인"
-- Header rows, summary rows, or UI labels
-
+- Any row containing "거래취소", "취소", "가승인", or negative amounts.
+- Rows where merchant name ends with "_가승인".
+- Header rows, summary rows, or UI labels.
+ 
 Date conversion rules:
 - "오늘" or "TODAY" → ${todayDate}
 - "어제" or "YESTERDAY" → ${yesterdayDate}
-- "26. 4. 12(일)" or "26. 4. 12" format → 2026-04-12 (Ignore days in parentheses like (일) or (월))
+- "26. 4. 12(일)" or "26. 4. 12" format → 2026-04-12 (Ignore days in parentheses).
 - "04/15" or "2026.04.15" → 2026-04-15
 - If date is missing, use ${todayDate}. If year is missing, use ${currentYear}.
-
-Korean card app layout:
-- The screen is divided into date sections. A date string (like "어제", "오늘", "26. 4. 12(일)") appears as a section header.
-- ALL transactions listed below that date header belong to that date (until a new date header appears).
-- Merchant name is usually the largest text in each row
-- Below merchant: time (HH:MM) and card name
-- Amount is on the right side, followed by "원"
-
+ 
+Guide to Korean card app layout:
+- The screen MAY be divided into date sections. If a date string (like "어제", "오늘", "26. 4. 12(일)") appears as a section header, ALL transactions below it belong to that date.
+- Regardless of layout, extract EVERY valid transaction you see.
+- Merchant name is usually the largest text in each row.
+- Amount is usually followed by "원".
+ 
 Return ONLY confirmed, non-cancelled transactions as a JSON array.`;
   } else if (mode === 'schedule') {
     promptText = `CRITICAL: Output ONLY valid JSON object. Start with { and end with }.
@@ -117,11 +116,12 @@ Now extract from this image: {"amount":number,"cat":"category","memo":"merchant_
   let lastStatus = 500;
   let geminiRes = null;
 
-  for (const model of models) {
+    for (const model of models) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
     try {
       geminiRes = await fetch(`${url}?key=${apiKey}`, {
         method: 'POST',
+        signal: AbortSignal.timeout(model === 'gemma-4-31b-it' ? 12000 : 20000), // Gemma 4: 12초, Gemini: 20초
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemInstruction }] },
@@ -266,11 +266,26 @@ function extractBulkItemsFallback(text) {
  * AI 응답 데이터를 모드별로 정규화하여 프런트엔드 크래시를 방지합니다.
  */
 function normalizeOcrData(parsed, mode) {
+  const sanitizeNumber = (val) => {
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') {
+      const num = parseInt(val.replace(/[^0-9]/g, ''), 10);
+      return isNaN(num) ? 0 : num;
+    }
+    return 0;
+  };
+
   if (mode === 'bulk') {
-    // 배열이 아니면 배열로 감싸기
-    if (!Array.isArray(parsed)) return { items: [parsed] };
-    return { items: parsed };
+    let arr = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.items) ? parsed.items : [parsed]);
+    arr = arr.map(item => ({
+      ...item,
+      amount: sanitizeNumber(item.amount)
+    }));
+    return { items: arr };
   }
 
-  return parsed;
+  return {
+    ...parsed,
+    amount: sanitizeNumber(parsed.amount)
+  };
 }

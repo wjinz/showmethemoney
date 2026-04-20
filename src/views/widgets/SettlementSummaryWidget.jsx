@@ -8,6 +8,13 @@ export function SettlementSummaryWidget({ onNavigate }) {
     if (!settlements || settlements.length === 0) return null;
     return [...settlements].sort((a, b) => b.date.localeCompare(a.date))[0];
   }, [settlements]);
+ 
+  const isPastMonth = useMemo(() => {
+    if (!latestSettlement) return false;
+    const d = new Date();
+    const curDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    return latestSettlement.date !== curDate;
+  }, [latestSettlement]);
 
   if (!latestSettlement) {
     return (
@@ -37,10 +44,13 @@ export function SettlementSummaryWidget({ onNavigate }) {
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>💳 카드 대금 정산</div>
-        <div style={{ fontSize: 10, color: "var(--text2)", background: "var(--bg)", padding: "2px 6px", borderRadius: 4 }}>{latestSettlement.date}</div>
+        <div style={{ fontSize: 10, color: "var(--text2)", background: "var(--bg)", padding: "2px 6px", borderRadius: 4 }}>
+          {isPastMonth && <span style={{ color: "var(--redD)" }}>※ 지난 데이터 </span>}
+          {latestSettlement.date}
+        </div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 2 }}>이번 달 {isSurplus ? "증감액 예측" : "예상 부족액"}</div>
+        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 2 }}>이번 달 {isSurplus ? "예상 여유액" : "예상 부족액"}</div>
         <div style={{ fontSize: 24, fontWeight: 800, color: isSurplus ? "var(--green)" : "var(--red)" }}>
           {isSurplus ? "+" : ""}{latestSettlement.expectedShortage.toLocaleString()}
           <span style={{ fontSize: 14 }}>원</span>

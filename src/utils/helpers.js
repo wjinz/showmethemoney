@@ -49,11 +49,15 @@ export function fmtPeriodLabel(s, e) {
 }
 
 /**
- * @param {{ billingStartDay: number, billingEndDay: number, billingEndNextMonth: boolean, paymentDay: number }} card
+ * @param {{ billingStartDay?: number, billingEndDay?: number, billingEndNextMonth?: boolean, paymentDay?: number }} card
  * @param {Date} [today]
  */
 export function getBillingPeriod(card, today = new Date()) {
-  const { billingStartDay, billingEndDay, billingEndNextMonth, paymentDay } = card;
+  const billingStartDay = card.billingStartDay || 1;
+  const billingEndDay = card.billingEndDay || 31;
+  const billingEndNextMonth = card.billingEndNextMonth || false;
+  const paymentDay = card.paymentDay || 15;
+
   const y = today.getFullYear();
   const m = today.getMonth(); // 0-indexed
   const d = today.getDate();
@@ -94,7 +98,7 @@ export function getBillingPeriod(card, today = new Date()) {
 
 /**
  * 특정 구매일과 카드의 정산 규칙에 따른 1회차 결제일을 반환합니다.
- * @param {{ billingStartDay: number, billingEndDay: number, billingEndNextMonth: boolean, paymentDay: number }} card
+ * @param {{ billingStartDay?: number, billingEndDay?: number, billingEndNextMonth?: boolean, paymentDay?: number }} card
  * @param {Date|string} purchaseDate
  * @returns {Date}
  */

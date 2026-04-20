@@ -84,7 +84,7 @@ export function CardView({cards, setCards}){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <div style={{width:40,height:40,borderRadius:12,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>{c.icon}</div>
-              <div><div style={{fontSize:17,fontWeight:700,color:"#fff"}}>{c.label}</div><div style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{c.paymentDay}일 결제</div></div>
+              <div><div style={{fontSize:17,fontWeight:700,color:"#fff"}}>{c.label}</div><div style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{c.paymentDay ? `${c.paymentDay}일 결제` : '결제일 미설정'}</div></div>
             </div>
             <button onClick={()=>del(c.id)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:16,cursor:"pointer"}}>✕</button>
           </div>
