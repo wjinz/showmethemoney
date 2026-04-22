@@ -7,6 +7,7 @@
  * @typedef {{ label: string, target: number, saved: number }} GoalItem
  * @typedef {{ cardId: string, expectedAmount: number }} CardBill
  * @typedef {{ id: number, date: string, cardBills: CardBill[], fixedCash: number, currentCash: number, expectedShortage: number }} SettlementItem
+ * @typedef {{ salary: { husband: number, wife: number, savingsTarget: number }, utilizationTarget: number, events: object[], goals: GoalItem[], privateGoals: { husband: GoalItem[], wife: GoalItem[] }, personalAllowancePct: number, isSolo?: boolean, allowance?: { husband: number, wife: number } }} Plan
  */
 
 export const CATS = [

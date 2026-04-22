@@ -44,8 +44,8 @@ import { HomeRecentTxWidget } from "./home-widgets/HomeRecentTxWidget.jsx";
  *   sliderCfg: { paceMaxDaily: number },
  *   onWidget: () => void,
  *   onScan: () => void,
- *   plan: any,
- *   setPlan: (v: object) => void,
+ *   plan: Plan,
+ *   setPlan: (v: Plan) => void,
  *   cards: CardItem[],
  *   onEdit: (id: number, updates: Partial<TxItem>) => void,
  *   onDelete: (id: number) => void,
@@ -336,7 +336,9 @@ export function HomeView({
         cols={{ desktop: 2, mobile: 1 }}
         rowHeight={70}
         width={width}
+        // @ts-ignore
         isDraggable={isEditMode}
+        // @ts-ignore
         isResizable={isEditMode}
         draggableHandle=".widget-handle"
         onLayoutChange={onLayoutChange}

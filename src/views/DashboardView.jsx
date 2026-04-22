@@ -31,7 +31,7 @@ import { SettlementSummaryWidget } from './widgets/SettlementSummaryWidget.jsx';
 
 /**
  * @param {{
- *   plan: any,
+ *   plan: Plan,
  *   budgets: Record<string, number>,
  *   tx: TxItem[],
  *   fixed: FixedItem[],
@@ -46,7 +46,7 @@ import { SettlementSummaryWidget } from './widgets/SettlementSummaryWidget.jsx';
  *   widgetLayout: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] },
  *   setWidgetLayout: (v: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }) => void,
  *   onSettings?: () => void,
- *   setPlan: (v: any) => void
+ *   setPlan: (v: Plan) => void
  * }} props
  */
 export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [], cards = [], names, myRole, mySosPending = [], sosRequests = [], onSosUpdate, onSosCancel, widgetLayout, setWidgetLayout, onSettings: _onSettings }) {
@@ -135,7 +135,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
     settlement_summary: '결제 정산기',
   };
 
-  /** @type {Record<string, React.ComponentType<any>>} */
+  /** @type {Record<string, React.ComponentType<import('../context/BudgetContext.jsx').BudgetContextType | Object>>} */
   const WIDGET_MAP = useMemo(() => ({
     sos_status:       SosStatusWidget,
     allowance_insight: AllowanceInsightWidget,
@@ -224,7 +224,9 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
         breakpoints={{ desktop: 480, mobile: 0 }}
         cols={{ desktop: 2, mobile: 1 }}
         rowHeight={70}
+        // @ts-ignore
         isDraggable={isEditMode}
+        // @ts-ignore
         isResizable={isEditMode}
         draggableHandle=".widget-handle"
         onLayoutChange={onLayoutChange}

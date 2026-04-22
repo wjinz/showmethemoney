@@ -31,10 +31,7 @@ export function SyncSetup({onDone}){
       ];
       await Promise.all(initialUploads);
 
-      // 2. 로컬 설정 저장
-      localStorage.setItem("householdId", JSON.stringify(hid));
-      localStorage.setItem("myRole",      JSON.stringify(role));
-
+      // 2. 완료 콜백 호출 (저장은 App.jsx에서 통합 처리)
       onDone(hid, role);
     } catch(e) {
       console.error("Create error:", e);
@@ -48,8 +45,11 @@ export function SyncSetup({onDone}){
     if (hid.length !== 6) { setErr("6자리 코드를 입력해주세요."); return; }
     setBusy(true); setErr("");
     try {
-      // 1. Supabase에서 해당 가계부 데이터가 실제로 존재하는지 확인
-      const data = await db.loadAll(hid);
+      // 1. Supabase에서 해당 가계부 데이터가 실제로 존재하는지 확인 (10초 타임아웃)
+      const data = await Promise.race([
+        db.loadAll(hid),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("네트워크 타임아웃")), 10000))
+      ]);
       
       // 데이터가 비어있으면 (key/value 쌍이 하나도 없으면) 잘못된 코드로 판단
       if (!data || Object.keys(data).length === 0) {
@@ -58,10 +58,19 @@ export function SyncSetup({onDone}){
         return;
       }
 
-      // 2. 존재하면 로컬 설정 저장 후 진입
-      localStorage.setItem("householdId", JSON.stringify(hid));
-      localStorage.setItem("myRole",      JSON.stringify(role));
-      
+      // 2. 존재하면 진입 (개선 2: 역할 중복 경고 추가)
+      const existingNames = data.names || {};
+      const isHusbandTaken = role === 'husband' && existingNames.husband && existingNames.husband !== '남편' && existingNames.husband !== '나';
+      const isWifeTaken = role === 'wife' && existingNames.wife && existingNames.wife !== '와이프' && existingNames.wife !== '';
+
+      if (isHusbandTaken || isWifeTaken) {
+        const displayName = existingNames[role];
+        if (!window.confirm(`이미 '${displayName}'님이 사용 중인 역할일 수 있습니다. 그래도 이 역할로 합류하시겠습니까?`)) {
+          setBusy(false);
+          return;
+        }
+      }
+
       onDone(hid, role);
     } catch(e) {
       console.error("Join error:", e);

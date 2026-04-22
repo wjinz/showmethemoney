@@ -14,7 +14,10 @@ import { fmtS } from "../../utils/helpers";
  *   fixedTotal: number,
  *   installTotal: number,
  *   totalBudget: number,
- *   allowanceData: { husband: any, wife: any } | null,
+ *   allowanceData: { 
+ *     husband: { target: number, spent: number, remaining: number, pct: number }, 
+ *     wife: { target: number, spent: number, remaining: number, pct: number } 
+ *   } | null,
  *   names: Record<string, string>,
  *   onSettings: (v: string) => void
  * }} props

@@ -9,7 +9,7 @@ import { fmtS } from '../../utils/helpers.js';
 
 /**
  * @param {{
- *   plan: any,
+ *   plan: import('../../constants/index.js').Plan,
  *   tx: TxItem[],
  *   fixed: FixedItem[],
  *   install: InstallItem[]

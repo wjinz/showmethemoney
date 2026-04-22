@@ -10,9 +10,28 @@ export const supabase = isSupabaseConfigured
   : null;
 
 export const db = {
+  /**
+   * @typedef {Object} BudgetData
+   * @property {import('../constants/index.js').TxItem[]} [tx]
+   * @property {import('../constants/index.js').FixedItem[]} [fixed]
+   * @property {import('../constants/index.js').InstallItem[]} [install]
+   * @property {import('../constants/index.js').CardItem[]} [cards]
+   * @property {import('../constants/index.js').SettlementItem[]} [settlements]
+   * @property {Object[]} [assets]
+   * @property {Record<string, number>} [budgets]
+   * @property {{ husband: string, wife: string }} [names]
+   * @property {Object} [plan]
+   * @property {Object} [taxConfig]
+   * @property {Object} [widgetLayout]
+   * @property {Object} [homeLayout]
+   * @property {boolean} [kidsMode]
+   * @property {boolean} [migrated_to_rdb]
+   * @property {any} [key] // For dynamic tx_YYYY keys, we might still need some flexibility or a catch-all
+   */
+
   // 특정 가계부 아이디(hid)의 모든 데이터를 불러옵니다.
   // tx는 연도별 키(tx_YYYY)로 저장되므로 여기서는 제외됩니다.
-  /** @param {string} hid @returns {Promise<Record<string,any>>} */
+  /** @param {string} hid @returns {Promise<Record<string, BudgetData[keyof BudgetData]>>} */
   async loadAll(hid) {
     const { data, error } = await supabase
       .from('household_data')
@@ -23,7 +42,7 @@ export const db = {
 
     // [{key: 'tx', value: [...]}, ...] 형태를 {tx: [...], ...} 형태로 변환
     // tx_YYYY 키들은 별도로 처리되므로 그대로 반환
-    /** @type {Record<string,any>} */
+    /** @type {Record<string, BudgetData[keyof BudgetData]>} */
     const result = {};
     for (const row of data) result[row.key] = row.value;
     return result;
@@ -73,7 +92,7 @@ export const db = {
   },
 
   // 특정 가계부 아이디의 특정 키(fixed, plan 등) 데이터를 저장(upsert)합니다.
-  /** @param {string} hid @param {string} key @param {unknown} value */
+  /** @param {string} hid @param {string} key @param {BudgetData[keyof BudgetData]} value */
   async save(hid, key, value) {
     const { error } = await supabase
       .from('household_data')
@@ -128,7 +147,7 @@ export const db = {
   // B5: DELETE 이벤트 포함 — 실시간 구독 설정
   /**
    * @param {string} hid
-   * @param {(key: string, value: any, deleted?: boolean) => void} onUpdate
+   * @param {(key: string, value: BudgetData[keyof BudgetData], deleted?: boolean) => void} onUpdate
    */
   subscribe(hid, onUpdate) {
     const channelName = `realtime:household:${hid}`;

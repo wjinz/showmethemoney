@@ -4,7 +4,7 @@ import { fmtS } from "../../utils/helpers";
 
 /**
  * @param {{
- *   plan: any,
+ *   plan: import('../../constants/index.js').Plan,
  *   totalSpent: number,
  *   hSpent: number,
  *   wSpent: number,

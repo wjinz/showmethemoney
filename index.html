@@ -1,25 +1,2045 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="description" content="부부의 실시간 경제 동기화와 AI 기반 예산 관리를 지원하는 프리미엄 가계부" />
-    <meta property="og:title" content="우리집 가계부 — 부부 경제 파트너" />
-    <meta property="og:description" content="실시간 지출 공유부터 AI 소비 코치까지, 투명하고 스마트한 자산 관리를 시작하세요." />
-    <meta property="og:type" content="website" />
-    <meta name="theme-color" content="#09090f" />
-    <title>우리집 가계부 — 부부 경제 파트너</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>" />
-    <link rel="manifest" href="/manifest.json" />
-    <style>
-      html, body, #root { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #09090f; }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>showmethemoney</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F4F6F8; --surface: #FFFFFF; --primary: #1C2B4A; --secondary: #7A9E87;
+      --text: #111827; --muted: #6B7280; --border: #E5E7EB;
+      --danger: #E8715A; --radius-lg: 24px; --radius-xl: 32px;
+      --shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.05);
+    }
+    html, body, #root { height: 100%; width: 100%; font-family: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif; background: #e2e5ea; color: var(--text); overflow: hidden; }
+    .phone-shell { width: 390px; height: 844px; margin: 0 auto; position: relative; overflow: hidden; background: var(--bg); display: flex; flex-direction: column; border-radius: 40px; box-shadow: 0 30px 80px rgba(0,0,0,.25); }
+    @media (max-width: 430px) { .phone-shell { width: 100vw; height: 100dvh; border-radius: 0; box-shadow: none; } body { background: var(--bg); } }
+    @media (min-height: 845px) { body { display: flex; align-items: center; justify-content: center; min-height: 100vh; } }
+    .view-content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 100px; }
+    .view-content::-webkit-scrollbar { display: none; }
+    .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; height: 84px; background: rgba(255,255,255,.93); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; padding: 0 8px 16px; z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; cursor: pointer; padding: 8px 4px; -webkit-tap-highlight-color: transparent; }
+    .nav-fab { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg,#1C2B4A,#2d4270); display: flex; align-items: center; justify-content: center; margin-top: -28px; box-shadow: 0 4px 16px rgba(28,43,74,.4); cursor: pointer; border: 4px solid var(--bg); transition: transform .15s; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+    .nav-fab:active { transform: scale(.93); }
+    .card { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 20px; }
+    .overlay { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 200; transition: opacity .25s; }
+    .sheet { position: absolute; bottom: 0; left: 0; right: 0; background: white; border-radius: 28px 28px 0 0; z-index: 201; max-height: 92%; display: flex; flex-direction: column; }
+    .sheet-handle { width: 40px; height: 5px; border-radius: 3px; background: #D1D5DB; margin: 12px auto 4px; flex-shrink: 0; }
+    button { border: none; background: none; cursor: pointer; font-family: inherit; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="text/babel">
+
+// ─── SUPABASE INITIALIZATION ───────────────────────────────────────────────────
+const SUPABASE_URL = 'https://epspmlslonvkkxorulbg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwc3BtbHNsb252a2t4b3J1bGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Mzg2MzYsImV4cCI6MjA5MDAxNDYzNn0._GA1x2kz-OgUW8cIJt4MrZwc8J8VxMM5uHyPqEkq4AE';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const fmt = (n) => n === undefined || n === null ? '₩0' : '₩' + Math.abs(n).toLocaleString('ko-KR');
+
+const ls = (k) => localStorage.getItem(k);
+const lsSet = (k, v) => localStorage.setItem(k, v);
+
+const toDateKey = (d) => {
+  const dt = d instanceof Date ? d : new Date(d);
+  return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+};
+
+const displayDate = (dateKey) => {
+  const today = toDateKey(new Date());
+  const yd = new Date(); yd.setDate(yd.getDate() - 1);
+  const yesterday = toDateKey(yd);
+  if (dateKey === today) return '오늘';
+  if (dateKey === yesterday) return '어제';
+  const [,m,d] = dateKey.split('-');
+  return parseInt(m) + '월 ' + parseInt(d) + '일';
+};
+
+const generateInviteCode = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+};
+
+const loadTransactions = () => {
+  const raw = ls('smtm_transactions');
+  if (!raw) {
+    // 이미 온보딩된 상태라면(초기화 이후 등) 빈 배열 반환, 아니면 초기 예시 데이터 반환
+    return ls('smtm_onboarded') ? [] : INITIAL_TRANSACTIONS;
+  }
+  try { return JSON.parse(raw); } catch { return []; }
+};
+
+const loadOrGenInviteCode = () => {
+  const saved = ls('smtm_invite_code');
+  if (saved) return saved;
+  const code = generateInviteCode();
+  lsSet('smtm_invite_code', code);
+  return code;
+};
+
+const loadCalNotes = () => {
+  const raw = ls('smtm_calendar_notes');
+  if (!raw) return {};
+  try { 
+    const parsed = JSON.parse(raw);
+    // 마이그레이션: 기존 문자열 메모를 배열 구조로 변경
+    Object.keys(parsed).forEach(k => {
+      if (typeof parsed[k] === 'string' && parsed[k].trim() !== '') {
+        parsed[k] = [{ id: Date.now() + Math.random(), text: parsed[k], done: false }];
+      } else if (typeof parsed[k] === 'string') {
+        parsed[k] = [];
+      }
+    });
+    return parsed;
+  } catch { return {}; }
+};
+
+const getCurrentMonthTx = (transactions) => {
+  if (!transactions) return [];
+  const now = new Date();
+  const prefix = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  return transactions.filter(t => t.date.startsWith(prefix));
+};
+
+const groupTxByDate = (txs) => {
+  return txs.reduce((acc, tx) => {
+    if (!acc[tx.date]) acc[tx.date] = [];
+    acc[tx.date].push(tx);
+    return acc;
+  }, {});
+};
+
+// ─── INITIAL DATA ──────────────────────────────────────────────────────────────
+const _today = new Date();
+const INITIAL_TRANSACTIONS = [
+  { id:1, who:'me',      type:'daily', date:toDateKey(_today),                       amount:35000,  memo:'하루 총액',   items:null },
+  { id:2, who:'partner', type:'daily', date:toDateKey(_today),                       amount:28000,  memo:'하루 총액',   items:null, hidden:true },
+  { id:3, who:'me',      type:'item',  date:toDateKey(new Date(_today.getTime()-86400000)),    amount:12500,  memo:'편의점',      category:'식비' },
+  { id:4, who:'partner', type:'item',  date:toDateKey(new Date(_today.getTime()-86400000)),    amount:67000,  memo:'마트 장보기', category:'식비' },
+  { id:5, who:'me',      type:'daily', date:toDateKey(new Date(_today.getTime()-86400000*2)), amount:54000,  memo:'하루 총액',   items:[{label:'점심',amount:12000},{label:'카페',amount:6500},{label:'교통',amount:35500}] },
+  { id:6, who:'partner', type:'item',  date:toDateKey(new Date(_today.getTime()-86400000*2)), amount:89000,  memo:'의류',        category:'쇼핑' },
+  { id:7, who:'me',      type:'item',  date:toDateKey(new Date(_today.getTime()-86400000*3)), amount:320000, memo:'관리비',      category:'주거' },
+];
+
+const INIT_SOS_MSGS = [
+  { id:1, from:'partner', text:'오늘 저녁 밥값 내가 낼게, SOS 승인해줘 🙏', time:'14:23', amount:45000 },
+  { id:2, from:'me',      text:'얼마?',                                   time:'14:25', amount:null },
+  { id:3, from:'partner', text:'4만5천원이면 될 것 같아 🥺',                  time:'14:25', amount:null },
+];
+
+const SETTLEMENT_INIT = { cardTotal:623000, cardEstimate:820000, myCard:312000, partnerCard:311000, cashFixed:150000 };
+
+// ─── ICONS ────────────────────────────────────────────────────────────────────
+const IcoHome = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z" fill="#9CA3AF"/><path d="M9 21V12h6v9" fill="#9CA3AF"/></svg>;
+const IcoHistory = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="3" fill="#9CA3AF"/><path d="M7 9h10M7 13h7" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>;
+const IcoLock = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="#9CA3AF"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/></svg>;
+const IcoSOS = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 2H4a2 2 0 00-2 2v14a2 2 0 002 2h3l3 3 3-3h7a2 2 0 002-2V4a2 2 0 00-2-2z" fill="#9CA3AF"/><circle cx="9" cy="11" r="1.2" fill="white"/><circle cx="12" cy="11" r="1.2" fill="white"/><circle cx="15" cy="11" r="1.2" fill="white"/></svg>;
+const IcoSettle = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="3" fill="#9CA3AF"/><path d="M2 9h20" stroke="white" strokeWidth="1.5"/><rect x="5" y="13" width="4" height="2" rx="1" fill="white"/></svg>;
+const IcoPlus = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg>;
+const IcoChevR = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IcoChevD = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IcoSend = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IcoDel = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2zM18 9l-6 6M12 9l6 6" stroke="#374151" strokeWidth="2" strokeLinecap="round"/></svg>;
+const IcoGear = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="#6B7280" strokeWidth="1.8"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="#6B7280" strokeWidth="1.8"/></svg>;
+const IcoChevLeft = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const IcoSosTab = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#9CA3AF" strokeWidth="2"/><path d="M12 9v4M12 17h.01" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/></svg>;
+
+// ─── BOTTOM NAV ───────────────────────────────────────────────────────────────
+function BottomNav({ active, onNav, onFab }) {
+  const items = [
+    { id:'home', label:'홈', Ico: IcoHome },
+    { id:'history', label:'내역', Ico: IcoHistory },
+    { id:'fab', label:'', Ico: null },
+    { id:'private', label:'프라이빗', Ico: IcoLock },
+    { id:'settlement', label:'정산', Ico: IcoSettle },
+  ];
+  return (
+    <nav className="bottom-nav">
+      {items.map(item => {
+        if (item.id === 'fab') return (
+          <div key="fab" className="nav-fab" onClick={onFab}><IcoPlus /></div>
+        );
+        const on = active === item.id;
+        return (
+          <div key={item.id} className="nav-item" onClick={() => onNav(item.id)}>
+            <item.Ico />
+            <span style={{ fontSize:10, fontWeight: on ? 700 : 500, color: on ? '#1C2B4A' : '#9CA3AF' }}>{item.label}</span>
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+// ─── BUDGET RING ──────────────────────────────────────────────────────────────
+function BudgetRing({ pct }) {
+  const r = 54, circ = 2 * Math.PI * r;
+  const color = pct > .85 ? '#E8715A' : pct > .65 ? '#F59E0B' : '#7A9E87';
+  return (
+    <svg width="120" height="120" viewBox="0 0 128 128" style={{ transform:'rotate(-90deg)' }}>
+      <circle cx="64" cy="64" r={r} fill="none" stroke="#E5E7EB" strokeWidth="10"/>
+      <circle cx="64" cy="64" r={r} fill="none" stroke={color} strokeWidth="10"
+        strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={circ*(1-Math.min(pct,1))}
+        style={{ transition:'stroke-dashoffset .6s ease,stroke .3s' }}/>
+    </svg>
+  );
+}
+
+// ─── NUMPAD ───────────────────────────────────────────────────────────────────
+function NumPad({ value, onChange }) {
+  const keys = ['1','2','3','4','5','6','7','8','9','00','0','⌫'];
+  const tap = (k) => {
+    if (k === '⌫') { onChange(value.slice(0,-1) || '0'); return; }
+    if (value === '0' || value === '') { onChange(k === '00' ? '0' : k); return; }
+    if (value.length >= 9) return;
+    onChange(value + k);
+  };
+  return (
+    <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6 }}>
+      {keys.map(k => (
+        <button key={k} onClick={() => tap(k)} style={{
+          height:50, borderRadius:12,
+          background: k==='⌫' ? '#F3F4F6' : 'transparent',
+          fontSize: k==='⌫' ? 13 : 22, fontWeight:600, color:'#111827',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          transition:'background .1s',
+        }}
+        onMouseDown={e=>e.currentTarget.style.background='#E5E7EB'}
+        onMouseUp={e=>e.currentTarget.style.background=k==='⌫'?'#F3F4F6':'transparent'}
+        >{k==='⌫' ? <IcoDel /> : k}</button>
+      ))}
+    </div>
+  );
+}
+
+// ─── TX ROW ───────────────────────────────────────────────────────────────────
+function TxRow({ tx, onDelete }) {
+  const [exp, setExp] = React.useState(false);
+  const [confirmDel, setConfirmDel] = React.useState(false);
+  const isMe = tx.who === 'me';
+  const color = isMe ? '#1C2B4A' : '#7A9E87';
+  const name = isMe ? (ls('smtm_myname') || '나') : (ls('smtm_partner_name') || '지연');
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    if (!confirmDel) { setConfirmDel(true); setTimeout(()=>setConfirmDel(false), 2500); return; }
+    onDelete?.(tx.id);
+  };
+
+  return (
+    <div style={{ marginBottom:8 }}>
+      <div style={{ background:'white', borderRadius:16, padding:'12px 14px', boxShadow:'0 1px 3px rgba(0,0,0,.06)', display:'flex', alignItems:'center', gap:10, cursor: tx.items ? 'pointer' : 'default' }}
+        onClick={() => tx.items && setExp(e=>!e)}>
+        <div style={{ width:4, alignSelf:'stretch', borderRadius:2, background:color, flexShrink:0 }} />
+        <div style={{ flex:1 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:3 }}>
+            <span style={{ fontSize:12, fontWeight:700, color }}>{name}</span>
+            {tx.type==='daily' && <span style={{ fontSize:10, background:color+'18', color, padding:'1px 6px', borderRadius:10, fontWeight:600 }}>총액</span>}
+            {tx.hidden && <span style={{ fontSize:10, background:'#F3F4F6', color:'#9CA3AF', padding:'1px 6px', borderRadius:10 }}>🔒 비공개</span>}
+          </div>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <span style={{ fontSize:13, color:'#374151' }}>{tx.memo}</span>
+            <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+              <span style={{ fontSize:15, fontWeight:800, color:'#111827' }}>{fmt(tx.amount)}</span>
+              {tx.items && <IcoChevD />}
+            </div>
+          </div>
+          <span style={{ fontSize:11, color:'#9CA3AF' }}>{displayDate(tx.date)}</span>
+        </div>
+        {onDelete && (
+          <button onClick={handleDelete} style={{
+            padding:'4px 8px', borderRadius:8, fontSize:11, fontWeight:700, flexShrink:0,
+            background: confirmDel ? '#E8715A' : '#FFF5F3',
+            color: confirmDel ? 'white' : '#E8715A',
+            border:'none', cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
+          }}>
+            {confirmDel ? '확인' : '삭제'}
+          </button>
+        )}
+      </div>
+      {exp && tx.items && (
+        <div style={{ background:'#F9FAFB', borderRadius:'0 0 14px 14px', padding:'10px 14px 12px 28px', marginTop:-4, borderTop:'none' }}>
+          {tx.items.map((item,i) => (
+            <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'3px 0' }}>
+              <span style={{ fontSize:12, color:'#6B7280' }}>· {item.label}</span>
+              <span style={{ fontSize:12, fontWeight:600, color:'#374151' }}>{fmt(item.amount)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── ALLOWANCE CARD ───────────────────────────────────────────────────────────
+function AllowanceCard({ transactions, onNav }) {
+  const myAlw = parseInt(ls('smtm_my_allowance')) || 300000;
+  const pAlw = parseInt(ls('smtm_partner_allowance')) || 300000;
+  const myName = ls('smtm_myname') || '나';
+  const pName = ls('smtm_partner_name') || '지연';
+
+  const mySpent = transactions.filter(t => t.who==='me' && t.type==='item').reduce((s,t)=>s+t.amount,0);
+  const pSpent = transactions.filter(t => t.who==='partner' && t.type==='item').reduce((s,t)=>s+t.amount,0);
+
+  const allowances = [
+    { name:myName, total:myAlw, spent:mySpent, color:'#1C2B4A' },
+    { name:pName, total:pAlw, spent:pSpent, color:'#7A9E87' },
+  ];
+  return (
+    <div className="card" style={{ marginBottom:12, padding:'16px 20px' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <p style={{ fontSize:12, color:'#9CA3AF', fontWeight:500 }}>부부 용돈 현황</p>
+        <button onClick={()=>onNav('settings')} style={{ fontSize:11, color:'#7A9E87', fontWeight:600, background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>설정 →</button>
+      </div>
+      {allowances.map((a,i) => {
+        const pct = a.spent / a.total;
+        const rem = a.total - a.spent;
+        return (
+          <div key={i} style={{ marginBottom: i < allowances.length-1 ? 14 : 0 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:6 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:a.color }} />
+                <span style={{ fontSize:13, fontWeight:600, color:'#374151' }}>{a.name}</span>
+              </div>
+              <div style={{ textAlign:'right' }}>
+                <span style={{ fontSize:14, fontWeight:800, color:a.color }}>{fmt(rem)}</span>
+                <span style={{ fontSize:11, color:'#9CA3AF' }}> 남음</span>
+              </div>
+            </div>
+            <div style={{ height:6, borderRadius:3, background:'#F3F4F6', overflow:'hidden' }}>
+              <div style={{ height:'100%', borderRadius:3, width:`${Math.min(pct*100,100)}%`, background: pct>.85?'#E8715A':pct>.65?'#F59E0B':a.color, transition:'width .6s ease' }}/>
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between', marginTop:4 }}>
+              <span style={{ fontSize:10, color:'#9CA3AF' }}>사용 {fmt(a.spent)}</span>
+              <span style={{ fontSize:10, color:'#9CA3AF' }}>총 {fmt(a.total)}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── MINI CALENDAR ────────────────────────────────────────────────────────────
+function MiniCalendar({ transactions, notes, onUpdateNotes }) {
+  const [viewDate, setViewDate] = React.useState(new Date());
+  const now = new Date();
+  const [selectedDate, setSelectedDate] = React.useState(now.getDate());
+  const [newText, setNewText] = React.useState('');
+
+  
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth() + 1;
+  const firstDay = new Date(year, month - 1, 1).getDay();
+  const totalDays = new Date(year, month, 0).getDate();
+  const days = ['일','월','화','수','목','금','토'];
+
+  const spendDays = {};
+  transactions.forEach(tx => {
+    const [y, m, d] = tx.date.split('-');
+    if (parseInt(y) === year && parseInt(m) === month) {
+      const day = parseInt(d);
+      if (!spendDays[day]) spendDays[day] = { me:0, partner:0 };
+      if (tx.who === 'me') spendDays[day].me += tx.amount;
+      if (tx.who === 'partner') spendDays[day].partner += tx.amount;
+    }
+  });
+
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= totalDays; d++) cells.push(d);
+
+  const selectedData = spendDays[selectedDate];
+  const selectedDateKey = year + '-' + String(month).padStart(2,'0') + '-' + String(selectedDate).padStart(2,'0');
+  const daySchedules = notes[selectedDateKey] || [];
+
+  const addSchedule = () => {
+    if (!newText.trim()) return;
+    const newItem = { id: Date.now(), text: newText, done: false };
+    const next = { ...notes, [selectedDateKey]: [...daySchedules, newItem] };
+    onUpdateNotes(next);
+    setNewText('');
+  };
+
+  const deleteSchedule = (id) => {
+    const next = { ...notes, [selectedDateKey]: daySchedules.filter(s => s.id !== id) };
+    onUpdateNotes(next);
+  };
+
+  const toggleSchedule = (id) => {
+    const next = { ...notes, [selectedDateKey]: daySchedules.map(s => s.id === id ? { ...s, done: !s.done } : s) };
+    onUpdateNotes(next);
+  };
+
+  const editSchedule = (id, currentText) => {
+    const newText = prompt('일정 수정', currentText);
+    if (newText === null || newText.trim() === '') return;
+    const next = { ...notes, [selectedDateKey]: daySchedules.map(s => s.id === id ? { ...s, text: newText } : s) };
+    onUpdateNotes(next);
+  };
+
+  const changeMonth = (delta) => {
+    setViewDate(new Date(year, viewDate.getMonth() + delta, 1));
+    setSelectedDate(1);
+  };
+
+  return (
+    <div className="card" style={{ marginBottom:12, padding:'16px 18px' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+        <p style={{ fontSize:12, color:'#9CA3AF', fontWeight:500 }}>{month}월 캘린더</p>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <button onClick={() => changeMonth(-1)} style={{ width:24, height:24, borderRadius:'50%', background:'#F3F4F6', border:'none', fontSize:12, cursor:'pointer' }}>&#8249;</button>
+          <span style={{ fontSize:12, fontWeight:600, color:'#1C2B4A', minWidth:60, textAlign:'center' }}>{year}년 {month}월</span>
+          <button onClick={() => changeMonth(1)} style={{ width:24, height:24, borderRadius:'50%', background:'#F3F4F6', border:'none', fontSize:12, cursor:'pointer' }}>&#8250;</button>
+        </div>
+      </div>
+      {/* Day headers */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', marginBottom:4 }}>
+        {days.map((d,i) => <div key={d} style={{ textAlign:'center', fontSize:10, fontWeight:600, color: i===0?'#E8715A':i===6?'#60A5FA':'#9CA3AF', padding:'2px 0' }}>{d}</div>)}
+      </div>
+      {/* Date cells */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:'3px 0' }}>
+        {cells.map((d,i) => {
+          if (!d) return <div key={i}/>;
+          const hasSpend = !!spendDays[d];
+          const isToday = d === now.getDate();
+          const isSel = d === selectedDate;
+          const isWeekend = (i % 7 === 0) || (i % 7 === 6);
+          const hasNote = !!notes[year + '-' + String(month).padStart(2,'0') + '-' + String(d).padStart(2,'0')];
+          return (
+            <div key={i} onClick={() => setSelectedDate(d)} style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'3px 0', cursor:'pointer', position:'relative' }}>
+              <div style={{
+                width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
+                background: isSel ? '#1C2B4A' : isToday ? '#EEF2FF' : 'transparent',
+                fontSize:12, fontWeight: isToday||isSel ? 700 : 400,
+                color: isSel ? 'white' : isToday ? '#1C2B4A' : isWeekend ? (i%7===0?'#E8715A':'#60A5FA') : '#374151',
+              }}>{d}</div>
+              {hasNote && <div style={{ position:'absolute', top:2, right:6, width:4, height:4, borderRadius:'50%', background:'#F59E0B' }}/>}
+              {hasSpend && (
+                <div style={{ display:'flex', gap:2, marginTop:2 }}>
+                  {spendDays[d].me > 0 && <div style={{ width:4, height:4, borderRadius:'50%', background:'#1C2B4A' }}/>}
+                  {spendDays[d].partner > 0 && <div style={{ width:4, height:4, borderRadius:'50%', background:'#7A9E87' }}/>}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {/* Selected day summary */}
+      {selectedData && (
+        <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #F3F4F6', display:'flex', gap:10 }}>
+          {selectedData.me > 0 && (
+            <div style={{ flex:1, background:'#F4F6F8', borderRadius:10, padding:'8px 10px' }}>
+              <p style={{ fontSize:10, color:'#1C2B4A', fontWeight:600, marginBottom:2 }}>나</p>
+              <p style={{ fontSize:14, fontWeight:800, color:'#1C2B4A' }}>{fmt(selectedData.me)}</p>
+            </div>
+          )}
+          {selectedData.partner > 0 && (
+            <div style={{ flex:1, background:'#F4F6F8', borderRadius:10, padding:'8px 10px' }}>
+              <p style={{ fontSize:10, color:'#7A9E87', fontWeight:600, marginBottom:2 }}>지연</p>
+              <p style={{ fontSize:14, fontWeight:800, color:'#7A9E87' }}>{fmt(selectedData.partner)}</p>
+            </div>
+          )}
+          <div style={{ flex:1, background:'#F4F6F8', borderRadius:10, padding:'8px 10px' }}>
+            <p style={{ fontSize:10, color:'#6B7280', fontWeight:600, marginBottom:2 }}>합계</p>
+            <p style={{ fontSize:14, fontWeight:800, color:'#111827' }}>{fmt((selectedData.me||0)+(selectedData.partner||0))}</p>
+          </div>
+        </div>
+      )}
+      {/* Schedules List */}
+      <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #F3F4F6' }}>
+        <p style={{ fontSize:11, fontWeight:700, color:'#9CA3AF', marginBottom:10, letterSpacing:0.5 }}>오늘의 일정 📅</p>
+        
+        <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
+          {daySchedules.length === 0 && <p style={{ fontSize:12, color:'#D1D5DB', textAlign:'center', padding:'10px 0' }}>등록된 일정이 없습니다.</p>}
+          {daySchedules.map(s => (
+            <div key={s.id} style={{ display:'flex', alignItems:'center', gap:10, background:'#F9FAFB', padding:'10px 12px', borderRadius:12 }}>
+              <div onClick={() => toggleSchedule(s.id)} style={{ 
+                width:20, height:20, borderRadius:6, border:'2px solid #D1D5DB', display:'flex', alignItems:'center', justifyContent:'center',
+                background: s.done ? '#7A9E87' : 'white', borderColor: s.done ? '#7A9E87' : '#D1D5DB', cursor:'pointer'
+              }}>
+                {s.done && <span style={{ color:'white', fontSize:12, fontWeight:900 }}>✓</span>}
+              </div>
+              <p onClick={() => editSchedule(s.id, s.text)} style={{ flex:1, fontSize:13, color: s.done ? '#9CA3AF' : '#374151', textDecoration: s.done ? 'line-through' : 'none', cursor:'pointer' }}>{s.text}</p>
+              <button onClick={() => deleteSchedule(s.id)} style={{ padding:4, color:'#D1D5DB' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display:'flex', gap:8 }}>
+          <input placeholder="새로운 일정을 입력하세요" value={newText} onChange={e => setNewText(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addSchedule()}
+            style={{ flex:1, padding:'10px 14px', borderRadius:12, border:'none', background:'#F3F4F6', fontSize:13, fontFamily:'inherit', outline:'none' }} />
+          <button onClick={addSchedule} style={{ padding:'0 16px', background:'#1C2B4A', color:'white', borderRadius:12, fontSize:13, fontWeight:600 }}>추가</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── HOME VIEW ────────────────────────────────────────────────────────────────
+function HomeView({ transactions, notes, onUpdateNotes, onDeleteTx, onNav }) {
+  const currentMonthTx = getCurrentMonthTx(transactions);
+  const budget = parseInt(ls('smtm_budget')) || 2000000;
+  const spent = currentMonthTx.reduce((sum, tx) => sum + tx.amount, 0);
+  
+  const todayKey = toDateKey(new Date());
+  const todayMe = transactions.filter(t => t.date === todayKey && t.who === 'me').reduce((s,t) => s+t.amount, 0);
+  const todayPartner = transactions.filter(t => t.date === todayKey && t.who === 'partner').reduce((s,t) => s+t.amount, 0);
+
+  const meName = ls('smtm_myname') || '나';
+  const partnerName = ls('smtm_partner_name') || '지연';
+
+  const remaining = budget - spent;
+  const pct = budget > 0 ? spent / budget : 0;
+  const [aiHide, setAiHide] = React.useState(false);
+
+  const groupedTx = groupTxByDate(transactions);
+  const recentDates = Object.keys(groupedTx).sort((a,b) => b.localeCompare(a)).slice(0, 2);
+
+  return (
+    <div className="view-content" style={{ padding:'0 16px' }}>
+      {/* Header */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'52px 0 18px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          {[{ name: meName, color:'#1C2B4A', shadow:'#1C2B4A' }, { name: partnerName, color:'#7A9E87', shadow:'#7A9E87' }].map((p,i) => (
+            <div key={i} style={{ display:'flex', alignItems:'center', gap:5 }}>
+              {i > 0 && <span style={{ color:'#D1D5DB', fontSize:12, margin:'0 2px' }}>·</span>}
+              <div style={{ width:34, height:34, borderRadius:'50%', background:p.color, display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:13, fontWeight:700, border:'2px solid white', boxShadow:`0 0 0 2px ${p.color}` }}>{p.name[0]}</div>
+              <span style={{ fontSize:13, fontWeight:600, color:p.color }}>{p.name}</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => onNav('settings')} style={{ width:36, height:36, borderRadius:'50%', background:'#F3F4F6', display:'flex', alignItems:'center', justifyContent:'center', border:'none', cursor:'pointer' }}><IcoGear /></button>
+      </div>
+
+      {/* Hero Budget */}
+      <div className="card" style={{ padding:'22px 20px', marginBottom:12 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ flex:1 }}>
+            <p style={{ fontSize:12, color:'#9CA3AF', fontWeight:500, marginBottom:5 }}>이번 달 남은 예산</p>
+            <p style={{ fontSize:36, fontWeight:900, color:'#1C2B4A', letterSpacing:'-1.5px', lineHeight:1.1 }}>{fmt(remaining)}</p>
+            <div style={{ marginTop:12, display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ flex:1, height:6, borderRadius:3, background:'#F3F4F6', overflow:'hidden' }}>
+                <div style={{ height:'100%', borderRadius:3, width:`${Math.min(pct*100,100)}%`, background: pct>.85?'#E8715A':pct>.65?'#F59E0B':'#7A9E87', transition:'width .6s ease' }} />
+              </div>
+              <span style={{ fontSize:12, color:'#9CA3AF', whiteSpace:'nowrap' }}>{Math.round(pct*100)}% 사용</span>
+            </div>
+          </div>
+          <div style={{ position:'relative', width:96, height:96, flexShrink:0, marginLeft:12 }}>
+            <BudgetRing pct={pct} />
+            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+              <span style={{ fontSize:13, fontWeight:700, color:'#1C2B4A' }}>{fmt(budget)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Today — Couples Row */}
+      <div className="card" style={{ marginBottom:12, padding:'16px 20px' }}>
+        <p style={{ fontSize:12, color:'#9CA3AF', fontWeight:500, marginBottom:12 }}>오늘 지출</p>
+        <div style={{ display:'flex', gap:10 }}>
+          {[
+            { label:meName, amount: todayMe, color:'#1C2B4A', note:'총액 입력' },
+            { label:partnerName, amount: todayPartner, color:'#7A9E87', note:'🔒 총액만 공개' },
+          ].map(p => (
+            <div key={p.label} style={{ flex:1, background:'#F4F6F8', borderRadius:16, padding:'12px 14px' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:5 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:p.color }} />
+                <span style={{ fontSize:12, fontWeight:600, color:'#6B7280' }}>{p.label}</span>
+              </div>
+              <p style={{ fontSize:20, fontWeight:800, color:p.color, letterSpacing:'-0.5px' }}>{fmt(p.amount)}</p>
+              <p style={{ fontSize:11, color:'#9CA3AF', marginTop:2 }}>{p.note}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop:12, paddingTop:12, borderTop:'1px solid #F3F4F6', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <span style={{ fontSize:12, color:'#9CA3AF' }}>오늘 합계</span>
+          <span style={{ fontSize:16, fontWeight:700, color:'#111827' }}>{fmt(todayMe + todayPartner)}</span>
+        </div>
+      </div>
+
+      {/* AI Coach */}
+      {!aiHide && (
+        <div style={{ background:'linear-gradient(135deg,#EEF2FF,#E0F2FE)', borderRadius:20, padding:'14px 16px', marginBottom:12, display:'flex', alignItems:'flex-start', gap:10, border:'1px solid #C7D2FE' }}>
+          <span style={{ fontSize:20, flexShrink:0 }}>🤖</span>
+          <div style={{ flex:1 }}>
+            <p style={{ fontSize:12, fontWeight:700, color:'#4338CA', marginBottom:3 }}>AI 소비 코치</p>
+            <p style={{ fontSize:13, color:'#374151', lineHeight:1.5 }}>이번 달 식비가 예상보다 <strong>18% 더</strong> 나오고 있어요. 이 추세면 월말에 <strong>₩94,000</strong> 초과할 것 같아요 🤔</p>
+          </div>
+          <button onClick={() => setAiHide(true)} style={{ color:'#9CA3AF', fontSize:18, lineHeight:1 }}>×</button>
+        </div>
+      )}
+
+      {/* SOS Banner */}
+      <div className="card" style={{ marginBottom:12, padding:'14px 20px', cursor:'pointer' }} onClick={() => onNav('sos')}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ width:4, height:36, borderRadius:2, background:'#E8715A', flexShrink:0 }} />
+            <div>
+              <p style={{ fontSize:12, fontWeight:700, color:'#E8715A' }}>SOS 결재 대기</p>
+              <p style={{ fontSize:13, color:'#374151', marginTop:1 }}>{partnerName}이 ₩45,000 요청 중</p>
+            </div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+            <span style={{ fontSize:12, color:'#9CA3AF' }}>확인하기</span>
+            <IcoChevR />
+          </div>
+        </div>
+      </div>
+
+      {/* Allowance + Calendar */}
+      <AllowanceCard transactions={transactions} onNav={onNav} />
+      <MiniCalendar transactions={transactions} notes={notes} onUpdateNotes={onUpdateNotes} />
+
+      {/* Recent */}
+      <div style={{ marginBottom:8 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+          <p style={{ fontSize:14, fontWeight:700, color:'#111827' }}>최근 내역</p>
+          <button onClick={() => onNav('history')} style={{ fontSize:12, color:'#7A9E87', fontWeight:600, background:'none', border:'none', cursor:'pointer' }}>전체 보기</button>
+        </div>
+        {recentDates.map(date => (
+          <div key={date} style={{ marginBottom: 16 }}>
+            <p style={{ fontSize:12, fontWeight:700, color:'#9CA3AF', marginBottom:8, paddingLeft:4 }}>{displayDate(date)}</p>
+            {groupedTx[date].map(tx => <TxRow key={tx.id} tx={tx} onDelete={onDeleteTx} />)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── INPUT SHEET ──────────────────────────────────────────────────────────────
+function InputSheet({ onClose, onSave }) {
+  const [tab, setTab] = React.useState('daily');
+  const [amount, setAmount] = React.useState('0');
+  const [showDetail, setShowDetail] = React.useState(false);
+  const [shared, setShared] = React.useState(false);
+  const [details, setDetails] = React.useState([{ label:'', amount:'' }]);
+  const [category, setCategory] = React.useState('식비');
+  const [memo, setMemo] = React.useState('');
+  const [selDate, setSelDate] = React.useState(new Date());
+  const cats = ['식비','교통','쇼핑','주거','의료','문화','기타'];
+  const numVal = parseInt(amount) || 0;
+
+  const shiftDate = (days) => {
+    const next = new Date(selDate.getTime() + days*86400000);
+    if (next > new Date()) return;
+    setSelDate(next);
+  };
+
+  const handleSave = () => {
+    if (numVal <= 0) return;
+    const tx = {
+      id: Date.now(), who: 'me', type: tab,
+      date: toDateKey(selDate), amount: numVal,
+      memo: memo || (tab === 'daily' ? '하루 총액' : '지출'),
+      category: tab === 'item' ? category : undefined,
+      items: tab === 'daily' && showDetail
+        ? details.filter(d => d.label && parseInt(d.amount) > 0).map(d => ({ label:d.label, amount:parseInt(d.amount) }))
+        : null,
+      hidden: tab === 'daily' ? !shared : false,
+    };
+    onSave?.(tx);
+    onClose();
+  };
+
+  const handleOcrUpload = (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    alert('OCR 분석 기능은 백엔드 연동 후 활성화됩니다.');
+  };
+
+  const isToday = toDateKey(selDate) === toDateKey(new Date());
+
+  const DatePickerUI = (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:4 }}>
+      <button onClick={()=>shiftDate(-1)} style={{ width:26, height:26, borderRadius:'50%', background:'#F3F4F6', border:'none', fontSize:15, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>&#8249;</button>
+      <span style={{ fontSize:12, color:'#9CA3AF', minWidth:160, textAlign:'center' }}>
+        {selDate.getFullYear()}. {selDate.getMonth()+1}. {selDate.getDate()}. ({displayDate(toDateKey(selDate))})
+      </span>
+      <button onClick={()=>shiftDate(1)} disabled={isToday}
+        style={{ width:26, height:26, borderRadius:'50%', background: isToday?'transparent':'#F3F4F6',
+        border:'none', fontSize:15, cursor: isToday?'not-allowed':'pointer', opacity: isToday?0.3:1,
+        display:'flex', alignItems:'center', justifyContent:'center' }}>&#8250;</button>
+    </div>
+  );
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
+      <div className="sheet-handle" />
+      <div style={{ padding:'8px 20px 0' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+          <p style={{ fontSize:18, fontWeight:800, color:'#111827' }}>지출 입력</p>
+          <label htmlFor="ocr-upload" style={{ fontSize:12, color:'#1C2B4A', fontWeight:600, cursor:'pointer', background:'#F3F4F6', padding:'6px 12px', borderRadius:20 }}>📷 스캔</label>
+          <input type="file" accept="image/*" onChange={handleOcrUpload} style={{display:'none'}} id="ocr-upload" />
+        </div>
+        {/* Tab */}
+        <div style={{ display:'flex', background:'#F3F4F6', borderRadius:14, padding:4, marginBottom:18 }}>
+          {[{id:'daily',label:'오늘 총액'},{id:'item',label:'건별 입력'}].map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              flex:1, padding:'8px 0', borderRadius:10,
+              background: tab===t.id ? 'white' : 'transparent',
+              color: tab===t.id ? '#1C2B4A' : '#9CA3AF',
+              fontWeight: tab===t.id ? 700 : 500, fontSize:14,
+              boxShadow: tab===t.id ? '0 1px 4px rgba(0,0,0,.1)' : 'none',
+              transition:'all .15s', border:'none', cursor:'pointer', fontFamily:'inherit',
+            }}>{t.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ flex:1, overflowY:'auto', padding:'0 20px' }}>
+        {tab === 'daily' ? (
+          <div>
+            <p style={{ fontSize:13, color:'#6B7280', marginBottom:14 }}>오늘 하루 지출한 총금액을 입력하세요</p>
+            {/* Big Amount */}
+            <div style={{ textAlign:'center', marginBottom:16 }}>
+              <p style={{ fontSize:42, fontWeight:900, color:'#1C2B4A', letterSpacing:'-2px' }}>
+                {numVal === 0 ? '₩0' : '₩' + numVal.toLocaleString('ko-KR')}
+              </p>
+              {DatePickerUI}
+            </div>
+            <NumPad value={amount} onChange={setAmount} />
+
+            {/* Privacy Toggle */}
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', background:'#F9FAFB', borderRadius:14, margin:'14px 0 10px' }}>
+              <div>
+                <p style={{ fontSize:13, fontWeight:600, color:'#374151' }}>세부 내역 파트너에게 공개</p>
+                <p style={{ fontSize:11, color:'#9CA3AF', marginTop:2 }}>꺼두면 총액만 공유돼요 🔒</p>
+              </div>
+              <div onClick={() => setShared(s=>!s)} style={{ width:44, height:26, borderRadius:13, background: shared?'#7A9E87':'#D1D5DB', position:'relative', cursor:'pointer', transition:'background .2s', flexShrink:0 }}>
+                <div style={{ width:20, height:20, borderRadius:'50%', background:'white', position:'absolute', top:3, left: shared?21:3, transition:'left .2s', boxShadow:'0 1px 3px rgba(0,0,0,.2)' }} />
+              </div>
+            </div>
+
+            {/* Detail Accordion */}
+            <button onClick={() => setShowDetail(d=>!d)} style={{
+              width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+              padding:'10px 0', borderRadius:12, border:'1.5px dashed #D1D5DB', background:'transparent',
+              color:'#7A9E87', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginBottom:10,
+            }}>
+              <span style={{ fontSize:16 }}>+</span>
+              {showDetail ? '세부 내역 접기' : '세부 내역 추가하기 (선택)'}
+            </button>
+
+            {showDetail && (
+              <div style={{ background:'#F9FAFB', borderRadius:16, padding:'14px', marginBottom:12 }}>
+                <p style={{ fontSize:12, color:'#9CA3AF', marginBottom:10 }}>어디에 썼나요? (나만 볼 수 있어요)</p>
+                {details.map((d,i) => (
+                  <div key={i} style={{ display:'flex', gap:8, marginBottom:8 }}>
+                    <input placeholder="항목" value={d.label}
+                      onChange={e => { const n=[...details]; n[i]={...n[i],label:e.target.value}; setDetails(n); }}
+                      style={{ flex:1, padding:'9px 12px', borderRadius:10, border:'1px solid #E5E7EB', fontSize:13, fontFamily:'inherit', outline:'none' }} />
+                    <input placeholder="금액" value={d.amount}
+                      onChange={e => { const n=[...details]; n[i]={...n[i],amount:e.target.value.replace(/\D/g,'')}; setDetails(n); }}
+                      style={{ width:88, padding:'9px 12px', borderRadius:10, border:'1px solid #E5E7EB', fontSize:13, fontFamily:'inherit', outline:'none' }} />
+                  </div>
+                ))}
+                <button onClick={() => setDetails(d=>[...d,{label:'',amount:''}])} style={{ fontSize:12, color:'#7A9E87', fontWeight:600, background:'none', border:'none', cursor:'pointer', fontFamily:'inherit' }}>+ 항목 추가</button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div>
+            <p style={{ fontSize:13, color:'#6B7280', marginBottom:14 }}>지출 항목을 직접 입력하세요</p>
+            <div style={{ textAlign:'center', marginBottom:14 }}>
+              <p style={{ fontSize:42, fontWeight:900, color:'#1C2B4A', letterSpacing:'-2px' }}>
+                {numVal === 0 ? '₩0' : '₩' + numVal.toLocaleString('ko-KR')}
+              </p>
+              {DatePickerUI}
+            </div>
+            <NumPad value={amount} onChange={setAmount} />
+            <p style={{ fontSize:12, color:'#9CA3AF', fontWeight:600, margin:'16px 0 8px' }}>카테고리</p>
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:14 }}>
+              {cats.map(c => (
+                <button key={c} onClick={() => setCategory(c)} style={{
+                  padding:'7px 14px', borderRadius:20, fontSize:13, fontWeight:600,
+                  background: category===c ? '#1C2B4A' : '#F3F4F6',
+                  color: category===c ? 'white' : '#374151',
+                  border:'none', cursor:'pointer', fontFamily:'inherit', transition:'all .15s',
+                }}>{c}</button>
+              ))}
+            </div>
+            <p style={{ fontSize:12, color:'#9CA3AF', fontWeight:600, marginBottom:6 }}>메모</p>
+            <input placeholder="어디에 쓰셨나요? 🥺" value={memo} onChange={e=>setMemo(e.target.value)}
+              style={{ width:'100%', padding:'12px 14px', borderRadius:14, border:'1.5px solid #E5E7EB', fontSize:14, fontFamily:'inherit', outline:'none', marginBottom:12 }}
+              onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'} />
+          </div>
+        )}
+      </div>
+
+      <div style={{ padding:'12px 20px 28px', borderTop:'1px solid #F3F4F6', flexShrink:0 }}>
+        <button onClick={handleSave} disabled={numVal<=0} style={{ width:'100%', padding:'16px 0', background:'linear-gradient(135deg,#1C2B4A,#2d4270)', color:'white', borderRadius:16, fontSize:16, fontWeight:700, border:'none', cursor:numVal>0?'pointer':'not-allowed', opacity:numVal>0?1:0.5, fontFamily:'inherit', boxShadow:'0 4px 14px rgba(28,43,74,.35)' }}>저장하기</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── HISTORY VIEW ─────────────────────────────────────────────────────────────
+function HistoryView({ transactions, onDeleteTx }) {
+  const [viewDate, setViewDate] = React.useState(new Date());
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth() + 1;
+  const prefix = year + '-' + String(month).padStart(2, '0');
+  const currentMonthTx = transactions.filter(t => t.date.startsWith(prefix));
+
+  const [filter, setFilter] = React.useState('전체');
+  const filters = ['전체','나','지연','총액','건별'];
+  const filtered = filter==='전체' ? currentMonthTx
+    : filter==='나' ? currentMonthTx.filter(t=>t.who==='me')
+    : filter==='지연' ? currentMonthTx.filter(t=>t.who==='partner')
+    : filter==='총액' ? currentMonthTx.filter(t=>t.type==='daily')
+    : currentMonthTx.filter(t=>t.type==='item');
+
+  const myT = currentMonthTx.filter(t=>t.who==='me').reduce((s,t)=>s+t.amount,0);
+  const pT = currentMonthTx.filter(t=>t.who==='partner').reduce((s,t)=>s+t.amount,0);
+  
+  const meName = ls('smtm_myname') || '나';
+  const pName = ls('smtm_partner_name') || '지연';
+
+  const changeMonth = (delta) => {
+    setViewDate(new Date(year, viewDate.getMonth() + delta, 1));
+  };
+
+  const groupedTx = groupTxByDate(filtered);
+  const sortedDates = Object.keys(groupedTx).sort((a,b) => b.localeCompare(a));
+
+  return (
+    <div className="view-content" style={{ padding:'0 16px' }}>
+      <div style={{ padding:'52px 0 18px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <p style={{ fontSize:22, fontWeight:800, color:'#111827', letterSpacing:'-0.5px' }}>지출 내역</p>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <button onClick={() => changeMonth(-1)} style={{ width:28, height:28, borderRadius:'50%', background:'#F3F4F6', border:'none', fontSize:14, cursor:'pointer' }}>&#8249;</button>
+          <span style={{ fontSize:14, fontWeight:700, color:'#1C2B4A', minWidth:70, textAlign:'center' }}>{year}.{String(month).padStart(2,'0')}</span>
+          <button onClick={() => changeMonth(1)} style={{ width:28, height:28, borderRadius:'50%', background:'#F3F4F6', border:'none', fontSize:14, cursor:'pointer' }}>&#8250;</button>
+        </div>
+      </div>
+      <div className="card" style={{ marginBottom:14, padding:'16px 20px' }}>
+        <p style={{ fontSize:12, color:'#9CA3AF', marginBottom:12 }}>{month}월 지출 합계</p>
+        <div style={{ display:'flex' }}>
+          {[{label:meName,val:myT,color:'#1C2B4A'},{label:pName,val:pT,color:'#7A9E87'},{label:'합계',val:myT+pT,color:'#111827'}].map((r,i) => (
+            <React.Fragment key={i}>
+              {i>0 && <div style={{ width:1, background:'#F3F4F6', margin:'0 10px' }}/>}
+              <div style={{ flex:1, textAlign:'center' }}>
+                <p style={{ fontSize:11, color:r.color, fontWeight:600, marginBottom:4 }}>{r.label}</p>
+                <p style={{ fontSize:18, fontWeight:800, color:r.color }}>{fmt(r.val)}</p>
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+      <div style={{ display:'flex', gap:6, marginBottom:14, overflowX:'auto', paddingBottom:4 }}>
+        {filters.map(f => (
+          <button key={f} onClick={() => setFilter(f)} style={{
+            padding:'6px 14px', borderRadius:20, fontSize:13, fontWeight:600,
+            background: filter===f ? '#1C2B4A' : 'white',
+            color: filter===f ? 'white' : '#6B7280',
+            border:`1px solid ${filter===f?'#1C2B4A':'#E5E7EB'}`,
+            cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap', transition:'all .15s',
+          }}>{f === '나' ? meName : f === '지연' ? pName : f}</button>
+        ))}
+      </div>
+      {sortedDates.map(date => (
+        <div key={date} style={{ marginBottom: 16 }}>
+          <p style={{ fontSize:12, fontWeight:700, color:'#9CA3AF', marginBottom:8, paddingLeft:4 }}>{displayDate(date)}</p>
+          {groupedTx[date].map(tx => <TxRow key={tx.id} tx={tx} onDelete={onDeleteTx} />)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── PRIVATE VIEW ─────────────────────────────────────────────────────────────
+function PrivateView({ transactions, onNav }) {
+  const [unlocked, setUnlocked] = React.useState(false);
+  const [pin, setPin] = React.useState('');
+  const [shake, setShake] = React.useState(false);
+  const CORRECT = ls('smtm_pin') || '1234';
+  const myAlw = parseInt(ls('smtm_my_allowance')) || 300000;
+  
+  const myHiddenTx = transactions.filter(t => t.who==='me' && t.hidden);
+  const hiddenTotal = myHiddenTx.reduce((sum, t) => sum + t.amount, 0);
+
+  const tap = (k) => {
+    if (k==='⌫') { setPin(p=>p.slice(0,-1)); return; }
+    if (k==='') return;
+    const next = pin + k;
+    setPin(next);
+    if (next.length === 4) {
+      if (next===CORRECT) { setTimeout(()=>setUnlocked(true), 200); }
+      else { setShake(true); setTimeout(()=>{ setPin(''); setShake(false); }, 600); }
+    }
+  };
+
+  if (unlocked) return (
+    <div style={{ background:'#121212', minHeight:'100%', padding:'52px 16px 100px', overflowY:'auto' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <button onClick={()=>onNav('home')} style={{ width:34, height:34, borderRadius:'50%', background:'#1E1E1E', display:'flex', alignItems:'center', justifyContent:'center', border:'none', cursor:'pointer' }}>
+            <IcoChevLeft />
+          </button>
+          <p style={{ color:'white', fontSize:20, fontWeight:800 }}>프라이빗 월렛</p>
+        </div>
+        <button onClick={()=>{setUnlocked(false);setPin('');}} style={{ color:'#E8715A', fontSize:12, fontWeight:600, background:'rgba(232,113,90,.15)', border:'none', cursor:'pointer', fontFamily:'inherit', padding:'6px 12px', borderRadius:20 }}>🔒 잠그기</button>
+      </div>
+      <div style={{ background:'linear-gradient(135deg,#1a1a1a,#2d2d2d 50%,#0a0a0a)', borderRadius:24, padding:24, marginBottom:16, position:'relative', overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,.6)' }}>
+        <div style={{ position:'absolute', top:-30, right:-30, width:120, height:120, borderRadius:'50%', background:'rgba(232,113,90,.1)', filter:'blur(30px)' }} />
+        <p style={{ color:'#9CA3AF', fontSize:11, letterSpacing:2, marginBottom:14 }}>PRIVATE WALLET</p>
+        <p style={{ color:'white', fontSize:32, fontWeight:900, letterSpacing:'-1px', marginBottom:4 }}>{fmt(hiddenTotal)}</p>
+        <p style={{ color:'#6B7280', fontSize:12 }}>나만의 이번 달 지출</p>
+        <div style={{ marginTop:20, display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
+          <div><p style={{ color:'#4B5563', fontSize:10, letterSpacing:1 }}>예산</p><p style={{ color:'#9CA3AF', fontSize:14, fontWeight:700 }}>{fmt(myAlw)}</p></div>
+          <span style={{ fontSize:22 }}>🔒</span>
+        </div>
+      </div>
+      <p style={{ color:'#6B7280', fontSize:12, fontWeight:600, marginBottom:10 }}>나만 보이는 내역</p>
+      {myHiddenTx.length === 0 && <p style={{color:'#6B7280', fontSize:13, textAlign:'center', marginTop:30}}>비공개 내역이 없습니다.</p>}
+      {myHiddenTx.map((t,i) => (
+        <div key={i} style={{ background:'#1E1E1E', borderRadius:14, padding:'12px 16px', marginBottom:8, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div><p style={{ color:'#F9FAFB', fontSize:14, fontWeight:600 }}>{t.memo}</p><p style={{ color:'#6B7280', fontSize:12 }}>{displayDate(t.date)}</p></div>
+          <p style={{ color:'#E8715A', fontSize:15, fontWeight:700 }}>{fmt(t.amount)}</p>
+        </div>
+      ))}
+    </div>
+  );
+
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  return (
+    <div style={{ background:'#121212', minHeight:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 32px 100px' }}>
+      <span style={{ fontSize:36, marginBottom:10 }}>🔒</span>
+      <p style={{ color:'white', fontSize:18, fontWeight:700, marginBottom:5 }}>프라이빗 월렛</p>
+      <p style={{ color:'#6B7280', fontSize:13, marginBottom:40 }}>PIN 4자리를 입력해주세요</p>
+      <div style={{ display:'flex', gap:16, marginBottom:48, animation: shake ? 'shake .4s ease' : 'none' }}>
+        {[0,1,2,3].map(i => (
+          <div key={i} style={{ width:16, height:16, borderRadius:'50%', background: i<pin.length?(shake?'#E8715A':'white'):'#374151', transition:'background .2s' }} />
+        ))}
+      </div>
+      <style>{`@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-8px)} 80%{transform:translateX(8px)} }`}</style>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, width:'100%', maxWidth:280 }}>
+        {keys.map((k,i) => (
+          k==='' ? <div key={i}/> :
+          <button key={i} onClick={()=>tap(k)} style={{
+            height:70, borderRadius:'50%', background: k==='⌫'?'transparent':'#1E1E1E',
+            color:'white', fontSize:22, fontWeight:600, border:'none', cursor:'pointer', fontFamily:'inherit',
+            display:'flex', alignItems:'center', justifyContent:'center', transition:'opacity .1s',
+          }}
+          onMouseDown={e=>e.currentTarget.style.opacity='0.4'}
+          onMouseUp={e=>e.currentTarget.style.opacity='1'}
+          >{k==='⌫'?<IcoDel/>:k}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── SOS VIEW ────────────────────────────────────────────────────────────────
+function SOSView() {
+  const [msgs, setMsgs] = React.useState(INIT_SOS_MSGS);
+  const [input, setInput] = React.useState('');
+  const [approved, setApproved] = React.useState(false);
+
+  const send = (text) => {
+    if (!text.trim()) return;
+    setMsgs(m => [...m, { id:Date.now(), from:'me', text, time:'지금', amount:null }]);
+    setInput('');
+  };
+
+  const approve = () => {
+    setApproved(true);
+    setMsgs(m => [...m, { id:Date.now(), from:'me', text:'✅ ₩45,000 승인했어!', time:'지금' }]);
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', background:'#F4F6F8' }}>
+      <div style={{ padding:'52px 16px 12px', background:'white', borderBottom:'1px solid #E5E7EB', flexShrink:0 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:38, height:38, borderRadius:'50%', background:'#7A9E87', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, fontSize:15 }}>지</div>
+          <div><p style={{ fontSize:15, fontWeight:700, color:'#111827' }}>지연과의 SOS</p><p style={{ fontSize:11, color:'#7A9E87' }}>● 온라인</p></div>
+        </div>
+      </div>
+
+      <div style={{ flex:1, overflowY:'auto', padding:'16px', display:'flex', flexDirection:'column', gap:10 }}>
+        {msgs.map(msg => {
+          const isMe = msg.from==='me';
+          return (
+            <div key={msg.id} style={{ display:'flex', flexDirection:'column', alignItems: isMe?'flex-end':'flex-start' }}>
+              {!isMe && <p style={{ fontSize:11, color:'#9CA3AF', marginBottom:4 }}>지연</p>}
+              {/* SOS request card */}
+              {msg.amount && !approved && !isMe ? (
+                <div style={{ background:'white', borderRadius:'18px 18px 18px 4px', padding:'14px 16px', maxWidth:'82%', boxShadow:'0 2px 8px rgba(0,0,0,.08)' }}>
+                  <p style={{ fontSize:13, color:'#374151', marginBottom:10 }}>{msg.text}</p>
+                  <div style={{ background:'#FFF5F3', borderRadius:12, padding:'10px 14px', border:'1px solid #FDD5CF', marginBottom:10 }}>
+                    <p style={{ fontSize:11, color:'#E8715A', fontWeight:600, marginBottom:2 }}>SOS 결재 요청</p>
+                    <p style={{ fontSize:24, fontWeight:900, color:'#E8715A' }}>₩{msg.amount.toLocaleString()}</p>
+                  </div>
+                  <button onClick={approve} style={{ width:'100%', padding:'10px 0', background:'#1C2B4A', color:'white', borderRadius:12, fontSize:14, fontWeight:700, border:'none', cursor:'pointer', fontFamily:'inherit' }}>승인하기</button>
+                </div>
+              ) : (
+                <div style={{ background: isMe?'#1C2B4A':'white', color: isMe?'white':'#111827', borderRadius: isMe?'18px 18px 4px 18px':'18px 18px 18px 4px', padding:'10px 14px', maxWidth:'75%', fontSize:14, lineHeight:1.5, boxShadow:'0 2px 6px rgba(0,0,0,.07)' }}>
+                  {msg.text}
+                </div>
+              )}
+              <p style={{ fontSize:10, color:'#9CA3AF', marginTop:3 }}>{msg.time}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Quick amounts */}
+      <div style={{ display:'flex', gap:6, padding:'8px 14px 4px', overflowX:'auto', background:'white', flexShrink:0 }}>
+        {[10000,30000,50000,100000].map(a => (
+          <button key={a} onClick={() => send(`₩${a.toLocaleString()} 요청해도 돼? 🥺`)} style={{ padding:'6px 12px', borderRadius:16, background:'#F3F4F6', border:'1px solid #E5E7EB', fontSize:12, fontWeight:600, color:'#374151', cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap' }}>
+            ₩{a.toLocaleString()}
+          </button>
+        ))}
+      </div>
+      <div style={{ display:'flex', gap:8, padding:'8px 14px 100px', background:'white', borderTop:'1px solid #E5E7EB', flexShrink:0 }}>
+        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send(input)}
+          placeholder="메시지를 입력하세요..."
+          style={{ flex:1, padding:'10px 14px', borderRadius:20, border:'1.5px solid #E5E7EB', fontSize:14, fontFamily:'inherit', outline:'none', background:'#F9FAFB' }}
+          onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'} />
+        <button onClick={()=>send(input)} style={{ width:42, height:42, borderRadius:'50%', background:'#1C2B4A', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><IcoSend/></button>
+      </div>
+    </div>
+  );
+}
+
+// ─── SETTLEMENT VIEW ──────────────────────────────────────────────────────────
+function SettlementView({ transactions }) {
+  const currentMonthTx = getCurrentMonthTx(transactions);
+  const myCard = currentMonthTx.filter(t => t.who==='me').reduce((s,t) => s+t.amount, 0);
+  const partnerCard = currentMonthTx.filter(t => t.who==='partner').reduce((s,t) => s+t.amount, 0);
+  
+  const s = {
+    cardTotal: myCard + partnerCard,
+    cardEstimate: parseInt(ls('smtm_budget')) || 2000000,
+    myCard,
+    partnerCard,
+    cashFixed: parseInt(ls('smtm_fixed_costs')) || 150000
+  };
+  const [tab, setTab] = React.useState('auto'); // 'auto' | 'manual'
+
+  // ── 자동 계산 탭
+  const AutoTab = () => {
+    const diff = s.cardEstimate - s.cardTotal;
+    const surplus = diff > 0;
+    const [cash, setCash] = React.useState('');
+    const [cashResult, setCashResult] = React.useState(null);
+    const calcCash = () => {
+      const c = parseInt(cash) || 0;
+      setCashResult(c - (s.cardTotal + s.cashFixed));
+    };
+    return (
+      <>
+        <div style={{ background: surplus?'linear-gradient(135deg,#ECFDF5,#D1FAE5)':'linear-gradient(135deg,#FFF5F3,#FDE8E4)', borderRadius:20, padding:'18px 20px', marginBottom:12, border:`1px solid ${surplus?'#6EE7B7':'#FCA5A5'}` }}>
+          <p style={{ fontSize:12, fontWeight:600, color: surplus?'#065F46':'#991B1B', marginBottom:5 }}>{surplus?'🟢 이번 달 카드값 여유 있어요':'🔴 카드값이 예상보다 높아요'}</p>
+          <p style={{ fontSize:34, fontWeight:900, color: surplus?'#047857':'#DC2626', letterSpacing:'-1.5px', marginBottom:2 }}>{surplus?'+':'-'}{fmt(Math.abs(diff))}</p>
+          <p style={{ fontSize:11, color: surplus?'#065F46':'#991B1B', opacity:.7 }}>예상 {fmt(s.cardEstimate)} vs 현재 {fmt(s.cardTotal)}</p>
+        </div>
+        <div className="card" style={{ marginBottom:12, padding:'16px 18px' }}>
+          <p style={{ fontSize:13, fontWeight:700, color:'#374151', marginBottom:12 }}>카드 결제 내역</p>
+          {[{label:'내 카드 합계',amount:s.myCard,color:'#1C2B4A'},{label:'지연 카드 합계',amount:s.partnerCard,color:'#7A9E87'},{label:'현금 고정비',amount:s.cashFixed,color:'#9CA3AF'}].map((row,i)=>(
+            <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'9px 0', borderBottom:i<2?'1px solid #F3F4F6':'none' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:row.color }}/>
+                <span style={{ fontSize:13, color:'#374151' }}>{row.label}</span>
+              </div>
+              <span style={{ fontSize:14, fontWeight:700, color:row.color }}>{fmt(row.amount)}</span>
+            </div>
+          ))}
+          <div style={{ paddingTop:10, marginTop:4, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <span style={{ fontSize:14, fontWeight:700, color:'#111827' }}>총 결제 예상액</span>
+            <span style={{ fontSize:18, fontWeight:900, color:'#111827' }}>{fmt(s.cardTotal+s.cashFixed)}</span>
+          </div>
+        </div>
+        <div className="card" style={{ padding:'16px 18px' }}>
+          <p style={{ fontSize:13, fontWeight:700, color:'#374151', marginBottom:10 }}>현금 잔고로 계산하기</p>
+          <div style={{ display:'flex', gap:8, marginBottom: cashResult!==null?10:0 }}>
+            <input placeholder="보유 현금 (원)" value={cash} onChange={e=>setCash(e.target.value.replace(/\D/g,''))}
+              style={{ flex:1, padding:'11px 14px', borderRadius:12, border:'1.5px solid #E5E7EB', fontSize:14, fontFamily:'inherit', outline:'none' }}
+              onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+            <button onClick={calcCash} style={{ padding:'0 16px', borderRadius:12, background:'#1C2B4A', color:'white', fontWeight:700, fontSize:14, border:'none', cursor:'pointer', fontFamily:'inherit' }}>계산</button>
+          </div>
+          {cashResult!==null && (
+            <div style={{ background:cashResult>=0?'#ECFDF5':'#FFF5F3', borderRadius:12, padding:'12px 14px', border:`1px solid ${cashResult>=0?'#6EE7B7':'#FCA5A5'}` }}>
+              <p style={{ fontSize:12, color:cashResult>=0?'#065F46':'#991B1B', fontWeight:600 }}>{cashResult>=0?'✅ 여유 현금':'⚠️ 현금 부족'}</p>
+              <p style={{ fontSize:20, fontWeight:800, color:cashResult>=0?'#047857':'#DC2626', marginTop:2 }}>{cashResult>=0?'+':''}{fmt(cashResult)}</p>
+            </div>
+          )}
+        </div>
+      </>
+    );
+  };
+
+  // ── 직접 입력 탭
+  const ManualTab = () => {
+    const fallbackCards = [
+      { id:1, name:'현대카드 M', amount:String(s.myCard), owner:'나' },
+      { id:2, name:'카카오 체크', amount:String(s.partnerCard), owner:'지연' },
+    ];
+    let loadedCards = fallbackCards;
+    try {
+      const parsed = JSON.parse(ls('smtm_cards'));
+      if(parsed && parsed.length > 0) {
+        loadedCards = parsed.map(c => ({...c, amount: c.owner==='나' ? String(s.myCard) : String(s.partnerCard)}));
+      }
+    } catch(e){}
+
+    const [cards, setCards] = React.useState(loadedCards);
+    const [cash, setCash] = React.useState('');
+    const [fixedCash, setFixedCash] = React.useState('150000');
+    const [result, setResult] = React.useState(null);
+
+    const cardTotal = cards.reduce((s,c)=>s+(parseInt(c.amount)||0),0);
+    const fixedNum = parseInt(fixedCash)||0;
+    const cashNum = parseInt(cash)||0;
+    const totalNeeded = cardTotal + fixedNum;
+
+    const calc = () => setResult(cashNum - totalNeeded);
+
+    const updateCard = (id, field, val) =>
+      setCards(cs=>cs.map(c=>c.id===id?{...c,[field]:val}:c));
+
+    return (
+      <>
+        {/* 카드 입력 */}
+        <div className="card" style={{ marginBottom:12, padding:'16px 18px' }}>
+          <p style={{ fontSize:13, fontWeight:700, color:'#374151', marginBottom:12 }}>💳 카드 결제액 입력</p>
+          {cards.map(card=>(
+            <div key={card.id} style={{ display:'flex', gap:8, marginBottom:8, alignItems:'center' }}>
+              <div style={{ width:8, height:8, borderRadius:'50%', background:card.owner==='나'?'#1C2B4A':'#7A9E87', flexShrink:0, marginTop:2 }}/>
+              <input value={card.name} onChange={e=>updateCard(card.id,'name',e.target.value)}
+                style={{ flex:1, padding:'9px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'inherit', outline:'none' }}
+                onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+              <div style={{ position:'relative', width:110 }}>
+                <span style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', color:'#9CA3AF', fontSize:12 }}>₩</span>
+                <input value={parseInt(card.amount).toLocaleString()||''} onChange={e=>updateCard(card.id,'amount',e.target.value.replace(/\D/g,''))}
+                  style={{ width:'100%', padding:'9px 10px 9px 22px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'inherit', outline:'none', fontWeight:700, color:'#1C2B4A' }}
+                  onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+              </div>
+            </div>
+          ))}
+          <button onClick={()=>setCards(cs=>[...cs,{id:Date.now(),name:'카드명',amount:'0',owner:'나'}])}
+            style={{ width:'100%', padding:'9px 0', borderRadius:12, border:'1.5px dashed #D1D5DB', background:'transparent', color:'#7A9E87', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginTop:4 }}>
+            + 카드 추가
+          </button>
+          <div style={{ marginTop:12, paddingTop:10, borderTop:'1px solid #F3F4F6', display:'flex', justifyContent:'space-between' }}>
+            <span style={{ fontSize:13, color:'#6B7280' }}>카드 합계</span>
+            <span style={{ fontSize:15, fontWeight:800, color:'#1C2B4A' }}>{fmt(cardTotal)}</span>
+          </div>
+        </div>
+
+        {/* 현금 고정비 */}
+        <div className="card" style={{ marginBottom:12, padding:'16px 18px' }}>
+          <p style={{ fontSize:13, fontWeight:700, color:'#374151', marginBottom:10 }}>🏠 현금 고정비</p>
+          <div style={{ position:'relative' }}>
+            <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#9CA3AF', fontSize:13 }}>₩</span>
+            <input value={parseInt(fixedCash).toLocaleString()||''} onChange={e=>setFixedCash(e.target.value.replace(/\D/g,''))}
+              placeholder="월세·관리비 등 현금 고정비"
+              style={{ width:'100%', padding:'11px 12px 11px 26px', borderRadius:12, border:'1.5px solid #E5E7EB', fontSize:14, fontFamily:'inherit', outline:'none', fontWeight:700, color:'#374151' }}
+              onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+          </div>
+        </div>
+
+        {/* 보유 현금 */}
+        <div className="card" style={{ marginBottom:12, padding:'16px 18px' }}>
+          <p style={{ fontSize:13, fontWeight:700, color:'#374151', marginBottom:10 }}>💵 현재 보유 현금</p>
+          <div style={{ position:'relative' }}>
+            <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#9CA3AF', fontSize:13 }}>₩</span>
+            <input value={cash} onChange={e=>setCash(e.target.value.replace(/\D/g,''))}
+              placeholder="지금 갖고 있는 현금"
+              style={{ width:'100%', padding:'11px 12px 11px 26px', borderRadius:12, border:'1.5px solid #E5E7EB', fontSize:14, fontFamily:'inherit', outline:'none', fontWeight:700, color:'#374151' }}
+              onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+          </div>
+        </div>
+
+        {/* 요약 + 계산 버튼 */}
+        <div className="card" style={{ marginBottom:12, padding:'16px 18px' }}>
+          <p style={{ fontSize:13, fontWeight:700, color:'#374151', marginBottom:10 }}>납부 필요 합계</p>
+          {[{label:'카드 결제액',amount:cardTotal,color:'#1C2B4A'},{label:'현금 고정비',amount:fixedNum,color:'#374151'}].map((r,i)=>(
+            <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid #F3F4F6' }}>
+              <span style={{ fontSize:13, color:'#6B7280' }}>{r.label}</span>
+              <span style={{ fontSize:13, fontWeight:700, color:r.color }}>{fmt(r.amount)}</span>
+            </div>
+          ))}
+          <div style={{ display:'flex', justifyContent:'space-between', padding:'10px 0 0', marginTop:2 }}>
+            <span style={{ fontSize:14, fontWeight:700, color:'#111827' }}>총 필요액</span>
+            <span style={{ fontSize:18, fontWeight:900, color:'#1C2B4A' }}>{fmt(totalNeeded)}</span>
+          </div>
+          <button onClick={calc} style={{ width:'100%', marginTop:14, padding:'14px 0', background:'linear-gradient(135deg,#1C2B4A,#2d4270)', color:'white', borderRadius:14, fontSize:15, fontWeight:700, border:'none', cursor:'pointer', fontFamily:'inherit', boxShadow:'0 4px 12px rgba(28,43,74,.3)' }}>
+            부족액 계산하기
+          </button>
+        </div>
+
+        {/* 결과 */}
+        {result!==null && (
+          <div style={{ background:result>=0?'linear-gradient(135deg,#ECFDF5,#D1FAE5)':'linear-gradient(135deg,#FFF5F3,#FDE8E4)', borderRadius:20, padding:'20px', marginBottom:12, border:`1px solid ${result>=0?'#6EE7B7':'#FCA5A5'}` }}>
+            <p style={{ fontSize:12, fontWeight:700, color:result>=0?'#065F46':'#991B1B', marginBottom:6 }}>{result>=0?'✅ 여유 있어요':'⚠️ 현금이 부족해요'}</p>
+            <p style={{ fontSize:36, fontWeight:900, color:result>=0?'#047857':'#DC2626', letterSpacing:'-1.5px', marginBottom:4 }}>{result>=0?'+':''}{fmt(result)}</p>
+            <p style={{ fontSize:12, color:result>=0?'#065F46':'#991B1B', opacity:.8 }}>
+              {result<0 ? `${fmt(Math.abs(result))}가 부족해요. 충전이 필요해요.` : `납부 후 ${fmt(result)}가 남아요.`}
+            </p>
+          </div>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <div className="view-content" style={{ padding:'0 16px' }}>
+      <p style={{ fontSize:22, fontWeight:800, color:'#111827', padding:'52px 0 16px', letterSpacing:'-0.5px' }}>카드 정산</p>
+
+      {/* Tab Toggle */}
+      <div style={{ display:'flex', background:'#F3F4F6', borderRadius:14, padding:4, marginBottom:16 }}>
+        {[{id:'auto',label:'📊 자동 계산'},{id:'manual',label:'✏️ 직접 입력'}].map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            flex:1, padding:'9px 0', borderRadius:10,
+            background: tab===t.id?'white':'transparent',
+            color: tab===t.id?'#1C2B4A':'#9CA3AF',
+            fontWeight: tab===t.id?700:500, fontSize:13,
+            boxShadow: tab===t.id?'0 1px 4px rgba(0,0,0,.1)':'none',
+            transition:'all .15s', border:'none', cursor:'pointer', fontFamily:'inherit',
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {tab==='auto' ? <AutoTab/> : <ManualTab/>}
+    </div>
+  );
+}
+
+// ─── ONBOARDING ───────────────────────────────────────────────────────────────
+function OnboardingView({ inviteCode, onComplete }) {
+  const [step, setStep] = React.useState(0);
+  const [type, setType] = React.useState(null);       // 'couple' | 'personal'
+  const [mode, setMode] = React.useState(null);       // 'join' | 'new'
+  const [code, setCode] = React.useState(['','','','','','']);
+  const [codeError, setCodeError] = React.useState(false);
+  const [myName, setMyName] = React.useState('');
+  const [partnerName, setPartnerName] = React.useState('');
+  const [budget, setBudget] = React.useState('');
+  const [done, setDone] = React.useState(false);
+  const codeRefs = [React.useRef(),React.useRef(),React.useRef(),React.useRef(),React.useRef(),React.useRef()];
+
+  const handleCodeInput = (val, idx) => {
+    const v = val.toUpperCase().replace(/[^A-Z0-9]/g,'');
+    const next = [...code];
+    next[idx] = v.slice(-1);
+    setCode(next);
+    setCodeError(false);
+    if (v && idx < 5) codeRefs[idx+1].current?.focus();
+    if (idx === 5 && v) {
+      const full = [...next].join('');
+      if (full === inviteCode) { setStep(5); }
+      else { setCodeError(true); }
+    }
+  };
+
+  const handleCodePaste = (e) => {
+    const pasted = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+    if (pasted.length === 6) {
+      setCode(pasted.split(''));
+      setCodeError(false);
+      if (pasted === inviteCode) setTimeout(()=>setStep(5), 100);
+      else setCodeError(true);
+    }
+  };
+
+  const handleDone = () => {
+    setDone(true);
+    setTimeout(() => onComplete({ type, myName: myName || '나', partnerName: partnerName || '파트너', budget: parseInt(budget) || 2000000 }), 1200);
+  };
+
+  // ── 공통 스타일
+  const BtnPrimary = ({ children, onClick, disabled }) => (
+    <button onClick={onClick} disabled={disabled} style={{ width:'100%', padding:'16px 0', background: disabled?'#E5E7EB':'linear-gradient(135deg,#1C2B4A,#2d4270)', color: disabled?'#9CA3AF':'white', borderRadius:18, fontSize:16, fontWeight:700, border:'none', cursor: disabled?'not-allowed':'pointer', fontFamily:'inherit', boxShadow: disabled?'none':'0 4px 14px rgba(28,43,74,.3)', transition:'all .2s' }}>
+      {children}
+    </button>
+  );
+
+  const SelectCard = ({ selected, onClick, icon, title, sub }) => (
+    <div onClick={onClick} style={{ border:`2px solid ${selected?'#1C2B4A':'#E5E7EB'}`, borderRadius:20, padding:'20px', cursor:'pointer', background: selected?'#F0F3FA':'white', transition:'all .2s', display:'flex', alignItems:'flex-start', gap:14 }}>
+      <div style={{ fontSize:32, flexShrink:0 }}>{icon}</div>
+      <div>
+        <p style={{ fontSize:15, fontWeight:700, color: selected?'#1C2B4A':'#111827', marginBottom:4 }}>{title}</p>
+        <p style={{ fontSize:13, color:'#6B7280', lineHeight:1.5 }}>{sub}</p>
+      </div>
+      <div style={{ marginLeft:'auto', width:22, height:22, borderRadius:'50%', border:`2px solid ${selected?'#1C2B4A':'#D1D5DB'}`, background: selected?'#1C2B4A':'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+        {selected && <div style={{ width:8, height:8, borderRadius:'50%', background:'white' }}/>}
+      </div>
+    </div>
+  );
+
+  // ── 완료 화면
+  if (done) return (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'white', gap:16 }}>
+      <div style={{ width:80, height:80, borderRadius:'50%', background:'linear-gradient(135deg,#7A9E87,#5a8a6e)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:36 }}>✅</div>
+      <p style={{ fontSize:22, fontWeight:900, color:'#1C2B4A', letterSpacing:'-0.5px' }}>준비 완료!</p>
+      <p style={{ fontSize:14, color:'#6B7280' }}>가계부를 시작해볼게요</p>
+    </div>
+  );
+
+  return (
+    <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'white' }}>
+      {/* Progress bar (steps 1~4) */}
+      {step > 0 && step < 5 && (
+        <div style={{ padding:'16px 24px 0', flexShrink:0 }}>
+          <div style={{ height:3, background:'#F3F4F6', borderRadius:2, overflow:'hidden' }}>
+            <div style={{ height:'100%', borderRadius:2, background:'#1C2B4A', width:`${(step/4)*100}%`, transition:'width .3s ease' }}/>
+          </div>
+        </div>
+      )}
+
+      <div style={{ flex:1, overflowY:'auto', padding:'0 24px 24px', display:'flex', flexDirection:'column' }}>
+
+        {/* ── STEP 0: 스플래시 ── */}
+        {step === 0 && (
+          <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', textAlign:'center', gap:0 }}>
+            <div style={{ width:88, height:88, borderRadius:28, background:'linear-gradient(135deg,#1C2B4A,#2d4270)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:24, boxShadow:'0 8px 32px rgba(28,43,74,.25)' }}>
+              <span style={{ fontSize:40 }}>💰</span>
+            </div>
+            <p style={{ fontSize:28, fontWeight:900, color:'#1C2B4A', letterSpacing:'-1px', marginBottom:8 }}>showmethemoney</p>
+            <p style={{ fontSize:15, color:'#6B7280', lineHeight:1.6, marginBottom:48, maxWidth:260 }}>두 사람이 함께 쓰는<br/>스마트 공유 가계부</p>
+            <div style={{ display:'flex', gap:8, width:'100%', flexDirection:'column' }}>
+              <BtnPrimary onClick={()=>setStep(1)}>시작하기</BtnPrimary>
+              <button onClick={()=>{ setType('couple'); setMode('join'); setStep(3); }} style={{ width:'100%', padding:'14px 0', background:'transparent', color:'#9CA3AF', fontSize:14, fontWeight:500, border:'none', cursor:'pointer', fontFamily:'inherit' }}>
+                초대 코드로 입장하기
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 1: 가계부 유형 ── */}
+        {step === 1 && (
+          <div style={{ flex:1, paddingTop:32 }}>
+            <button onClick={()=>setStep(0)} style={{ color:'#9CA3AF', fontSize:13, background:'none', border:'none', cursor:'pointer', fontFamily:'inherit', marginBottom:20, padding:0 }}>← 뒤로</button>
+            <p style={{ fontSize:22, fontWeight:900, color:'#1C2B4A', letterSpacing:'-0.5px', marginBottom:6 }}>어떤 가계부인가요?</p>
+            <p style={{ fontSize:14, color:'#6B7280', marginBottom:28, lineHeight:1.5 }}>용도에 맞게 최적화된 기능을 제공해드릴게요</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:32 }}>
+              <SelectCard selected={type==='couple'} onClick={()=>setType('couple')} icon="👫" title="부부 / 파트너 공유" sub="두 사람이 함께 예산을 관리해요. 용돈·SOS 결재·공동 지출 추적 기능이 활성화돼요."/>
+              <SelectCard selected={type==='personal'} onClick={()=>setType('personal')} icon="👤" title="개인용" sub="혼자서 지출을 관리해요. 프라이빗 월렛과 AI 코치 기능을 활용할 수 있어요."/>
+            </div>
+            <BtnPrimary onClick={()=>{ if(type) setStep(2); }} disabled={!type}>다음</BtnPrimary>
+          </div>
+        )}
+
+        {/* ── STEP 2: 입장 방식 ── */}
+        {step === 2 && (
+          <div style={{ flex:1, paddingTop:32 }}>
+            <button onClick={()=>setStep(1)} style={{ color:'#9CA3AF', fontSize:13, background:'none', border:'none', cursor:'pointer', fontFamily:'inherit', marginBottom:20, padding:0 }}>← 뒤로</button>
+            <p style={{ fontSize:22, fontWeight:900, color:'#1C2B4A', letterSpacing:'-0.5px', marginBottom:6 }}>어떻게 시작할까요?</p>
+            <p style={{ fontSize:14, color:'#6B7280', marginBottom:28 }}>기존 가계부에 합류하거나 새로 만들 수 있어요</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:32 }}>
+              <SelectCard selected={mode==='join'} onClick={()=>setMode('join')} icon="🔗" title="초대 코드로 입장" sub="파트너가 보내준 6자리 코드로 기존 가계부에 합류해요."/>
+              <SelectCard selected={mode==='new'} onClick={()=>setMode('new')} icon="✨" title="새 가계부 만들기" sub="처음부터 새로운 가계부를 만들고 파트너를 초대해요."/>
+            </div>
+            <BtnPrimary onClick={()=>{ if(mode) setStep(mode==='join'?3:4); }} disabled={!mode}>다음</BtnPrimary>
+          </div>
+        )}
+
+        {/* ── STEP 3: 초대 코드 입력 ── */}
+        {step === 3 && (
+          <div style={{ flex:1, paddingTop:32 }}>
+            <button onClick={()=>setStep(2)} style={{ color:'#9CA3AF', fontSize:13, background:'none', border:'none', cursor:'pointer', fontFamily:'inherit', marginBottom:20, padding:0 }}>← 뒤로</button>
+            <p style={{ fontSize:22, fontWeight:900, color:'#1C2B4A', letterSpacing:'-0.5px', marginBottom:6 }}>초대 코드 입력</p>
+            <p style={{ fontSize:14, color:'#6B7280', marginBottom:8 }}>파트너에게 받은 6자리 코드를 입력하세요</p>
+            <p style={{ fontSize:12, color:'#7A9E87', marginBottom:28, fontWeight:600 }}>데모 코드: A1B2C3</p>
+            <div style={{ display:'flex', gap:8, justifyContent:'center', marginBottom:12 }} onPaste={handleCodePaste}>
+              {code.map((c,i) => (
+                <input key={i} ref={codeRefs[i]} value={c} maxLength={1}
+                  onChange={e=>handleCodeInput(e.target.value,i)}
+                  onKeyDown={e=>{ if(e.key==='Backspace'&&!c&&i>0) codeRefs[i-1].current?.focus(); }}
+                  style={{ width:44, height:54, textAlign:'center', fontSize:22, fontWeight:800, borderRadius:14, border:`2px solid ${codeError?'#E8715A':c?'#1C2B4A':'#E5E7EB'}`, outline:'none', fontFamily:'inherit', color:'#1C2B4A', textTransform:'uppercase', background: c?'#F0F3FA':'white', transition:'border-color .15s' }}
+                  onFocus={e=>!codeError&&(e.target.style.borderColor='#1C2B4A')}
+                  onBlur={e=>!c&&!codeError&&(e.target.style.borderColor='#E5E7EB')}/>
+              ))}
+            </div>
+            {codeError && <p style={{ textAlign:'center', fontSize:13, color:'#E8715A', fontWeight:600, marginBottom:16 }}>코드가 일치하지 않아요. 다시 확인해주세요.</p>}
+            <div style={{ marginTop:20 }}>
+              <BtnPrimary onClick={()=>{ const full=code.join(''); if(full===DEMO_CODE) setStep(5); else setCodeError(true); }} disabled={code.join('').length<6}>입장하기</BtnPrimary>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 4: 신규 설정 ── */}
+        {step === 4 && (
+          <div style={{ flex:1, paddingTop:32 }}>
+            <button onClick={()=>setStep(2)} style={{ color:'#9CA3AF', fontSize:13, background:'none', border:'none', cursor:'pointer', fontFamily:'inherit', marginBottom:20, padding:0 }}>← 뒤로</button>
+            <p style={{ fontSize:22, fontWeight:900, color:'#1C2B4A', letterSpacing:'-0.5px', marginBottom:6 }}>기본 설정</p>
+            <p style={{ fontSize:14, color:'#6B7280', marginBottom:28 }}>나중에 설정에서 언제든 바꿀 수 있어요</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:14, marginBottom:32 }}>
+              <div>
+                <p style={{ fontSize:12, fontWeight:700, color:'#374151', marginBottom:6 }}>내 이름</p>
+                <input placeholder="이름을 입력해주세요" value={myName} onChange={e=>setMyName(e.target.value)}
+                  style={{ width:'100%', padding:'13px 16px', borderRadius:14, border:'1.5px solid #E5E7EB', fontSize:15, fontFamily:'inherit', outline:'none', transition:'border-color .15s' }}
+                  onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+              </div>
+              {type === 'couple' && (
+                <div>
+                  <p style={{ fontSize:12, fontWeight:700, color:'#374151', marginBottom:6 }}>파트너 이름</p>
+                  <input placeholder="파트너 이름을 입력해주세요" value={partnerName} onChange={e=>setPartnerName(e.target.value)}
+                    style={{ width:'100%', padding:'13px 16px', borderRadius:14, border:'1.5px solid #E5E7EB', fontSize:15, fontFamily:'inherit', outline:'none', transition:'border-color .15s' }}
+                    onFocus={e=>e.target.style.borderColor='#7A9E87'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+                </div>
+              )}
+              <div>
+                <p style={{ fontSize:12, fontWeight:700, color:'#374151', marginBottom:6 }}>월 예산</p>
+                <div style={{ position:'relative' }}>
+                  <span style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:'#9CA3AF', fontSize:15 }}>₩</span>
+                  <input placeholder="2,000,000" value={budget?parseInt(budget).toLocaleString():''} onChange={e=>setBudget(e.target.value.replace(/\D/g,''))}
+                    style={{ width:'100%', padding:'13px 16px 13px 30px', borderRadius:14, border:'1.5px solid #E5E7EB', fontSize:15, fontFamily:'inherit', outline:'none', transition:'border-color .15s' }}
+                    onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+                </div>
+              </div>
+              {type === 'couple' && (
+                <div style={{ background:'#F9FAFB', borderRadius:14, padding:'12px 14px', border:'1px solid #E5E7EB' }}>
+                  <p style={{ fontSize:12, fontWeight:600, color:'#374151', marginBottom:2 }}>📤 초대 코드가 생성돼요</p>
+                  <p style={{ fontSize:12, color:'#9CA3AF', lineHeight:1.5 }}>가계부 생성 후 파트너에게 코드를 공유하면 함께 시작할 수 있어요</p>
+                </div>
+              )}
+            </div>
+            <BtnPrimary onClick={()=>setStep(5)} disabled={!myName}>다음</BtnPrimary>
+          </div>
+        )}
+
+        {/* ── STEP 5: 완료 ── */}
+        {step === 5 && (
+          <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', textAlign:'center', gap:16 }}>
+            <div style={{ width:80, height:80, borderRadius:'50%', background:'linear-gradient(135deg,#1C2B4A,#2d4270)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:36, boxShadow:'0 8px 32px rgba(28,43,74,.25)' }}>🎉</div>
+            <div>
+              <p style={{ fontSize:24, fontWeight:900, color:'#1C2B4A', letterSpacing:'-0.5px', marginBottom:6 }}>
+                {mode==='join' ? '합류 완료!' : '가계부 생성 완료!'}
+              </p>
+              <p style={{ fontSize:14, color:'#6B7280', lineHeight:1.6 }}>
+                {mode==='join' ? '공유 가계부에 합류했어요' : `${myName||'나'}의 가계부가 준비됐어요`}
+              </p>
+            </div>
+            {mode==='new' && type==='couple' && (
+              <div style={{ background:'#F0F3FA', borderRadius:16, padding:'14px 18px', width:'100%', border:'1px solid #C7D2FE' }}>
+                <p style={{ fontSize:11, color:'#6B7280', marginBottom:6 }}>파트너 초대 코드</p>
+                <p style={{ fontSize:28, fontWeight:900, color:'#1C2B4A', letterSpacing:4 }}>X7K9M2</p>
+                <p style={{ fontSize:11, color:'#9CA3AF', marginTop:4 }}>파트너에게 공유해주세요</p>
+              </div>
+            )}
+            <div style={{ width:'100%', marginTop:8 }}>
+              <BtnPrimary onClick={handleDone}>시작하기 →</BtnPrimary>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+// ─── SETTINGS SHARED ─────────────────────────────────────────────────────────
+const Toggle = ({ on, onChange }) => (
+  <div onClick={onChange} style={{ width:44, height:26, borderRadius:13, background:on?'#7A9E87':'#D1D5DB', position:'relative', cursor:'pointer', transition:'background .2s', flexShrink:0 }}>
+    <div style={{ width:20, height:20, borderRadius:'50%', background:'white', position:'absolute', top:3, left:on?21:3, transition:'left .2s', boxShadow:'0 1px 3px rgba(0,0,0,.2)' }}/>
+  </div>
+);
+const SettingSection = ({ title, children }) => (
+  <div style={{ marginBottom:20 }}>
+    <p style={{ fontSize:11, fontWeight:700, color:'#9CA3AF', letterSpacing:1.2, textTransform:'uppercase', padding:'0 4px', marginBottom:8 }}>{title}</p>
+    <div style={{ background:'white', borderRadius:20, boxShadow:'0 1px 3px rgba(0,0,0,.07)', overflow:'hidden' }}>{children}</div>
+  </div>
+);
+const SettingRow = ({ label, sub, right, onClick, border=true, icon }) => (
+  <div onClick={onClick} style={{ display:'flex', alignItems:'center', gap:12, padding:'14px 18px', borderBottom:border?'1px solid #F9FAFB':'none', cursor:onClick?'pointer':'default' }}>
+    {icon && <span style={{ fontSize:18, flexShrink:0 }}>{icon}</span>}
+    <div style={{ flex:1 }}><p style={{ fontSize:14, fontWeight:500, color:'#111827' }}>{label}</p>{sub&&<p style={{ fontSize:11, color:'#9CA3AF', marginTop:2 }}>{sub}</p>}</div>
+    {right}
+  </div>
+);
+const SubPageHeader = ({ title, onBack }) => (
+  <div style={{ display:'flex', alignItems:'center', gap:12, padding:'52px 16px 20px', flexShrink:0 }}>
+    <button onClick={onBack} style={{ width:36, height:36, borderRadius:'50%', background:'#F3F4F6', display:'flex', alignItems:'center', justifyContent:'center', border:'none', cursor:'pointer', flexShrink:0 }}><IcoChevLeft /></button>
+    <p style={{ fontSize:20, fontWeight:800, color:'#111827', letterSpacing:'-0.5px' }}>{title}</p>
+  </div>
+);
+
+// ─── SETTINGS: 부부 용돈 ───────────────────────────────────────────────────────
+function AllowancePage({ onBack }) {
+  const [myAmt, setMyAmt] = React.useState('300000');
+  const [partnerAmt, setPartnerAmt] = React.useState('300000');
+  const [resetDay, setResetDay] = React.useState('1');
+  const [autoAlert, setAutoAlert] = React.useState(true);
+
+  const AmtInput = ({ value, onChange, color }) => (
+    <input value={parseInt(value).toLocaleString()} onChange={e=>onChange(e.target.value.replace(/\D/g,''))}
+      style={{ width:120, textAlign:'right', padding:'8px 12px', borderRadius:12, border:'1.5px solid #E5E7EB', fontSize:15, fontFamily:'inherit', outline:'none', fontWeight:700, color }}
+      onFocus={e=>e.target.style.borderColor=color} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+  );
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', background:'#F4F6F8' }}>
+      <SubPageHeader title="부부 용돈 설정" onBack={onBack} />
+      <div className="view-content" style={{ padding:'0 16px', paddingBottom:100 }}>
+        <SettingSection title="월 용돈 금액">
+          <SettingRow label="내 용돈" sub="매월 초 자동 초기화" icon="👤" border={true} right={<AmtInput value={myAmt} onChange={setMyAmt} color="#1C2B4A"/>}/>
+          <SettingRow label="지연 용돈" sub="파트너 용돈" icon="👤" border={false} right={<AmtInput value={partnerAmt} onChange={setPartnerAmt} color="#7A9E87"/>}/>
+        </SettingSection>
+        <SettingSection title="초기화 설정">
+          <SettingRow label="초기화 기준일" sub="매월 며칠에 초기화할까요?" icon="📅" border={true}
+            right={
+              <select value={resetDay} onChange={e=>setResetDay(e.target.value)} style={{ padding:'6px 10px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:14, fontFamily:'inherit', outline:'none', color:'#1C2B4A', fontWeight:700 }}>
+                {[1,5,10,15,20,25].map(d=><option key={d} value={d}>{d}일</option>)}
+              </select>
+            }/>
+          <SettingRow label="잔액 알림" sub="용돈 20% 남을 때 알림" icon="🔔" border={false} right={<Toggle on={autoAlert} onChange={()=>setAutoAlert(v=>!v)}/>}/>
+        </SettingSection>
+        <div style={{ background:'linear-gradient(135deg,#EEF2FF,#E0F2FE)', borderRadius:20, padding:'16px 18px', border:'1px solid #C7D2FE' }}>
+          <p style={{ fontSize:12, fontWeight:700, color:'#4338CA', marginBottom:4 }}>이번 달 용돈 현황</p>
+          {[{name:'나',total:300000,spent:155000,color:'#1C2B4A'},{name:'지연',total:300000,spent:198000,color:'#7A9E87'}].map((a,i) => (
+            <div key={i} style={{ marginTop:10 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                <span style={{ fontSize:13, fontWeight:600, color:a.color }}>{a.name}</span>
+                <span style={{ fontSize:13, fontWeight:700, color:a.color }}>{fmt(a.total-a.spent)} 남음</span>
+              </div>
+              <div style={{ height:5, borderRadius:3, background:'rgba(255,255,255,.6)', overflow:'hidden' }}>
+                <div style={{ height:'100%', borderRadius:3, width:`${(a.spent/a.total)*100}%`, background:a.color }}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SETTINGS: 고정비 ─────────────────────────────────────────────────────────
+function FixedCostsPage({ onBack }) {
+  const [items, setItems] = React.useState(() => {
+    try {
+      const saved = JSON.parse(ls('smtm_fixed_items'));
+      if (saved && saved.length > 0) return saved;
+    } catch(e) {}
+    return [
+      { id:1, label:'월세', amount:650000, type:'fixed', day:1, card:null },
+      { id:2, label:'관리비', amount:85000, type:'fixed', day:15, card:null },
+      { id:3, label:'넷플릭스', amount:17000, type:'sub', day:3, card:'현대카드' },
+      { id:4, label:'헬스장 할부', amount:36000, type:'install', day:10, card:'신한카드', remain:8 },
+      { id:5, label:'자동차 보험', amount:120000, type:'fixed', day:20, card:null },
+    ];
+  });
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [newLabel, setNewLabel] = React.useState('');
+  const [newAmt, setNewAmt] = React.useState('');
+
+  const typeLabel = { fixed:'고정비', sub:'구독', install:'할부' };
+  const typeColor = { fixed:'#1C2B4A', sub:'#7A9E87', install:'#F59E0B' };
+  const total = items.reduce((s,i)=>s+i.amount,0);
+
+  const updateItems = (next) => {
+    setItems(next);
+    lsSet('smtm_fixed_items', JSON.stringify(next));
+    lsSet('smtm_fixed_costs', String(next.reduce((s,i)=>s+i.amount,0)));
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', background:'#F4F6F8' }}>
+      <SubPageHeader title="고정비 관리" onBack={onBack} />
+      <div className="view-content" style={{ padding:'0 16px', paddingBottom:100 }}>
+        <div className="card" style={{ marginBottom:16, padding:'14px 18px' }}>
+          <p style={{ fontSize:12, color:'#9CA3AF', marginBottom:4 }}>매월 고정 지출</p>
+          <p style={{ fontSize:28, fontWeight:900, color:'#1C2B4A', letterSpacing:'-1px' }}>{fmt(total)}</p>
+        </div>
+        <SettingSection title="고정비 목록">
+          {items.map((item,i) => (
+            <SettingRow key={item.id} label={item.label} border={i<items.length-1}
+              sub={`매월 ${item.day}일${item.card?' · '+item.card:''}${item.remain?' · 잔여 '+item.remain+'회':''}`}
+              icon={item.type==='sub'?'📱':item.type==='install'?'💳':'🏠'}
+              right={
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ fontSize:13, fontWeight:700, color:typeColor[item.type] }}>{fmt(item.amount)}</span>
+                  <span style={{ fontSize:10, background:typeColor[item.type]+'18', color:typeColor[item.type], padding:'2px 8px', borderRadius:10, fontWeight:600 }}>{typeLabel[item.type]}</span>
+                </div>
+              }/>
+          ))}
+        </SettingSection>
+        <button onClick={()=>setAddOpen(v=>!v)} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'12px 0', borderRadius:16, border:'1.5px dashed #D1D5DB', background:'transparent', color:'#7A9E87', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginBottom:12 }}>
+          + 고정비 추가
+        </button>
+        {addOpen && (
+          <div className="card" style={{ padding:'16px' }}>
+            <p style={{ fontSize:13, fontWeight:600, color:'#374151', marginBottom:10 }}>새 고정비 추가</p>
+            <div style={{ display:'flex', gap:8, marginBottom:8 }}>
+              <input placeholder="항목 이름" value={newLabel} onChange={e=>setNewLabel(e.target.value)}
+                style={{ flex:1, padding:'10px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'inherit', outline:'none' }}
+                onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+              <input placeholder="금액" value={newAmt} onChange={e=>setNewAmt(e.target.value.replace(/\D/g,''))}
+                style={{ width:100, padding:'10px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'inherit', outline:'none' }}
+                onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+            </div>
+            <button onClick={()=>{ if(newLabel&&newAmt){ updateItems([...items,{id:Date.now(),label:newLabel,amount:parseInt(newAmt),type:'fixed',day:1,card:null}]); setNewLabel(''); setNewAmt(''); setAddOpen(false); }}} style={{ width:'100%', padding:'11px 0', background:'#1C2B4A', color:'white', borderRadius:12, fontSize:14, fontWeight:700, border:'none', cursor:'pointer', fontFamily:'inherit' }}>추가</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── SETTINGS: 카드 관리 ──────────────────────────────────────────────────────
+function CardManagementPage({ onBack }) {
+  const [cards, setCards] = React.useState(() => {
+    try {
+      const saved = JSON.parse(ls('smtm_cards'));
+      if (saved && saved.length > 0) return saved;
+    } catch(e) {}
+    return [
+      { id:1, name:'현대카드 M', owner:'나', last4:'1234', limit:3000000, used:623000, color:'#1C2B4A' },
+      { id:2, name:'신한카드 Deep', owner:'나', last4:'5678', limit:2000000, used:0, color:'#374151' },
+      { id:3, name:'카카오뱅크 체크', owner:'지연', last4:'9012', limit:null, used:311000, color:'#7A9E87' },
+    ];
+  });
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [newName, setNewName] = React.useState('');
+  const [newLast4, setNewLast4] = React.useState('');
+  const [newLimit, setNewLimit] = React.useState('');
+
+  const updateCards = (next) => {
+    setCards(next);
+    lsSet('smtm_cards', JSON.stringify(next));
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', background:'#F4F6F8' }}>
+      <SubPageHeader title="카드 관리" onBack={onBack} />
+      <div className="view-content" style={{ padding:'0 16px', paddingBottom:100 }}>
+        {cards.map(card => (
+          <div key={card.id} style={{ background:'white', borderRadius:20, padding:'18px 20px', marginBottom:12, boxShadow:'0 1px 3px rgba(0,0,0,.07)' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
+              <div>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+                  <div style={{ width:32, height:20, borderRadius:4, background:card.color }}/>
+                  <p style={{ fontSize:14, fontWeight:700, color:'#111827' }}>{card.name}</p>
+                </div>
+                <p style={{ fontSize:12, color:'#9CA3AF' }}>**** {card.last4} · {card.owner}</p>
+              </div>
+              <span style={{ fontSize:12, background: card.owner==='나'?'#EEF2FF':'#ECFDF5', color: card.owner==='나'?'#4338CA':'#047857', padding:'3px 10px', borderRadius:20, fontWeight:600 }}>{card.owner}</span>
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+              <span style={{ fontSize:12, color:'#9CA3AF' }}>이번 달 사용</span>
+              <span style={{ fontSize:14, fontWeight:700, color:card.color }}>{fmt(card.used)}</span>
+            </div>
+            {card.limit && (
+              <>
+                <div style={{ height:5, borderRadius:3, background:'#F3F4F6', overflow:'hidden', marginBottom:4 }}>
+                  <div style={{ height:'100%', borderRadius:3, width:`${(card.used/card.limit)*100}%`, background:card.color }}/>
+                </div>
+                <p style={{ fontSize:11, color:'#9CA3AF', textAlign:'right' }}>한도 {fmt(card.limit)}</p>
+              </>
+            )}
+          </div>
+        ))}
+        <button onClick={()=>setAddOpen(v=>!v)} style={{ width:'100%', padding:'14px 0', borderRadius:16, border:'1.5px dashed #D1D5DB', background:'transparent', color:'#7A9E87', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:12 }}>
+          + 카드 추가
+        </button>
+        {addOpen && (
+          <div className="card" style={{ padding:'16px' }}>
+            <p style={{ fontSize:13, fontWeight:600, marginBottom:10 }}>새 카드 등록</p>
+            <input placeholder="카드 이름 (예: 신한카드 Deep)" value={newName} onChange={e=>setNewName(e.target.value)} style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'inherit', outline:'none', marginBottom:8, display:'block' }} onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+            <input placeholder="뒷 4자리" value={newLast4} onChange={e=>setNewLast4(e.target.value)} style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'inherit', outline:'none', marginBottom:8, display:'block' }} onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+            <input placeholder="한도 금액 (없으면 빈칸)" value={newLimit} onChange={e=>setNewLimit(e.target.value.replace(/\D/g,''))} style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'inherit', outline:'none', marginBottom:8, display:'block' }} onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+            
+            <button onClick={()=>{ if(newName){ updateCards([...cards,{id:Date.now(),name:newName,owner:'나',last4:newLast4,limit:parseInt(newLimit)||null,used:0,color:'#1C2B4A'}]); setNewName(''); setNewLast4(''); setNewLimit(''); setAddOpen(false); }}} style={{ width:'100%', padding:'11px 0', background:'#1C2B4A', color:'white', borderRadius:12, fontSize:14, fontWeight:700, border:'none', cursor:'pointer', fontFamily:'inherit' }}>등록</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── SETTINGS: 전체 플랜 요약 ────────────────────────────────────────────────
+function PlanSummaryPage({ onBack }) {
+  const items = [
+    { label:'월 예산', amount:2000000, icon:'📊', color:'#1C2B4A', sub:'공동 예산' },
+    { label:'나 용돈', amount:300000, icon:'👤', color:'#1C2B4A', sub:'매월 1일 초기화' },
+    { label:'지연 용돈', amount:300000, icon:'👤', color:'#7A9E87', sub:'매월 1일 초기화' },
+    { label:'고정비 합계', amount:908000, icon:'🏠', color:'#374151', sub:'월세·관리비·구독 등' },
+    { label:'카드 결제 예상', amount:820000, icon:'💳', color:'#F59E0B', sub:'현대·신한·카카오' },
+    { label:'저축 목표', amount:500000, icon:'🏦', color:'#7A9E87', sub:'비상금 적립' },
+  ];
+  const total = 2000000;
+  const allocated = items.slice(1).reduce((s,i)=>s+i.amount,0);
+  const free = total - allocated;
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', background:'#F4F6F8' }}>
+      <SubPageHeader title="전체 플랜 요약" onBack={onBack} />
+      <div className="view-content" style={{ padding:'0 16px', paddingBottom:100 }}>
+        {/* Summary donut-style */}
+        <div className="card" style={{ marginBottom:16, padding:'18px 20px' }}>
+          <p style={{ fontSize:12, color:'#9CA3AF', marginBottom:6 }}>월 예산 배분 현황</p>
+          <p style={{ fontSize:30, fontWeight:900, color:'#1C2B4A', letterSpacing:'-1px', marginBottom:4 }}>{fmt(total)}</p>
+          <div style={{ height:8, borderRadius:4, background:'#F3F4F6', overflow:'hidden', marginBottom:8 }}>
+            {[{w:(908000/total)*100,c:'#1C2B4A'},{w:(300000/total)*100,c:'#7A9E87'},{w:(820000/total)*100,c:'#F59E0B'},{w:(500000/total)*100,c:'#10B981'}].map((s,i)=>(
+              <div key={i} style={{ height:'100%', width:`${s.w}%`, background:s.c, display:'inline-block' }}/>
+            ))}
+          </div>
+          <div style={{ display:'flex', justifyContent:'space-between' }}>
+            <span style={{ fontSize:12, color:'#9CA3AF' }}>배분 완료 {fmt(allocated)}</span>
+            <span style={{ fontSize:12, fontWeight:700, color: free>=0?'#7A9E87':'#E8715A' }}>여유 {free>=0?'+':''}{fmt(free)}</span>
+          </div>
+        </div>
+
+        <SettingSection title="항목별 배분">
+          {items.map((item,i) => (
+            <SettingRow key={i} label={item.label} sub={item.sub} icon={item.icon} border={i<items.length-1}
+              right={<span style={{ fontSize:14, fontWeight:700, color:item.color }}>{fmt(item.amount)}</span>}/>
+          ))}
+        </SettingSection>
+
+        <div style={{ background:'#F9FAFB', borderRadius:16, padding:'14px 16px', border:'1px solid #E5E7EB' }}>
+          <p style={{ fontSize:12, color:'#9CA3AF', marginBottom:6 }}>💡 플랜 인사이트</p>
+          <p style={{ fontSize:13, color:'#374151', lineHeight:1.6 }}>고정비 비율이 예산의 <strong>45%</strong>를 차지하고 있어요. 절약 여지는 카드 결제 예상액인 <strong>{fmt(820000)}</strong>에서 생길 수 있어요.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── RESET SHEET (데이터 초기화 선택) ──────────────────────────────────────────
+function ResetSheet({ onClose, onConfirm }) {
+  const [options, setOptions] = React.useState({
+    history: false,
+    family: false,
+    assets: false,
+    security: false,
+  });
+
+  const toggle = (k) => setOptions(prev => ({ ...prev, [k]: !prev[k] }));
+  const isAny = Object.values(options).some(v => v);
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', padding:'0 20px 24px' }}>
+      <div style={{ width:40, height:4, background:'#E5E7EB', borderRadius:2, margin:'12px auto 24px' }}/>
+      
+      <div style={{ marginBottom:24 }}>
+        <p style={{ fontSize:20, fontWeight:800, color:'#111827', marginBottom:8 }}>데이터 초기화 🗑️</p>
+        <p style={{ fontSize:14, color:'#6B7280', lineHeight:1.5 }}>삭제할 데이터 범위를 선택해주세요.<br/>삭제된 데이터는 복구할 수 없습니다.</p>
+      </div>
+
+      <div style={{ flex:1, overflowY:'auto' }}>
+        {[
+          { id:'history', label:'지출 기록', sub:'모든 지출 내역 및 캘린더 메모', icon:'📝' },
+          { id:'family', label:'가족 설정', sub:'내 이름, 파트너 이름, 이번 달 예산', icon:'🏠' },
+          { id:'assets', label:'결제 수단', sub:'등록된 카드 정보 및 고정비 항목', icon:'💳' },
+          { id:'security', label:'보안 설정', sub:'프라이빗 월렛 PIN 번호 (1234로 초기화)', icon:'🔒' },
+        ].map(item => (
+          <div key={item.id} onClick={() => toggle(item.id)} style={{ 
+            display:'flex', alignItems:'center', gap:14, padding:'16px', borderRadius:16, 
+            background: options[item.id] ? '#F3F4F6' : 'white', 
+            border: options[item.id] ? '1.5px solid #1C2B4A' : '1.5px solid #F3F4F6',
+            marginBottom:12, cursor:'pointer', transition:'all .2s'
+          }}>
+            <span style={{ fontSize:24 }}>{item.icon}</span>
+            <div style={{ flex:1 }}>
+              <p style={{ fontSize:15, fontWeight:700, color:'#111827' }}>{item.label}</p>
+              <p style={{ fontSize:12, color:'#9CA3AF', marginTop:2 }}>{item.sub}</p>
+            </div>
+            <div style={{ 
+              width:22, height:22, borderRadius:6, border:'2px solid #D1D5DB',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              background: options[item.id] ? '#1C2B4A' : 'transparent',
+              borderColor: options[item.id] ? '#1C2B4A' : '#D1D5DB'
+            }}>
+              {options[item.id] && <span style={{ color:'white', fontSize:14, fontWeight:900 }}>✓</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display:'flex', gap:10, marginTop:20 }}>
+        <button onClick={() => onConfirm(true)} style={{ flex:1, padding:'16px 0', background:'#F3F4F6', color:'#374151', borderRadius:16, fontSize:15, fontWeight:700, border:'none', cursor:'pointer' }}>전체 초기화</button>
+        <button onClick={() => onConfirm(false, options)} disabled={!isAny} style={{ 
+          flex:2, padding:'16px 0', background:'linear-gradient(135deg,#1C2B4A,#2d4270)', color:'white', 
+          borderRadius:16, fontSize:15, fontWeight:700, border:'none', cursor:isAny?'pointer':'not-allowed', opacity:isAny?1:0.5,
+          boxShadow:'0 4px 14px rgba(28,43,74,.3)'
+        }}>선택 항목 삭제</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── SETTINGS VIEW (메인 메뉴) ────────────────────────────────────────────────
+function SettingsView({ onNav, onReset, inviteCode }) {
+  const [sub, setSub] = React.useState(null);
+  const [notifBudget, setNotifBudget] = React.useState(true);
+  const [notifSOS, setNotifSOS] = React.useState(true);
+  const [notifAI, setNotifAI] = React.useState(false);
+  const [pinOpen, setPinOpen] = React.useState(false);
+  const [newPin, setNewPin] = React.useState('');
+  const [budgetOpen, setBudgetOpen] = React.useState(false);
+  const [newBudget, setNewBudget] = React.useState('');
+  
+  const [resetSheetOpen, setResetSheetOpen] = React.useState(false);
+  const [resetVis, setResetVis] = React.useState(false);
+
+  const openReset = () => { setResetSheetOpen(true); setTimeout(() => setResetVis(true), 10); };
+  const closeReset = () => { setResetVis(false); setTimeout(() => setResetSheetOpen(false), 280); };
+
+  const handleResetAction = (all = false, selectedOptions = {}) => {
+    const msg = all ? "정말 모든 데이터를 삭제하고 처음으로 돌아갈까요? ⚠️" : "선택한 항목의 데이터를 삭제하시겠습니까?";
+    if (!confirm(msg)) return;
+
+    const keys = [];
+    if (all || selectedOptions.history) keys.push('smtm_transactions', 'smtm_calendar_notes');
+    if (all || selectedOptions.family) keys.push('smtm_myname', 'smtm_partner_name', 'smtm_my_allowance', 'smtm_partner_allowance', 'smtm_budget');
+    if (all || selectedOptions.assets) keys.push('smtm_cards', 'smtm_fixed_items', 'smtm_fixed_costs');
+    if (all || selectedOptions.security) keys.push('smtm_pin');
+    
+    if (all) {
+      localStorage.clear();
+    } else {
+      keys.forEach(k => localStorage.removeItem(k));
+    }
+
+    alert("초기화가 완료되었습니다. 앱을 재시작합니다.");
+    window.location.reload();
+  };
+
+  if (sub === 'allowance') return <AllowancePage onBack={()=>setSub(null)}/>;
+  if (sub === 'fixed')     return <FixedCostsPage onBack={()=>setSub(null)}/>;
+  if (sub === 'cards')     return <CardManagementPage onBack={()=>setSub(null)}/>;
+  if (sub === 'plan')      return <PlanSummaryPage onBack={()=>setSub(null)}/>;
+
+  return (
+    <div className="view-content" style={{ padding:'0 16px' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'52px 0 20px' }}>
+        <button onClick={()=>onNav('home')} style={{ width:36, height:36, borderRadius:'50%', background:'#F3F4F6', display:'flex', alignItems:'center', justifyContent:'center', border:'none', cursor:'pointer', flexShrink:0 }}><IcoChevLeft /></button>
+        <p style={{ fontSize:22, fontWeight:800, color:'#111827', letterSpacing:'-0.5px' }}>설정</p>
+      </div>
+
+      {/* 파트너 초대 코드 */}
+      <div style={{ background:'linear-gradient(135deg,#1C2B4A,#2d4270)', borderRadius:20, padding:'18px 20px', marginBottom:20, position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', top:-20, right:-20, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,.06)' }}/>
+        <div style={{ position:'absolute', bottom:-30, right:30, width:100, height:100, borderRadius:'50%', background:'rgba(122,158,135,.15)' }}/>
+        <p style={{ fontSize:11, color:'rgba(255,255,255,.6)', fontWeight:600, letterSpacing:1.2, marginBottom:8 }}>파트너 초대 코드</p>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+          <p style={{ fontSize:30, fontWeight:900, color:'white', letterSpacing:6 }}>{inviteCode}</p>
+          <button onClick={()=>{
+            navigator.clipboard?.writeText(inviteCode).catch(()=>{});
+            const el = document.getElementById('copy-toast');
+            if(el){ el.style.opacity='1'; setTimeout(()=>el.style.opacity='0',1500); }
+          }} style={{ padding:'6px 12px', borderRadius:10, background:'rgba(255,255,255,.15)', color:'white', fontSize:12, fontWeight:600, border:'none', cursor:'pointer', fontFamily:'inherit' }}>복사</button>
+        </div>
+        <p style={{ fontSize:11, color:'rgba(255,255,255,.5)', lineHeight:1.5 }}>이 코드를 파트너에게 공유하면<br/>같은 가계부에 함께 접속할 수 있어요</p>
+        <div id="copy-toast" style={{ position:'absolute', top:12, right:16, background:'rgba(122,158,135,.9)', color:'white', fontSize:11, fontWeight:600, padding:'5px 10px', borderRadius:8, opacity:0, transition:'opacity .3s' }}>복사됨 ✓</div>
+      </div>
+      <SettingSection title="핵심 기능">
+        <SettingRow label="부부 용돈 설정" sub="월 용돈 금액·초기화 기준일" icon="💰" border={true} onClick={()=>setSub('allowance')} right={<IcoChevR/>}/>
+        <SettingRow label="고정비 관리" sub="할부·구독·고정비용" icon="📋" border={true} onClick={()=>setSub('fixed')} right={<IcoChevR/>}/>
+        <SettingRow label="카드 관리" sub="카드 등록·한도·사용 현황" icon="💳" border={true} onClick={()=>setSub('cards')} right={<IcoChevR/>}/>
+        <SettingRow label="전체 플랜 요약" sub="예산 배분 현황 한눈에" icon="📊" border={false} onClick={()=>setSub('plan')} right={<IcoChevR/>}/>
+      </SettingSection>
+
+      {/* 예산 관리 */}
+      <SettingSection title="가족 예산 설정">
+        <SettingRow label="이번 달 예산 변경" sub={`현재 예산: ${fmt(parseInt(ls('smtm_budget')) || 2000000)}`} icon="💵" border={false} onClick={()=>setBudgetOpen(v=>!v)} right={<IcoChevR/>}/>
+        {budgetOpen && (
+          <div style={{ padding:'0 18px 16px' }}>
+            <p style={{ fontSize:12, color:'#9CA3AF', marginBottom:8 }}>새 예산 금액 (원)</p>
+            <div style={{ display:'flex', gap:8 }}>
+              <input type="text" placeholder="예: 2500000" value={newBudget} onChange={e=>setNewBudget(e.target.value.replace(/\D/g,''))}
+                style={{ flex:1, padding:'10px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:16, fontFamily:'inherit', outline:'none' }}
+                onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+              <button onClick={()=>{ if(newBudget){ lsSet('smtm_budget', newBudget); setNewBudget(''); setBudgetOpen(false); window.location.reload(); }}} style={{ padding:'0 16px', borderRadius:10, background:'#1C2B4A', color:'white', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'inherit' }}>저장</button>
+            </div>
+          </div>
+        )}
+      </SettingSection>
+
+      {/* SOS */}
+      <SettingSection title="SOS 결재">
+        <SettingRow label="SOS 채팅 바로가기" sub="파트너와 결재 요청·승인" icon="🆘" border={false}
+          onClick={()=>onNav('sos')}
+          right={<div style={{ display:'flex', alignItems:'center', gap:6 }}><span style={{ fontSize:11, color:'#E8715A', fontWeight:700, background:'#FFF5F3', padding:'2px 8px', borderRadius:10 }}>대기 1건</span><IcoChevR/></div>}/>
+      </SettingSection>
+
+      {/* 알림 */}
+      <SettingSection title="알림">
+        <SettingRow label="예산 초과 경고" sub="85% 이상 소비 시" icon="⚠️" border={true} right={<Toggle on={notifBudget} onChange={()=>setNotifBudget(v=>!v)}/>}/>
+        <SettingRow label="SOS 결재 요청" sub="파트너 요청 도착 시" icon="🔔" border={true} right={<Toggle on={notifSOS} onChange={()=>setNotifSOS(v=>!v)}/>}/>
+        <SettingRow label="AI 소비 코치" sub="주간 소비 분석 알림" icon="🤖" border={false} right={<Toggle on={notifAI} onChange={()=>setNotifAI(v=>!v)}/>}/>
+      </SettingSection>
+
+      {/* 프라이빗 월렛 */}
+      <SettingSection title="프라이빗 월렛">
+        <SettingRow label="PIN 변경" sub="현재 PIN: ****" icon="🔒" border={false} onClick={()=>setPinOpen(v=>!v)} right={<IcoChevR/>}/>
+        {pinOpen && (
+          <div style={{ padding:'0 18px 16px' }}>
+            <p style={{ fontSize:12, color:'#9CA3AF', marginBottom:8 }}>새 PIN 4자리 입력</p>
+            <div style={{ display:'flex', gap:8 }}>
+              <input type="password" maxLength={4} placeholder="새 PIN" value={newPin} onChange={e=>setNewPin(e.target.value.replace(/\D/g,''))}
+                style={{ flex:1, padding:'10px 12px', borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:16, fontFamily:'inherit', outline:'none', letterSpacing:6, textAlign:'center' }}
+                onFocus={e=>e.target.style.borderColor='#1C2B4A'} onBlur={e=>e.target.style.borderColor='#E5E7EB'}/>
+              <button onClick={()=>{ if(newPin.length===4){ lsSet('smtm_pin', newPin); setNewPin(''); setPinOpen(false); }}} style={{ padding:'0 16px', borderRadius:10, background:'#1C2B4A', color:'white', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', fontFamily:'inherit' }}>저장</button>
+            </div>
+          </div>
+        )}
+      </SettingSection>
+
+      {/* 테마 */}
+      <SettingSection title="테마">
+        {[{label:'라이트 모드',sub:'공동 가계부 기본',id:'light',icon:'☀️'},{label:'다크 모드',sub:'프리미엄 감성',id:'dark',icon:'🌙'},{label:'올드스쿨',sub:'레트로 스타일',id:'oldschool',icon:'📟'}].map((t,i,arr)=>(
+          <SettingRow key={t.id} label={t.label} sub={t.sub} icon={t.icon} border={i<arr.length-1}
+            right={t.id==='light'?<span style={{ fontSize:11, fontWeight:700, color:'#7A9E87', background:'#ECFDF5', padding:'3px 10px', borderRadius:20 }}>사용 중</span>:<span style={{ fontSize:11, color:'#D1D5DB' }}>곧 출시</span>}/>
+        ))}
+      </SettingSection>
+
+      {/* 데이터 */}
+      <SettingSection title="데이터">
+        <SettingRow label="데이터 내보내기" sub="CSV / Excel" icon="📤" border={true} onClick={()=>{}} right={<IcoChevR/>}/>
+        <SettingRow label="온보딩 다시 보기" sub="초기 설정 화면으로 이동" icon="🔄" border={true} onClick={onReset} right={<IcoChevR/>}/>
+        <SettingRow label="앱 초기화" sub="데이터 선택 삭제 및 전체 초기화" icon="🗑️" border={false} onClick={openReset} right={<span style={{ fontSize:13, color:'#E8715A', fontWeight:600, cursor:'pointer' }}>초기화</span>}/>
+      </SettingSection>
+
+      {resetSheetOpen && (
+        <>
+          <div className="overlay" style={{ opacity:resetVis?1:0, zIndex:1000 }} onClick={closeReset} />
+          <div className="sheet" style={{ 
+            transform:resetVis?'translateY(0)':'translateY(100%)', 
+            transition:'transform .28s cubic-bezier(.32,0,.67,0)', 
+            height:'auto', minHeight:'60%', zIndex:1001 
+          }}>
+            <ResetSheet onClose={closeReset} onConfirm={handleResetAction} />
+          </div>
+        </>
+      )}
+
+      <p style={{ textAlign:'center', fontSize:12, color:'#9CA3AF', padding:'4px 0 28px' }}>showmethemoney v4.0.0</p>
+    </div>
+  );
+}
+
+// ─── APP ─────────────────────────────────────────────────────────────────────
+function App() {
+  const [onboarded, setOnboarded] = React.useState(() => !!localStorage.getItem('smtm_onboarded'));
+  const [view, setView] = React.useState(() => localStorage.getItem('smtm_view') || 'home');
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+  const [sheetVis, setSheetVis] = React.useState(false);
+  const [sheetKey, setSheetKey] = React.useState(Date.now());
+  
+  const [transactions, setTransactions] = React.useState(loadTransactions());
+  const [notes, setNotes] = React.useState(loadCalNotes());
+  const [inviteCode] = React.useState(loadOrGenInviteCode());
+
+  React.useEffect(() => {
+    const room = inviteCode || 'demo_room';
+    const channel = supabase.channel(`budget_sync_${room}`);
+    
+    channel.on('broadcast', { event: 'sync_tx' }, (payload) => {
+      if (payload.payload && payload.payload.transactions) {
+        setTransactions(payload.payload.transactions);
+        lsSet('smtm_transactions', JSON.stringify(payload.payload.transactions));
+      }
+    });
+
+    channel.on('broadcast', { event: 'sync_notes' }, (payload) => {
+      if (payload.payload && payload.payload.notes) {
+        setNotes(payload.payload.notes);
+        lsSet('smtm_calendar_notes', JSON.stringify(payload.payload.notes));
+      }
+    });
+
+    channel.subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [inviteCode]);
+
+  const broadcastTx = (next) => {
+    const room = inviteCode || 'demo_room';
+    supabase.channel(`budget_sync_${room}`).send({
+      type: 'broadcast',
+      event: 'sync_tx',
+      payload: { transactions: next }
+    });
+  };
+
+  const broadcastNotes = (next) => {
+    const room = inviteCode || 'demo_room';
+    supabase.channel(`budget_sync_${room}`).send({
+      type: 'broadcast',
+      event: 'sync_notes',
+      payload: { notes: next }
+    });
+  };
+
+  const handleSaveTx = (tx) => {
+    const next = [tx, ...transactions].sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
+    setTransactions(next);
+    lsSet('smtm_transactions', JSON.stringify(next));
+    broadcastTx(next);
+  };
+
+  const handleDeleteTx = (id) => {
+    const next = transactions.filter(t => t.id !== id);
+    setTransactions(next);
+    lsSet('smtm_transactions', JSON.stringify(next));
+    broadcastTx(next);
+  };
+
+  const handleOnboardComplete = (data) => {
+    localStorage.setItem('smtm_onboarded', '1');
+    if (data.myName) localStorage.setItem('smtm_myname', data.myName);
+    setOnboarded(true);
+  };
+
+  const handleUpdateNotes = (next) => {
+    setNotes(next);
+    lsSet('smtm_calendar_notes', JSON.stringify(next));
+    broadcastNotes(next);
+  };
+
+  const navigate = (v) => { setView(v); localStorage.setItem('smtm_view', v); };
+  const openSheet = () => { setSheetKey(Date.now()); setSheetOpen(true); setTimeout(()=>setSheetVis(true), 10); };
+  const closeSheet = () => { setSheetVis(false); setTimeout(()=>setSheetOpen(false), 280); };
+
+  if (!onboarded) return (
+    <div className="phone-shell">
+      <OnboardingView inviteCode={inviteCode} onComplete={handleOnboardComplete} />
+    </div>
+  );
+
+  const views = {
+    home: <HomeView transactions={transactions} notes={notes} onUpdateNotes={handleUpdateNotes} onDeleteTx={handleDeleteTx} onOpenInput={openSheet} onNav={navigate}/>,
+    history: <HistoryView transactions={transactions} onDeleteTx={handleDeleteTx}/>,
+    private: <PrivateView transactions={transactions} onNav={navigate}/>,
+    sos: <SOSView/>,
+    settlement: <SettlementView transactions={transactions}/>,
+    settings: <SettingsView inviteCode={inviteCode} onNav={navigate} onReset={()=>{ localStorage.removeItem('smtm_onboarded'); localStorage.removeItem('smtm_view'); setView('home'); setOnboarded(false); }}/>,
+  };
+
+  return (
+    <div className="phone-shell">
+      <div style={{ flex:1, position:'relative', overflow:'hidden', display:'flex', flexDirection:'column' }}>
+        {views[view] || views.home}
+      </div>
+      <BottomNav active={view} onNav={navigate} onFab={openSheet} />
+      {sheetOpen && (
+        <>
+          <div className="overlay" style={{ opacity:sheetVis?1:0 }} onClick={closeSheet} />
+          <div className="sheet" style={{ transform:sheetVis?'translateY(0)':'translateY(100%)', transition:'transform .28s cubic-bezier(.32,0,.67,0)', height:'88%' }}>
+            <InputSheet key={sheetKey} onClose={closeSheet} onSave={handleSaveTx} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
 </html>

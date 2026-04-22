@@ -94,7 +94,9 @@ export function SettlementView({ onBack }) {
     try {
       const reader = new FileReader();
       reader.onload = async (ev) => {
-        const base64 = ev.target.result.split(',')[1];
+        const result = ev.target?.result;
+        if (typeof result !== 'string') return;
+        const base64 = result.split(',')[1];
         try {
           const res = await fetch('/api/ocr?mode=single', {
             method: 'POST',

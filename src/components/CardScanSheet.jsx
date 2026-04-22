@@ -11,6 +11,13 @@ import { ReceiptSplitter } from "./ReceiptSplitter.jsx";
 /** @returns {string} */
 const newId = () => Math.random().toString(36).slice(2);
 
+/**
+ * @param {Object} props
+ * @param {string} props.who
+ * @param {(v: import('../constants/index.js').TxItem | Omit<import('../constants/index.js').TxItem, 'id'>) => void} props.onSave
+ * @param {(v: (import('../constants/index.js').TxItem | Omit<import('../constants/index.js').TxItem, 'id'>)[]) => void} [props.onSaveAll]
+ * @param {() => void} props.onClose
+ */
 export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
   const { phase, data: rawItems, error: errMsg, cooldown, startScan, reset } = useOcrScan(runBulkOCR, 'bulk');
   
@@ -44,9 +51,11 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
   // PWA Share Target 이미지 처리
   useEffect(() => {
     if (processedRef.current) return;
+    // @ts-ignore
     const sharedFile = window.__sharedFile;
     if (sharedFile instanceof File) {
       processedRef.current = true;
+      // @ts-ignore
       window.__sharedFile = null;
       setScanFile(sharedFile);
       startScan(sharedFile);
@@ -114,12 +123,14 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
     onClose();
   };
 
+  /** @type {import('react').CSSProperties} */
   const overlayStyle = {
     position: 'fixed', inset: 0, zIndex: 1100,
     display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
     background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)',
   };
 
+  /** @type {import('react').CSSProperties} */
   const sheetStyle = {
     width: '100%', maxWidth: 480,
     background: 'var(--bg2)', borderRadius: '20px 20px 0 0',

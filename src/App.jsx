@@ -327,7 +327,7 @@ export default function App() {
     const subscription = db.subscribe(householdId, (key, value) => {
       updateSharedState(key, value);
     });
-    return () => { subscription.unsubscribe(); };
+    return () => { db.unsubscribe(householdId); };
   }, [setupDone, householdId, updateSharedState]);
 
   // Task 5-3: 온라인 복구 시 오프라인 큐 flush
@@ -359,7 +359,7 @@ export default function App() {
   
   // PWA Share Target 핸들러 (Task 2-3)
   useEffect(() => {
-    /** @param {any} e */
+    /** @param {CustomEvent<{ type: string, buf?: ArrayBuffer, name?: string, text?: string }>} e */
     const handleShare = (e) => {
       const { type, buf, name, text } = e.detail;
       if (type === 'SHARE_IMAGE' && buf) {

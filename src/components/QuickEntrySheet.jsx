@@ -18,7 +18,7 @@ import { runOCR } from "../utils/ocr.js";
  */
 
 /**
- * @param {any[]} tx
+ * @param {import('../constants/index.js').TxItem[]} tx
  * @returns {FrequentPattern[]}
  */
 function getFrequentPatterns(tx) {
@@ -46,10 +46,10 @@ function getFrequentPatterns(tx) {
 /**
  * @param {{ 
  *   names: Record<string, string>, 
- *   plan: any, 
- *   cards: any[], 
- *   tx: any[], 
- *   onSave: (v: any) => void, 
+ *   plan: import('../constants/index.js').Plan, 
+ *   cards: import('../constants/index.js').CardItem[], 
+ *   tx: import('../constants/index.js').TxItem[], 
+ *   onSave: (v: Omit<import('../constants/index.js').TxItem, 'id'>) => void, 
  *   onClose: () => void, 
  *   onCardScan: () => void,
  *   onSosRequest: () => void,

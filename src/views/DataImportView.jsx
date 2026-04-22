@@ -79,7 +79,7 @@ const analyze = (txs) => {
 };
 
 // recharts 툴팁 포맷
-/** @param {{ active?: boolean, payload?: any[], label?: any }} props */
+/** @param {{ active?: boolean, payload?: { value: number, payload: Object }[], label?: string | number }} props */
 const KrTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (

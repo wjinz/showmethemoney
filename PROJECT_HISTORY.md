@@ -14,9 +14,9 @@
     - `react-grid-layout` 기반의 모듈형 위젯 대시보드 시스템 구축.
     - Gemini AI를 활용한 초기 OCR(영수증 분석) 및 맞춤형 지출 피드백(Nudge) 로직 구현.
 - **관련 문서**:
-    - [uiux guide/plan.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/uiux%20guide/plan.md)
-    - [_history/research_2026-04-07_103534.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/research_2026-04-07_103534.md)
-    - [_history/HANDOVER_V3.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/HANDOVER_V3.md)
+    - [uiux guide/plan.md](uiux%20guide/plan.md)
+    - [_history/research_2026-04-07_103534.md](_history/research_2026-04-07_103534.md)
+    - [_history/HANDOVER_V3.md](_history/HANDOVER_V3.md)
 
 ---
 
@@ -28,8 +28,8 @@
     - 기존 JSONB 방식에서 정규화된 `transactions` 테이블로의 데이터 구조 전환 계획 확정.
     - 로컬 오프라인 큐와 Supabase Realtime 간의 동기화 안정성 검증.
 - **관련 문서**:
-    - [_history/research_2026-04-13_1154.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/research_2026-04-13_1154.md)
-    - [_history/research_2026-04-13_1221.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/research_2026-04-13_1221.md)
+    - [_history/research_2026-04-13_1154.md](_history/research_2026-04-13_1154.md)
+    - [_history/research_2026-04-13_1221.md](_history/research_2026-04-13_1221.md)
 
 ---
 
@@ -41,9 +41,9 @@
     - **근무표 파서**: 수기 입력 시 다양한 공백 문자를 지원하는 견고한 파서 개발 및 `M(낮12시)` 근무 코드 정식 반영.
     - **안정성 확보**: 이미지 대량 분석 시 발생하는 브라우저 캐시 및 렌더링 크래시 이슈 해결.
 - **관련 문서**:
-    - [_history/implementation_plan1955.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/implementation_plan1955.md)
-    - [_history/implementation_plan2013.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/implementation_plan2013.md)
-    - [_history/implementation_plan2052.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/implementation_plan2052.md)
+    - [_history/implementation_plan1955.md](_history/implementation_plan1955.md)
+    - [_history/implementation_plan2013.md](_history/implementation_plan2013.md)
+    - [_history/implementation_plan2052.md](_history/implementation_plan2052.md)
 
 ---
 
@@ -55,8 +55,8 @@
     - **보안 및 테마**: 3가지 테마(`dark`, `light`, `oldschool`) 시스템과 관리자 모드, 개인 정보 보호 기능을 비즈니스 로직에 완전 통합.
     - **미래 과제 도출**: 다중 자녀 지원, 데이터 무결성 강화를 위한 트랜잭션 처리 등 향후 고도화 로드맵 제시.
 - **관련 문서**:
-    - [_history/research_2026-04-15_1500.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/research_2026-04-15_1500.md)
-    - [PROJECT_HISTORY.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/PROJECT_HISTORY.md) (본 문서)
+    - [_history/research_2026-04-15_1500.md](_history/research_2026-04-15_1500.md)
+    - [PROJECT_HISTORY.md](PROJECT_HISTORY.md) (본 문서)
 
 ---
 
@@ -68,8 +68,9 @@
     - **네트워크 최적화**: 무손실 PNG 대신 WebP/JPEG(0.8) 가변 압축 도입으로 업로드 용량 50~70% 절감.
     - **데이터 복원력**: AI 파싱 실패 시에도 정규식을 통해 유효한 항목을 긁어내는 `extractBulkItemsFallback` 방어 레이어 구축.
     - **UX 자동화**: 영수증 스탬프 촬영 즉시 폼으로 진입, 최근 패턴 기반 '빠른 입력 칩' 연동으로 입력 피로도 최소화.
-    - [_history/plan_expense-entry_2026-04-16_0120.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/plan_expense-entry_2026-04-16_0120.md)
-    - [_history/implementation_plan0416_1435.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/_history/implementation_plan0416_1435.md)
+- **관련 문서**:
+    - [_history/plan_expense-entry_2026-04-16_0120.md](_history/plan_expense-entry_2026-04-16_0120.md)
+    - [_history/implementation_plan0416_1435.md](_history/implementation_plan0416_1435.md)
 
 ---
 
@@ -82,7 +83,82 @@
     - **UX 자동화**: 고정 지출 내역에서 `cardId`가 없는 현금 고정비용을 산출해 자동 제안값으로 노출시키는 편의성 제공.
     - **접근성 확장**: `SettingsView` 진입점 버튼 구성 및 `DashboardView` 메인 요약 위젯(`SettlementSummaryWidget`)으로 진입 장벽 완화.
 - **관련 문서**:
-    - [plan_2026-04-20_0932.md](file:///Users/dongpayuk/wjin_forwork/%EC%96%B4%ED%94%8C%EA%B0%9C%EB%B0%9C_%EC%9A%B0%EC%A7%84%EC%A7%80%EC%97%B0%20budget/plan_2026-04-20_0932.md)
+    - [_history/plan_2026-04-20_0932.md](_history/plan_2026-04-20_0932.md)
+    - [_history/plan_2026-04-20_2301.md](_history/plan_2026-04-20_2301.md)
+    - [_history/plan_final_2026-04-20.md](_history/plan_final_2026-04-20.md)
+
+---
+
+### 7단계: v4.0 디자인 핸드오프 구현 및 배포 (2026.04.22)
+**"Claude Design 핸드오프 → 단일 HTML 앱으로 즉시 배포"**
+- **주요 과제**: 디자인 도구에서 내보낸 HTML 프로토타입을 검토·수정하고 프로덕션 URL에 배포.
+- **핵심 성과**:
+    - **디자인 구현**: `showmethemoney-handoff.zip` 수령 후 `showmethemoney.html` 추출 및 JSX 문법 버그(잉여 `}`) 수정.
+    - **앱 구조**: CDN React 18 + Babel 기반 단일 HTML 파일 — 빌드 없이 동작. 6개 화면(홈/내역/프라이빗/SOS/정산/설정) + 공통 컴포넌트(BudgetRing, NumPad, TxRow, InputSheet 등) 완비.
+    - **배포 방식**: `.vercel/output/static/index.html` 구조 생성 후 `npx vercel deploy --prebuilt --prod` 실행.
+    - **현재 상태**: Mock 데이터 기반 정적 앱. Supabase 실연동은 차기 단계.
+- **배포 URL**: https://showmethemoney-eta.vercel.app
+- **관련 문서**:
+    - [_history/HANDOVER_V4_2026-04-22.md](_history/HANDOVER_V4_2026-04-22.md)
+
+---
+
+### 8단계: v4.0 상태 연동 및 기능 동적화 (2026.04.22)
+**"MOCK 데이터 제거 및 localStorage 기반 앱 로직 완성"**
+- **주요 과제**: 정적 HTML 디자인의 하드코딩된 MOCK 데이터를 걷어내고 실제 동작 가능한 가계부 시스템 구현.
+- **핵심 성과**:
+    - **상태 아키텍처 확립**: localStorage 기반으로 `smtm_transactions`, `smtm_budget` 등 전역 상태 관리 체계 도입 및 `loadTransactions` 등의 헬퍼 함수 구현.
+    - **크리티컬 버그 수정**: 과거 기간 통합 지출 합산 버그(`getCurrentMonthTx` 도입으로 당월 계산), `InputSheet` 폼 상태 초기화 누락, 날짜 계산 오차 해결.
+    - **주요 뷰 동적화**: `PrivateView` 내 시크릿 지출 동적 연동, `HomeView` 예산 링 동적 계산, `AllowanceCard` 및 `MiniCalendar`의 트랜잭션 실시간 동기화 연동.
+    - **안정성 강화**: `SOSView`, `SettlementView` 크래시 방지 및 설정(`FixedCostsPage`, `CardManagementPage`) 영속화 도입.
+- **관련 문서**:
+    - [_history/plan_functional_2026-04-22_0213.md](_history/plan_functional_2026-04-22_0213.md)
+
+---
+
+---
+
+### 9단계: v4.0 실시간 동기화 및 편의 기능 고도화 (2026.04.22)
+**"Supabase Realtime 기반 파트너 동기화 및 유연한 예산 관리 적용"**
+- **주요 과제**: 단일 기기 데모 수준의 한계를 넘어 실제 멀티 기기(파트너 간) 실시간 동기화 환경을 구축하고, 하드코딩되었던 예산 및 날짜 조회 기능을 동적으로 확장.
+- **핵심 성과**:
+    - **실시간 데이터 동기화**: `@supabase/supabase-js` CDN을 `showmethemoney.html`에 연동하고, `Channel Broadcast`를 통해 데이터베이스 수정 없이도 파트너 기기 간 실시간 지출 내역 동기화(sync_tx) 구현 완료.
+    - **유연한 시점 조회(Month Toggle)**: `MiniCalendar`와 `HistoryView` 내부에 각각의 기준월(viewDate) 상태를 관리하는 컨트롤(이전 달/다음 달 이동)을 추가하여 과거 지출 이력을 손쉽게 추적 가능.
+    - **가족 예산 편집**: `SettingsView` 내에 설정된 예산을 동적으로 수정하고 `localStorage`와 전역 앱 상태에 즉각 연동하는 폼(Form) 구축 완료.
+    - **타입 안정성 준수**: 모든 신규 데이터 로직을 추가하며 `any`나 `unknown` 사용 없이 엄격한 JSDoc 타입 원칙을 고수하여 버그 발생 원천 차단.
+- **핫픽스 (v4.0.1)**: 
+    - **버그 수정**: `SettingsView` 호출 시 `inviteCode` props 수신 누락으로 인한 설정창 진입 크래시 해결.
+    - **배포 최적화**: Vercel 빌드 시 기존 Vite 설정과의 충돌로 인한 404 에러를 방지하기 위해 `package.json` 빌드 스크립트를 단일 HTML 추출 방식으로 변경하여 배포 안정성 확보.
+- **배포 URL**: https://showmethemoney-eta.vercel.app
+- **관련 문서**:
+    - [_history/plan_functional_2026-04-22_0213.md](_history/plan_functional_2026-04-22_0213.md) (완료 마킹)
+
+---
+
+### 10단계: 데이터 초기화 기능 고도화 및 세분화 (2026.04.22)
+**"사용자 선택형 데이터 삭제 및 안전한 초기화 시스템 구축"**
+- **주요 과제**: 기존에 동작하지 않던 '앱 초기화' 기능을 구현하고, 전체 삭제 외에 특정 범주의 데이터만 선택하여 삭제할 수 있는 세분화된 관리 기능 도입.
+- **핵심 성과**:
+    - **ResetSheet 도입**: 하단 시트(Bottom Sheet) 인터페이스를 통해 지출 기록, 가족 설정, 결제 수단, 보안 설정 등 4가지 범주를 개별 선택할 수 있는 UI 구현.
+    - **범주별 정밀 삭제**: `localStorage`의 수십 개 키값을 범주별로 매핑하여 의도한 데이터만 정확히 제거하는 로직(`handleResetAction`) 완성.
+    - **안전 장치**: 삭제 전 최종 컨펌 팝업 및 초기화 후 자동 앱 리로드(`window.location.reload()`) 처리를 통해 데이터 정합성 유지.
+    - **UX 최적화**: PIN 초기화 시 시스템 기본값(1234)으로의 자동 복구 로직 연동.
+    - **버그 수정**: 지출 초기화 후에도 MOCK 데이터가 다시 로드되던 현상 수정 (`loadTransactions` 로직 보완).
+- **배포 URL**: https://showmethemoney-eta.vercel.app
+- **관련 문서**:
+    - [plan_reset_2026-04-22_1345.md](file:///Users/dongpayuk/.gemini/antigravity/brain/c2b55a4c-038c-4771-b7e8-79705e64d3ac/plan_reset_2026-04-22_1345.md)
+
+---
+
+### 11단계: 캘린더 일정 관리 고도화 및 실시간 동기화 (2026.04.22)
+**"지출 내역과 별개로 작동하는 독립적 일정 등록 시스템 구축"**
+- **주요 과제**: 단순 메모 기능을 넘어선 다중 일정 등록, 수정, 삭제 및 상태 관리 기능 도입.
+- **핵심 성과**:
+    - **데이터 구조 확장**: `smtm_calendar_notes`를 단순 문자열에서 객체 배열(`Array<{id, text, done}>`)로 확장하고 하위 호환 마이그레이션 적용.
+    - **일정 관리 UI**: 캘린더 하단에 일정 목록(ToDo List)을 렌더링하고, 인라인 추가/삭제/체크 및 클릭 수정 기능을 구현.
+    - **전역 상태화 및 동기화**: 일정을 `App` 전역 상태로 관리하고 Supabase Channel을 통한 실시간 동기화(`sync_notes`)를 적용하여 부부 간 실시간 공유 가능.
+    - **UX 디테일**: 일정이 있는 날짜에 노란색 점 표시 및 주말/오늘 날짜 강조 유지.
+- **배포 URL**: https://showmethemoney-eta.vercel.app
 
 ---
 
@@ -90,10 +166,11 @@
 
 | 분류 | 내용 | 위치 |
 |---|---|---|
-| **분석 (Research)** | 프로젝트 아키텍처, 기술 스택, 코드 리뷰 결과 | `research_*.md` |
-| **계획 (Plan)** | 신규 기능 설계, 마일스톤, UI/UX 디자인 가이드 | `plan_*.md`, `uiux guide/` |
-| **구현 (Implementation)** | 특정 기능의 상세 구현 내역 및 기술적 난제 해결 과정 | `implementation_plan*.md` |
-| **운영 (Management)** | 인계 문서, 배포 가이드, 메인 이력 기록 | `HANDOVER_*.md`, `DEPLOYMENT.md`, `README.md` |
+| **분석 (Research)** | 프로젝트 아키텍처, 기술 스택, 코드 리뷰 결과 | `_history/research_*.md` |
+| **계획 (Plan)** | 신규 기능 설계, 마일스톤, UI/UX 디자인 가이드 | `_history/plan_*.md`, `uiux guide/` |
+| **구현 (Implementation)** | 특정 기능의 상세 구현 내역 및 기술적 난제 해결 과정 | `_history/implementation_plan*.md` |
+| **운영 (Management)** | 인계 문서, 배포 가이드, 메인 이력 기록 | `_history/HANDOVER_*.md`, `DEPLOYMENT.md`, `PROJECT_HISTORY.md` |
 
 ---
 *본 마스터 히스토리는 신규 기술적 성취가 있을 때마다 최신화됩니다.*
+

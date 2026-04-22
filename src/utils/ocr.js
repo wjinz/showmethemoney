@@ -103,9 +103,9 @@ function buildHeaders() {
  * 캐시 관리 헬퍼: sessionStorage에서 OCR 결과를 읽거나 씁니다 (최대 5개 유지).
  * [개선] 알파벳 순서가 아닌 타임스탬프 기반 LRU 방식으로 오래된 캐시 삭제.
  * @param {File} file 
- * @param {string} mode 
- * @param {any} [result] - 결과가 있으면 저장, 없으면 조회
- * @returns {any|null}
+ * @param {'single' | 'bulk' | 'schedule'} mode 
+ * @param {Object} [result] - 결과가 있으면 저장, 없으면 조회
+ * @returns {Object|null}
  */
 function manageCache(file, mode, result) {
   const cachePrefix = 'ocr_cache_';
@@ -152,8 +152,8 @@ function manageCache(file, mode, result) {
 /**
  * 전역적인 OCR API 호출 헬퍼
  * @param {File} imageFile 
- * @param {string} mode 
- * @returns {Promise<any>}
+ * @param {'single' | 'bulk' | 'schedule'} mode 
+ * @returns {Promise<Object>}
  */
 async function callOcrApi(imageFile, mode) {
   // 1. 캐시 확인
@@ -168,10 +168,9 @@ async function callOcrApi(imageFile, mode) {
     body: JSON.stringify({ image: base64Image, mediaType, mode }),
   });
 
-  const data = await response.json();
+  const data = /** @type {Record<string, string | number | boolean | Object>} */ (await response.json());
   if (!response.ok) {
-    /** @type {any} */
-    const err = new Error(data.error ?? `서버 오류 (${response.status})`);
+    const err = /** @type {Error & {status?: number}} */ (new Error(data.error ?? `서버 오류 (${response.status})`));
     err.status = response.status; // 컴포넌트에서 429 감지용
     throw err;
   }

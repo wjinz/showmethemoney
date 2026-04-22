@@ -5,8 +5,8 @@ import { fmtS, fmtC } from '../../utils/helpers.js';
 
 /**
  * @param {{
- *   plan: { goals?: import('../../constants/index.js').GoalItem[] },
- *   setPlan?: (v: any) => void
+ *   plan: import('../../constants/index.js').Plan,
+ *   setPlan?: (v: import('../../constants/index.js').Plan) => void
  * }} props
  */
 export function GoalWidget({ plan, setPlan }) {

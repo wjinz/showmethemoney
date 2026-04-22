@@ -11,10 +11,10 @@ import { DNAMES } from "../../constants/index.js";
  *   setShowFull: (v: boolean) => void,
  *   filteredTx: import('../../constants/index.js').TxItem[],
  *   setEditItem: (v: import('../../constants/index.js').TxItem) => void,
- *   CAT: Record<string, any>,
- *   CATS: any[],
+ *   CAT: Record<string, { id: string, label: string, icon: string, color: string }>,
+ *   CATS: { id: string, label: string, icon: string, color: string }[],
  *   cards: import('../../constants/index.js').CardItem[],
- *   plan: any,
+ *   plan: import('../../constants/index.js').Plan,
  *   names: Record<string, string>
  * }} props
  */

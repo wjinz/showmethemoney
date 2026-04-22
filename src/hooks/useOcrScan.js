@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 /**
  * AI 사진 스캔을 위한 공통 로직 훅
- * @param {(file: File) => Promise<any>} ocrFn - 실행할 OCR 유틸 함수 (runBulkOCR, runScheduleOCR 등)
+ * @param {(file: File) => Promise<Object | Object[]>} ocrFn - 실행할 OCR 유틸 함수 (runBulkOCR, runScheduleOCR 등)
  * @param {string} scanKey - 스캔 인스턴스를 구분할 고유 키 (예: 'bulk', 'schedule')
  */
 export function useOcrScan(ocrFn, scanKey = 'default') {
