@@ -112,8 +112,8 @@ export function ParentKidsMgmtView() {
             onClick={() => setSelectedKidId(kid.id)}
             style={{
               padding: '8px 16px', borderRadius: 99, border: 'none', cursor: 'pointer',
-              background: selectedKidId === kid.id ? 'var(--gold)' : 'var(--bg2)',
-              color: selectedKidId === kid.id ? '#fff' : 'var(--text2)',
+              background: selectedKidId === kid.id ? 'var(--primary)' : 'var(--surface)',
+              color: selectedKidId === kid.id ? '#fff' : 'var(--text-muted)',
               fontWeight: 700, fontSize: 13,
             }}
           >
@@ -123,8 +123,8 @@ export function ParentKidsMgmtView() {
         <button
           onClick={() => setShowAddKid(true)}
           style={{
-            padding: '8px 14px', borderRadius: 99, border: '1px dashed var(--border2)',
-            background: 'transparent', color: 'var(--text3)', cursor: 'pointer', fontSize: 12,
+            padding: '8px 14px', borderRadius: 99, border: '1px dashed var(--border)',
+            background: 'transparent', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 12,
           }}
         >
           + 아이 추가
@@ -132,7 +132,7 @@ export function ParentKidsMgmtView() {
       </div>
 
       {kidsProfiles.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text3)', fontSize: 13 }}>
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-faint)', fontSize: 13 }}>
           아이를 추가하고 저금통 목표를 설정해보세요 🐷
         </div>
       )}
@@ -140,21 +140,21 @@ export function ParentKidsMgmtView() {
       {selectedKid && (
         <>
           {/* 목표 게이지 카드 */}
-          <div style={{ background: 'var(--bg2)', borderRadius: 16, padding: 20, marginBottom: 16, border: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 8 }}>🎯 {selectedKid.goal_label}</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text3)', marginBottom: 6 }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 20, marginBottom: 16, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>🎯 {selectedKid.goal_label}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>
               <span>{fmtC(selectedKid.saved_amount)}원</span>
               <span>{goalPct}%</span>
             </div>
-            <div style={{ height: 10, background: 'var(--bg3)', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: 10, background: 'var(--surface-alt)', borderRadius: 99, overflow: 'hidden' }}>
               <div style={{
                 height: '100%', borderRadius: 99,
                 width: `${goalPct}%`,
-                background: goalPct >= 100 ? '#22c55e' : 'var(--gold)',
+                background: goalPct >= 100 ? '#22c55e' : 'var(--primary)',
                 transition: 'width 0.5s ease',
               }} />
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6, textAlign: 'right' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6, textAlign: 'right' }}>
               목표: {fmtC(selectedKid.goal_amount)}원
             </div>
           </div>
@@ -162,14 +162,14 @@ export function ParentKidsMgmtView() {
           {/* 미션 목록 */}
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <span style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 700 }}>미션 목록</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>미션 목록</span>
               <button onClick={() => setShowAddMission(true)}
-                style={{ background: 'var(--goldD)', color: 'var(--gold)', border: 'none', borderRadius: 8, padding: '4px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ background: 'rgba(28,43,74,.08)', color: 'var(--primary)', border: 'none', borderRadius: 8, padding: '4px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                 + 미션 추가
               </button>
             </div>
             {missions.length === 0 && (
-              <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: '20px 0' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-faint)', textAlign: 'center', padding: '20px 0' }}>
                 미션을 추가해서 아이에게 동기를 주세요!
               </div>
             )}
@@ -178,25 +178,25 @@ export function ParentKidsMgmtView() {
               return (
                 <div key={m.id} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  background: 'var(--bg2)', borderRadius: 12, padding: '12px 14px', marginBottom: 8,
+                  background: 'var(--surface)', borderRadius: 12, padding: '12px 14px', marginBottom: 8,
                   border: `1px solid ${m.status === 'rewarded' ? 'rgba(34,197,94,0.3)' : 'var(--border)'}`,
                 }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{m.title}</div>
-                    <div style={{ fontSize: 11, color: isPenalty ? '#ef4444' : 'var(--gold)' }}>
+                    <div style={{ fontSize: 11, color: isPenalty ? '#ef4444' : 'var(--primary)' }}>
                       {isPenalty ? `${fmtC(m.reward)}원 차감` : `+${fmtC(m.reward)}원`}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
                     {m.status === 'pending' && (
                       <button onClick={() => handleMarkDone(m)}
-                        style={{ background: 'var(--bg3)', color: 'var(--text2)', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 11, cursor: 'pointer' }}>
+                        style={{ background: 'var(--surface-alt)', color: 'var(--text-muted)', border: 'none', borderRadius: 8, padding: '6px 10px', fontSize: 11, cursor: 'pointer' }}>
                         완료 확인
                       </button>
                     )}
                     {m.status === 'done' && (
                       <button onClick={() => handleReward(m)}
-                        style={{ background: 'var(--gold)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                        style={{ background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                         보상 지급
                       </button>
                     )}
@@ -240,31 +240,31 @@ function AddMissionSheet({ isOpen, onAdd, onClose }) {
           placeholder="미션 내용 (예: 레고 정리하기)"
           value={title}
           onChange={e => setTitle(e.target.value)}
-          style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }}
+          style={{ width: '100%', background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }}
         />
         <NumericInput
           placeholder="보상 금액 (원)"
           value={reward}
           onChange={v => setReward(v)}
-          style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }}
+          style={{ width: '100%', background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }}
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
           <button
             onClick={() => setIsPenalty(p => !p)}
             style={{
               padding: '6px 14px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
-              background: isPenalty ? '#ef4444' : 'var(--bg3)',
-              color: isPenalty ? '#fff' : 'var(--text3)',
+              background: isPenalty ? '#ef4444' : 'var(--surface-alt)',
+              color: isPenalty ? '#fff' : 'var(--text-faint)',
             }}
           >
             {isPenalty ? '⚠ 패널티 미션' : '패널티로 전환'}
           </button>
-          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
+          <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
             {isPenalty ? '차감 미션: 규칙 위반 시 저금 감소' : '보상 미션: 완료 시 저금 증가'}
           </span>
         </div>
         <button onClick={handleSubmit}
-          style={{ width: '100%', background: 'var(--gold)', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ width: '100%', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
           미션 등록
         </button>
       </div>
@@ -298,19 +298,19 @@ function AddKidSheet({ isOpen, onAdd, onClose }) {
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           {AVATAR_OPTIONS.map(a => (
             <button key={a} onClick={() => setAvatar(a)}
-              style={{ fontSize: 28, background: avatar === a ? 'var(--goldD)' : 'var(--bg3)', border: `2px solid ${avatar === a ? 'var(--gold)' : 'transparent'}`, borderRadius: 12, padding: 8, cursor: 'pointer' }}>
+              style={{ fontSize: 28, background: avatar === a ? 'rgba(28,43,74,.08)' : 'var(--surface-alt)', border: `2px solid ${avatar === a ? 'var(--primary)' : 'transparent'}`, borderRadius: 12, padding: 8, cursor: 'pointer' }}>
               {a}
             </button>
           ))}
         </div>
         <input placeholder="이름" value={name} onChange={e => setName(e.target.value)}
-          style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }} />
+          style={{ width: '100%', background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }} />
         <input placeholder="목표 (예: 레고 테크닉 42151)" value={goalLabel} onChange={e => setGoalLabel(e.target.value)}
-          style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }} />
+          style={{ width: '100%', background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }} />
         <NumericInput placeholder="목표 금액 (원)" value={goalAmount} onChange={v => setGoalAmount(v)}
-          style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 20, outline: 'none', boxSizing: 'border-box' }} />
+          style={{ width: '100%', background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', color: 'var(--text)', fontSize: 14, marginBottom: 20, outline: 'none', boxSizing: 'border-box' }} />
         <button onClick={handleSubmit}
-          style={{ width: '100%', background: 'var(--gold)', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ width: '100%', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
           추가
         </button>
       </div>

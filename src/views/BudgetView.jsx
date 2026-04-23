@@ -18,7 +18,7 @@ const TABS = [
 ];
 
 const iStyle = {
-  width: "100%", background: "var(--bg3)", border: "1px solid var(--border)",
+  width: "100%", background: "var(--surface-alt)", border: "1px solid var(--border)",
   borderRadius: 10, padding: "10px 13px", color: "var(--text)", fontSize: 14, outline: "none",
 };
 
@@ -113,90 +113,90 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 700 }}>고정비 합계: <span style={{color:"var(--blue)"}}>{fmtS(fTotal + iTotal)}원</span></div>
+        <div style={{ fontSize: 13, fontWeight: 700 }}>고정비 합계: <span style={{color:"#3B82F6"}}>{fmtS(fTotal + iTotal)}원</span></div>
         <button onClick={() => {
           if (showAdd) { setEditFId(null); setEditIId(null); }
           setShowAdd(!showAdd);
-        }} style={{ background: "var(--blue)", color: "#fff", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+        }} style={{ background: "#3B82F6", color: "#fff", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
           {showAdd ? "닫기" : "+ 지출 추가"}
         </button>
       </div>
 
       {showAdd && (
-        <Card style={{ padding: "18px", marginBottom: 16, border: "1px solid var(--blue)" }}>
+        <Card style={{ padding: "18px", marginBottom: 16, border: "1px solid #3B82F6" }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
             {[{ id: "f", l: "고정 정기지출" }, { id: "i", l: "카드 할부" }].map(t => (
-              <button key={t.id} onClick={() => setNewF({ ...newF, type: t.id })} style={{ flex: 1, padding: "8px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: (newF.type || "f") === t.id ? "var(--blueD)" : "var(--bg4)", color: (newF.type || "f") === t.id ? "var(--blue)" : "var(--text2)", border: `1px solid ${(newF.type || "f") === t.id ? "var(--blue)" : "var(--border)"}` }}>{t.l}</button>
+              <button key={t.id} onClick={() => setNewF({ ...newF, type: t.id })} style={{ flex: 1, padding: "8px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: (newF.type || "f") === t.id ? "#EFF6FF" : "#F3F4F6", color: (newF.type || "f") === t.id ? "#3B82F6" : "var(--text-muted)", border: `1px solid ${(newF.type || "f") === t.id ? "#3B82F6" : "var(--border)"}` }}>{t.l}</button>
             ))}
           </div>
 
           {(newF.type || "f") === "f" ? (
             <div>
-              <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>항목명</div><input value={newF.label} onChange={e => setNewF({ ...newF, label: e.target.value })} placeholder="예: 아파트 관리비" style={iStyle} /></div>
+              <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>항목명</div><input value={newF.label} onChange={e => setNewF({ ...newF, label: e.target.value })} placeholder="예: 아파트 관리비" style={iStyle} /></div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-                <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>월 금액</div><NumericInput value={newF.amount} onChange={v => setNewF({ ...newF, amount: v })} placeholder="0" style={{ ...iStyle, textAlign: "right" }} /></div>
-                <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>출금일</div><input type="number" value={newF.day} onChange={e => setNewF({ ...newF, day: e.target.value })} placeholder="일(1-31)" style={{ ...iStyle, textAlign: "right" }} /></div>
+                <div><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>월 금액</div><NumericInput value={newF.amount} onChange={v => setNewF({ ...newF, amount: v })} placeholder="0" style={{ ...iStyle, textAlign: "right" }} /></div>
+                <div><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>출금일</div><input type="number" value={newF.day} onChange={e => setNewF({ ...newF, day: e.target.value })} placeholder="일(1-31)" style={{ ...iStyle, textAlign: "right" }} /></div>
               </div>
-              <button onClick={addF} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "var(--blue)", color: "#fff", fontWeight: 700, fontSize: 13 }}>{editFId ? "수정 완료" : "고정비 등록"}</button>
+              <button onClick={addF} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "#3B82F6", color: "#fff", fontWeight: 700, fontSize: 13 }}>{editFId ? "수정 완료" : "고정비 등록"}</button>
             </div>
           ) : (
             <div>
-              <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>할부 항목</div><input value={newI.label} onChange={e => setNewI({ ...newI, label: e.target.value })} placeholder="예: 가전제품" style={iStyle} /></div>
+              <div style={{ marginBottom: 12 }}><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>할부 항목</div><input value={newI.label} onChange={e => setNewI({ ...newI, label: e.target.value })} placeholder="예: 가전제품" style={iStyle} /></div>
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 10, marginBottom: 10 }}>
-                <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>할부 원금</div><NumericInput value={newI.total} onChange={v => setNewI({ ...newI, total: v })} placeholder="0" style={iStyle} /></div>
-                <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>개월 수</div><input type="number" value={newI.months} onChange={e => setNewI({ ...newI, months: e.target.value })} placeholder="개월" style={{ ...iStyle, textAlign: "right" }} /></div>
+                <div><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>할부 원금</div><NumericInput value={newI.total} onChange={v => setNewI({ ...newI, total: v })} placeholder="0" style={iStyle} /></div>
+                <div><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>개월 수</div><input type="number" value={newI.months} onChange={e => setNewI({ ...newI, months: e.target.value })} placeholder="개월" style={{ ...iStyle, textAlign: "right" }} /></div>
               </div>
               <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
                 {[3, 6, 12, 24].map(m => (
-                  <button key={m} onClick={() => setNewI({ ...newI, months: String(m) })} style={{ flex: 1, padding: "5px 0", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer", background: newI.months === String(m) ? "var(--blueD)" : "var(--bg3)", color: newI.months === String(m) ? "var(--blue)" : "var(--text3)", border: `1px solid ${newI.months === String(m) ? "var(--blue)" : "var(--border)"}` }}>{m}개월</button>
+                  <button key={m} onClick={() => setNewI({ ...newI, months: String(m) })} style={{ flex: 1, padding: "5px 0", borderRadius: 8, fontSize: 10, fontWeight: 700, cursor: "pointer", background: newI.months === String(m) ? "#EFF6FF" : "var(--surface-alt)", color: newI.months === String(m) ? "#3B82F6" : "var(--text-faint)", border: `1px solid ${newI.months === String(m) ? "#3B82F6" : "var(--border)"}` }}>{m}개월</button>
                 ))}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
-                <div style={{ flex: 1, minWidth: "45%" }}><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>결제 카드</div><select value={newI.cardId} onChange={e => setNewI({ ...newI, cardId: e.target.value })} style={iStyle}>{cards.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
-                <div style={{ flex: 1, minWidth: "45%" }}><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>최초 결제일</div><input type="date" value={newI.date} onChange={e => setNewI({ ...newI, date: e.target.value })} style={iStyle} /></div>
+                <div style={{ flex: 1, minWidth: "45%" }}><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>결제 카드</div><select value={newI.cardId} onChange={e => setNewI({ ...newI, cardId: e.target.value })} style={iStyle}>{cards.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
+                <div style={{ flex: 1, minWidth: "45%" }}><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>최초 결제일</div><input type="date" value={newI.date} onChange={e => setNewI({ ...newI, date: e.target.value })} style={iStyle} /></div>
               </div>
-              <button onClick={addI} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "var(--blue)", color: "#fff", fontWeight: 700, fontSize: 13 }}>{editIId ? "수정 완료" : "할부 등록"}</button>
+              <button onClick={addI} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "#3B82F6", color: "#fff", fontWeight: 700, fontSize: 13 }}>{editIId ? "수정 완료" : "할부 등록"}</button>
             </div>
           )}
           {(editFId || editIId) && (
-            <button onClick={() => { setShowAdd(false); setEditFId(null); setEditIId(null); }} style={{ width: "100%", marginTop: 8, padding: "8px", borderRadius: 10, border: "1px solid var(--border)", background: "none", color: "var(--text3)", fontSize: 12 }}>취소</button>
+            <button onClick={() => { setShowAdd(false); setEditFId(null); setEditIId(null); }} style={{ width: "100%", marginTop: 8, padding: "8px", borderRadius: 10, border: "1px solid var(--border)", background: "none", color: "var(--text-faint)", fontSize: 12 }}>취소</button>
           )}
         </Card>
       )}
 
       {/* 리스트 출력 */}
       <Card style={{ padding: "12px 14px", marginBottom: 8 }}>
-        <div style={{fontSize:10, color:"var(--text3)", marginBottom:8}}>정기 지출</div>
+        <div style={{fontSize:10, color:"var(--text-faint)", marginBottom:8}}>정기 지출</div>
         {fixed && fixed.length > 0 ? fixed.map(f => (
           <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: "1px solid var(--border)", background: editFId === f.id ? "rgba(92,141,232,0.05)" : "none" }}>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>{f.name} <span style={{fontSize:10, color:"var(--text2)", fontWeight:400}}>(매달 {f.day}일)</span></div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{f.name} <span style={{fontSize:10, color:"var(--text-muted)", fontWeight:400}}>(매달 {f.day}일)</span></div>
             <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700 }}>
               {fmtS(f.amount)}원
               <button onClick={() => {
                 setEditFId(f.id); setShowAdd(true);
                 setNewF({ ...f, amount: Number(f.amount), type: "f" });
-              }} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--bg3)", border: "none", color: "var(--blue)", fontSize: 10, marginLeft: 8 }}>✏️</button>
-              <button onClick={() => delF(f.id)} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--bg3)", border: "none", color: "var(--red)", fontSize: 10, marginLeft: 4 }}>✕</button>
+              }} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-alt)", border: "none", color: "#3B82F6", fontSize: 10, marginLeft: 8 }}>✏️</button>
+              <button onClick={() => delF(f.id)} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-alt)", border: "none", color: "var(--danger)", fontSize: 10, marginLeft: 4 }}>✕</button>
             </div>
           </div>
-        )) : <div style={{fontSize:11, color:"var(--text3)", padding:"10px 0"}}>등록된 고정비가 없습니다.</div>}
+        )) : <div style={{fontSize:11, color:"var(--text-faint)", padding:"10px 0"}}>등록된 고정비가 없습니다.</div>}
       </Card>
       <Card style={{ padding: "12px 14px" }}>
-        <div style={{fontSize:10, color:"var(--text3)", marginBottom:8}}>카드 할부</div>
+        <div style={{fontSize:10, color:"var(--text-faint)", marginBottom:8}}>카드 할부</div>
         {install && install.length > 0 ? install.map(i => (
           <div key={i.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: "1px solid var(--border)", background: editIId === i.id ? "rgba(92,141,232,0.05)" : "none" }}>
-            <div><div style={{ fontSize: 13, fontWeight: 600 }}>{i.name}</div><div style={{fontSize:10, color:"var(--text2)"}}>{i.months}개월 · {i.date}</div></div>
+            <div><div style={{ fontSize: 13, fontWeight: 600 }}>{i.name}</div><div style={{fontSize:10, color:"var(--text-muted)"}}>{i.months}개월 · {i.date}</div></div>
             <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: "var(--pink)" }}>
               {fmtS(i.monthly)}원
               <button onClick={() => {
                 setEditIId(i.id); setShowAdd(true);
                 setNewF({ ...newF, type: "i" });
                 setNewI({ ...i, total: Number(i.total) });
-              }} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--bg3)", border: "none", color: "var(--blue)", fontSize: 10, marginLeft: 8 }}>✏️</button>
-              <button onClick={() => delI(i.id)} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--bg3)", border: "none", color: "var(--red)", fontSize: 10, marginLeft: 4 }}>✕</button>
+              }} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-alt)", border: "none", color: "#3B82F6", fontSize: 10, marginLeft: 8 }}>✏️</button>
+              <button onClick={() => delI(i.id)} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-alt)", border: "none", color: "var(--danger)", fontSize: 10, marginLeft: 4 }}>✕</button>
             </div>
           </div>
-        )) : <div style={{fontSize:11, color:"var(--text3)", padding:"10px 0"}}>등록된 할부 내역이 없습니다.</div>}
+        )) : <div style={{fontSize:11, color:"var(--text-faint)", padding:"10px 0"}}>등록된 할부 내역이 없습니다.</div>}
       </Card>
     </div>
   );
@@ -209,7 +209,7 @@ function BaselineTab({ plan, onGoToImport=undefined }) {
       <Card style={{ padding: "28px 20px", textAlign: "center", border: "1px dashed var(--border)" }}>
         <div style={{ fontSize: 36, marginBottom: 12 }}>📂</div>
         <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 15 }}>분석된 카드 데이터가 없어요</div>
-        <div style={{ fontSize: 12, color: "var(--text2)", marginBottom: 20, lineHeight: 1.7 }}>
+        <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20, lineHeight: 1.7 }}>
           데이터 메뉴에서 카드사 Excel 파일을 업로드하면<br/>
           지출 패턴을 분석해서 예산 초안을 자동으로 잡아드려요.
         </div>
@@ -224,21 +224,21 @@ function BaselineTab({ plan, onGoToImport=undefined }) {
   })).filter(c => c.amount > 0).sort((a, b) => b.amount - a.amount);
   return (
     <div>
-      <Card style={{ padding: "16px", marginBottom: 10, background: "var(--bg2)", border: "1px solid var(--green)" }}>
+      <Card style={{ padding: "16px", marginBottom: 10, background: "var(--surface)", border: "1px solid var(--success)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontSize: 11, color: "var(--green)", fontWeight: 700 }}>✓ 데이터 분석 완료</div>
+          <div style={{ fontSize: 11, color: "var(--success)", fontWeight: 700 }}>✓ 데이터 분석 완료</div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
           {[{ l: "분석 기간", v: `${months.length}개월` }, { l: "총 지출", v: fmtS(total) + "원" }, { l: "월평균", v: fmtS(avgMonthly) + "원" }].map(s => (
             <div key={s.l} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 9, color: "var(--text2)", marginBottom: 3 }}>{s.l}</div>
+              <div style={{ fontSize: 9, color: "var(--text-muted)", marginBottom: 3 }}>{s.l}</div>
               <div style={{ fontSize: 13, fontWeight: 800 }}>{s.v}</div>
             </div>
           ))}
         </div>
       </Card>
       <Card style={{ padding: "16px", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 지출 분석 상세</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14 }}>■ 지출 분석 상세</div>
         {catData.map(c => {
           const pct = total > 0 ? Math.round(c.amount / total * 100) : 0;
           return (
@@ -271,57 +271,57 @@ function IncomeTab({ plan, setPlan, fixed, install }) {
   return (
     <div>
       <Card style={{ padding: "18px", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ {plan?.isSolo ? "나의 월 실수령액" : "부부 월 실수령액"}</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14 }}>■ {plan?.isSolo ? "나의 월 실수령액" : "부부 월 실수령액"}</div>
         {plan?.isSolo ? (
           <NumericInput value={salary.husband} onChange={v => {
             update("salary", { ...salary, husband: v, wife: 0 });
           }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>남편</div><NumericInput value={salary.husband} onChange={v => {
+            <div><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>남편</div><NumericInput value={salary.husband} onChange={v => {
               update("salary", { ...salary, husband: v });
             }} style={{...iStyle, textAlign: "right"}} placeholder="0" /></div>
-            <div><div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>아내</div><NumericInput value={salary.wife} onChange={v => {
+            <div><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>아내</div><NumericInput value={salary.wife} onChange={v => {
               update("salary", { ...salary, wife: v });
             }} style={{...iStyle, textAlign: "right"}} placeholder="0" /></div>
           </div>
         )}
-        <div style={{ marginTop: 12, fontSize: 14, fontWeight: 800 }}>합계: <span style={{ color: "var(--green)" }}>{fmtS(monthlyIncome)}원</span></div>
+        <div style={{ marginTop: 12, fontSize: 14, fontWeight: 800 }}>합계: <span style={{ color: "var(--success)" }}>{fmtS(monthlyIncome)}원</span></div>
       </Card>
       
       <Card style={{ padding: "18px", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 월 저축 목표</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14 }}>■ 월 저축 목표</div>
         <NumericInput value={salary.savingsTarget} onChange={v => {
           update("salary", { ...salary, savingsTarget: v });
         }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
-        {monthlyIncome > 0 && <div style={{ marginTop: 8, fontSize: 11, color: "var(--text3)" }}>저축률: {Math.round(monthlySavingTarget / monthlyIncome * 100)}%</div>}
+        {monthlyIncome > 0 && <div style={{ marginTop: 8, fontSize: 11, color: "var(--text-faint)" }}>저축률: {Math.round(monthlySavingTarget / monthlyIncome * 100)}%</div>}
       </Card>
 
       <Card style={{ padding: "18px", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 부부 개별 용돈 설정</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14 }}>■ 부부 개별 용돈 설정</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <div>
-            <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>남편 용돈</div>
+            <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>남편 용돈</div>
             <NumericInput value={allowance.husband} onChange={v => {
               update("allowance", { ...allowance, husband: v });
             }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
           </div>
           <div>
-            <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 4 }}>아내 용돈</div>
+            <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>아내 용돈</div>
             <NumericInput value={allowance.wife} onChange={v => {
               update("allowance", { ...allowance, wife: v });
             }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
           </div>
         </div>
-        <div style={{ marginTop: 12, fontSize: 14, fontWeight: 800 }}>용돈 합계: <span style={{ color: "var(--gold)" }}>{fmtS(allowanceTotal)}원</span></div>
+        <div style={{ marginTop: 12, fontSize: 14, fontWeight: 800 }}>용돈 합계: <span style={{ color: "var(--primary)" }}>{fmtS(allowanceTotal)}원</span></div>
       </Card>
 
-      <div style={{ background: monthlyAvail >= 0 ? "var(--bg2)" : "var(--redD)", border: "1px solid var(--border)", borderRadius: 14, padding: "16px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}><span style={{ color: "var(--text2)" }}>월 실수령액</span><span style={{ fontWeight: 600 }}>{fmtS(monthlyIncome)}원</span></div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}><span style={{ color: "var(--text2)" }}>저축/고정비/용돈</span><span style={{ fontWeight: 600 }}>-{fmtS(monthlySavingTarget + monthlyFixed + allowanceTotal)}원</span></div>
+      <div style={{ background: monthlyAvail >= 0 ? "var(--surface)" : "var(--danger-bg1)", border: "1px solid var(--border)", borderRadius: 14, padding: "16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}><span style={{ color: "var(--text-muted)" }}>월 실수령액</span><span style={{ fontWeight: 600 }}>{fmtS(monthlyIncome)}원</span></div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}><span style={{ color: "var(--text-muted)" }}>저축/고정비/용돈</span><span style={{ fontWeight: 600 }}>-{fmtS(monthlySavingTarget + monthlyFixed + allowanceTotal)}원</span></div>
         <div style={{ borderTop: "1px solid var(--border)", paddingTop: 10, marginTop: 4, display: "flex", justifyContent: "space-between" }}>
           <span style={{ fontWeight: 700 }}>이달의 생활비(변동 예산)</span>
-          <span style={{ fontWeight: 800, fontSize: 15, color: "var(--gold)" }}>{fmtS(monthlyAvail)}원/월</span>
+          <span style={{ fontWeight: 800, fontSize: 15, color: "var(--primary)" }}>{fmtS(monthlyAvail)}원/월</span>
         </div>
       </div>
     </div>
@@ -390,25 +390,25 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
 
   return (
     <div>
-      <Card style={{ padding: "18px", marginBottom: 14, background: "var(--bg2)", border: "1px solid var(--border)" }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 10 }}>■ 지출 한도 설정</div>
+      <Card style={{ padding: "18px", marginBottom: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>■ 지출 한도 설정</div>
 
         {/* 프리셋 버튼 */}
         <div style={{ display: "flex", gap: 5, marginBottom: 8 }}>
           {PRESET_UTILS.map(v => (
             <button key={v} onClick={() => setUtil(v)} style={{
               flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer",
-              border: `1px solid ${(!customUtil && utilTarget === v) ? "var(--gold)" : "var(--border)"}`,
-              background: (!customUtil && utilTarget === v) ? "var(--goldD)" : "var(--bg3)",
-              color: (!customUtil && utilTarget === v) ? "var(--gold)" : "var(--text2)",
+              border: `1px solid ${(!customUtil && utilTarget === v) ? "var(--primary)" : "var(--border)"}`,
+              background: (!customUtil && utilTarget === v) ? "rgba(28,43,74,.08)" : "var(--surface-alt)",
+              color: (!customUtil && utilTarget === v) ? "var(--primary)" : "var(--text-muted)",
               transition: "all .2s"
             }}>{v}%</button>
           ))}
           <button onClick={() => setCustomUtil(true)} style={{
             flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer",
-            border: `1px solid ${customUtil ? "var(--blue)" : "var(--border)"}`,
-            background: customUtil ? "var(--blueD)" : "var(--bg3)",
-            color: customUtil ? "var(--blue)" : "var(--text2)",
+            border: `1px solid ${customUtil ? "#3B82F6" : "var(--border)"}`,
+            background: customUtil ? "#EFF6FF" : "var(--surface-alt)",
+            color: customUtil ? "#3B82F6" : "var(--text-muted)",
             transition: "all .2s"
           }}>직접</button>
         </div>
@@ -416,34 +416,34 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
         {/* 커스텀 슬라이더 */}
         {customUtil && (
           <div style={{ marginBottom: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text2)", marginBottom: 4 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>
               <span>지출 한도</span>
-              <span style={{ color: "var(--gold)", fontWeight: 700 }}>{utilTarget}%</span>
+              <span style={{ color: "var(--primary)", fontWeight: 700 }}>{utilTarget}%</span>
             </div>
             <input
               type="range" min={50} max={100} step={5}
               value={utilTarget}
               onChange={e => setPlan(p => ({ ...p, utilizationTarget: parseInt(e.target.value) }))}
-              style={{ width: "100%", accentColor: "var(--gold)" }}
+              style={{ width: "100%", accentColor: "var(--primary)" }}
             />
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--text3)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--text-faint)" }}>
               <span>50%</span><span>100%</span>
             </div>
           </div>
         )}
 
         {/* 예산 요약 */}
-        <div style={{ background: "var(--bg3)", borderRadius: 10, padding: "10px 12px", marginBottom: 14, fontSize: 12 }}>
+        <div style={{ background: "var(--surface-alt)", borderRadius: 10, padding: "10px 12px", marginBottom: 14, fontSize: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <span style={{ color: "var(--text2)" }}>변동비 가용액</span>
+            <span style={{ color: "var(--text-muted)" }}>변동비 가용액</span>
             <span style={{ fontWeight: 600 }}>{fmtS(monthlyAvailRaw)}원</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ color: "var(--text2)" }}>AI 배분 한도 ({utilTarget}%)</span>
-            <span style={{ fontWeight: 800, color: "var(--gold)" }}>{fmtS(monthlyAvail)}원</span>
+            <span style={{ color: "var(--text-muted)" }}>AI 배분 한도 ({utilTarget}%)</span>
+            <span style={{ fontWeight: 800, color: "var(--primary)" }}>{fmtS(monthlyAvail)}원</span>
           </div>
           {utilTarget < 100 && (
-            <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 5 }}>
+            <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 5 }}>
               버퍼: {fmtS(monthlyAvailRaw - monthlyAvail)}원 (예비비 성격)
             </div>
           )}
@@ -451,13 +451,13 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
            <div>
             <div style={{ fontSize: 13, fontWeight: 700 }}>총 집행 예정 예산</div>
-            <div style={{ fontSize: 11, color: "var(--gold)", fontWeight: 800, marginTop: 4 }}>{fmtS(totalBudget)}원 <span style={{fontSize:9, color:"var(--text3)", fontWeight:400}}>/ {fmtS(monthlyAvail)}원</span></div>
+            <div style={{ fontSize: 11, color: "var(--primary)", fontWeight: 800, marginTop: 4 }}>{fmtS(totalBudget)}원 <span style={{fontSize:9, color:"var(--text-faint)", fontWeight:400}}>/ {fmtS(monthlyAvail)}원</span></div>
            </div>
-          <button onClick={() => setEditMode(!editMode)} style={{ background: editMode ? "var(--gold)" : "var(--bg3)", border: "1px solid var(--border)", borderRadius: 8, padding: "5px 12px", fontSize: 11, cursor: "pointer", color: editMode ? "#fff" : "var(--text2)", fontWeight: 700 }}>{editMode ? "저장" : "예산 편집"}</button>
+          <button onClick={() => setEditMode(!editMode)} style={{ background: editMode ? "var(--primary)" : "var(--surface-alt)", border: "1px solid var(--border)", borderRadius: 8, padding: "5px 12px", fontSize: 11, cursor: "pointer", color: editMode ? "#fff" : "var(--text-muted)", fontWeight: 700 }}>{editMode ? "저장" : "예산 편집"}</button>
         </div>
 
         {/* 인터랙티브 스택 바 (Unallocated 포함) */}
-        <div style={{ height: 36, width: "100%", background: "var(--bg4)", borderRadius: 12, overflow: "hidden", display: "flex", marginBottom: 12, border: "1px solid var(--border)" }}>
+        <div style={{ height: 36, width: "100%", background: "#F3F4F6", borderRadius: 12, overflow: "hidden", display: "flex", marginBottom: 12, border: "1px solid var(--border)" }}>
           {CATS.map(c => {
             const val = budgets[c.id] || 0;
             const pct = monthlyAvail > 0 ? (val / monthlyAvail * 100) : 0;
@@ -468,30 +468,30 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
               </div>
             );
           })}
-          {unallocated > 0 && <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text3)" }}>미배분</div>}
+          {unallocated > 0 && <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-faint)" }}>미배분</div>}
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10 }}>
-          <span style={{ color: unallocated < 0 ? "var(--red)" : "var(--green)" }}>{unallocated < 0 ? `한도 초과: ${fmtS(Math.abs(unallocated))}원` : `남은 예산: ${fmtS(unallocated)}원`}</span>
-          <span style={{ color: "var(--text3)" }}>총 가용: {fmtS(monthlyAvail)}원</span>
+          <span style={{ color: unallocated < 0 ? "var(--danger)" : "var(--success)" }}>{unallocated < 0 ? `한도 초과: ${fmtS(Math.abs(unallocated))}원` : `남은 예산: ${fmtS(unallocated)}원`}</span>
+          <span style={{ color: "var(--text-faint)" }}>총 가용: {fmtS(monthlyAvail)}원</span>
         </div>
       </Card>
 
       {!aiResult && (
-        <Card style={{ padding: "16px", marginBottom: 14, background: "var(--bg3)", border: "1px dashed var(--border)" }}>
+        <Card style={{ padding: "16px", marginBottom: 14, background: "var(--surface-alt)", border: "1px dashed var(--border)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: 12, fontWeight: 700 }}>🤖 AI에게 예산 추천받기</div>
-            <button onClick={runAI} disabled={aiLoading} style={{ background: "var(--gold)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{aiLoading ? "분석 중..." : "추천 시작"}</button>
+            <button onClick={runAI} disabled={aiLoading} style={{ background: "var(--primary)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{aiLoading ? "분석 중..." : "추천 시작"}</button>
           </div>
         </Card>
       )}
 
       {aiResult && (
-        <Card style={{ padding: "16px", marginBottom: 14, background: "var(--greenD)1a", border: "1px solid var(--green)" }}>
-          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4, color: "var(--green)" }}>✨ AI 추천 결과</div>
-          <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 12 }}>{aiResult.tip}</div>
+        <Card style={{ padding: "16px", marginBottom: 14, background: "var(--success-bg1)1a", border: "1px solid var(--success)" }}>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 4, color: "var(--success)" }}>✨ AI 추천 결과</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>{aiResult.tip}</div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => { setBudgets(b => ({ ...b, ...aiResult.budgets })); setAiResult(null); }} style={{ flex: 1, background: "var(--green)", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 12, fontWeight: 700 }}>전체 적용</button>
+            <button onClick={() => { setBudgets(b => ({ ...b, ...aiResult.budgets })); setAiResult(null); }} style={{ flex: 1, background: "var(--success)", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 12, fontWeight: 700 }}>전체 적용</button>
             <button onClick={() => setAiResult(null)} style={{ padding: "10px", background: "none", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}>취소</button>
           </div>
         </Card>
@@ -510,8 +510,8 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
           return (
             <div key={c.id} style={{
               marginBottom: 10,
-              background: "var(--bg2)",
-              border: `1px solid ${isOver ? "var(--red)" : "var(--border)"}`,
+              background: "var(--surface)",
+              border: `1px solid ${isOver ? "var(--danger)" : "var(--border)"}`,
               borderRadius: 14,
               padding: "12px 14px",
             }}>
@@ -525,23 +525,23 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <NumericInput value={budgets[c.id]} onChange={v => {
                       setBudgets(prev => ({ ...prev, [c.id]: v }));
-                    }} style={{ width: 100, background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: 8, padding: "7px 10px", fontSize: 13, textAlign: "right", color: "var(--text)", fontWeight: 700 }} />
-                    <span style={{ fontSize: 11, color: "var(--text2)" }}>원</span>
+                    }} style={{ width: 100, background: "#F3F4F6", border: "1px solid var(--border)", borderRadius: 8, padding: "7px 10px", fontSize: 13, textAlign: "right", color: "var(--text)", fontWeight: 700 }} />
+                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>원</span>
                   </div>
                 ) : (
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontSize: 14, fontWeight: 800 }}>{fmtS(spent)}원</div>
-                    <div style={{ fontSize: 10, color: "var(--text3)" }}>/ {fmtS(budget)}원</div>
+                    <div style={{ fontSize: 10, color: "var(--text-faint)" }}>/ {fmtS(budget)}원</div>
                   </div>
                 )}
               </div>
 
               {/* 진행 바 */}
-              <div style={{ height: 6, borderRadius: 4, background: "var(--bg4)", overflow: "hidden", marginBottom: 6 }}>
+              <div style={{ height: 6, borderRadius: 4, background: "#F3F4F6", overflow: "hidden", marginBottom: 6 }}>
                 <div style={{
                   height: "100%",
                   width: `${spentPct}%`,
-                  background: isOver ? "var(--red)" : spentPct > 80 ? "var(--gold)" : c.color,
+                  background: isOver ? "var(--danger)" : spentPct > 80 ? "var(--primary)" : c.color,
                   borderRadius: 4,
                   transition: "width .5s ease",
                 }} />
@@ -550,8 +550,8 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
               {/* 하단 요약 */}
               {!editMode && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10 }}>
-                  <span style={{ color: "var(--text3)" }}>사용 {spentPct}%</span>
-                  <span style={{ color: isOver ? "var(--red)" : remaining > 0 ? "var(--green)" : "var(--text3)", fontWeight: 600 }}>
+                  <span style={{ color: "var(--text-faint)" }}>사용 {spentPct}%</span>
+                  <span style={{ color: isOver ? "var(--danger)" : remaining > 0 ? "var(--success)" : "var(--text-faint)", fontWeight: 600 }}>
                     {budget === 0 ? "예산 미설정" : isOver ? `초과 ${fmtS(Math.abs(remaining))}원` : `남은 예산 ${fmtS(remaining)}원`}
                   </span>
                 </div>
@@ -608,8 +608,8 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
         <div style={{ fontSize: 32, marginBottom: 12 }}>💰</div>
         <div style={{ fontWeight: 700, marginBottom: 8 }}>수입을 먼저 입력해주세요</div>
         <button onClick={() => onTabChange("income")} style={{
-          padding: "10px 20px", borderRadius: 10, border: "1px solid var(--gold)",
-          background: "var(--goldD)", color: "var(--gold)", fontWeight: 700, fontSize: 13, cursor: "pointer",
+          padding: "10px 20px", borderRadius: 10, border: "1px solid var(--primary)",
+          background: "rgba(28,43,74,.08)", color: "var(--primary)", fontWeight: 700, fontSize: 13, cursor: "pointer",
         }}>수입/저축 탭으로 →</button>
       </Card>
     );
@@ -617,10 +617,10 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
 
   const FlowRow = ({ label, value, color = "var(--text)", sub = "" }) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid var(--border)" }}>
-      <span style={{ fontSize: 12, color: "var(--text2)" }}>{label}</span>
+      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{label}</span>
       <div style={{ textAlign: "right" }}>
         <span style={{ fontSize: 13, fontWeight: 700, color }}>{fmtS(value)}원</span>
-        {sub && <div style={{ fontSize: 10, color: "var(--text3)" }}>{sub}</div>}
+        {sub && <div style={{ fontSize: 10, color: "var(--text-faint)" }}>{sub}</div>}
       </div>
     </div>
   );
@@ -630,30 +630,30 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
       {/* 섹션 1: 월 현금 흐름 */}
       <Card style={{ padding: "16px", marginBottom: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontSize: 11, color: "var(--text2)" }}>■ 월 현금 흐름</div>
-          <button onClick={() => onTabChange("income")} style={{ fontSize: 10, color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}>수정 →</button>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>■ 월 현금 흐름</div>
+          <button onClick={() => onTabChange("income")} style={{ fontSize: 10, color: "var(--text-faint)", background: "none", border: "none", cursor: "pointer" }}>수정 →</button>
         </div>
-        <FlowRow label="월 실수령액" value={income} color="var(--green)" />
-        <FlowRow label="저축 목표" value={-savings} color="var(--blue)" sub={`저축률 ${income > 0 ? Math.round(savings / income * 100) : 0}%`} />
+        <FlowRow label="월 실수령액" value={income} color="var(--success)" />
+        <FlowRow label="저축 목표" value={-savings} color="#3B82F6" sub={`저축률 ${income > 0 ? Math.round(savings / income * 100) : 0}%`} />
         <FlowRow label="고정비 + 할부" value={-fixedTotal} color="var(--text)" />
-        <FlowRow label="부부 개별 용돈" value={-allowanceTotal} color="var(--gold)" />
+        <FlowRow label="부부 개별 용돈" value={-allowanceTotal} color="var(--primary)" />
         {utilTarget < 100 && (
-          <FlowRow label={`예비 버퍼 (${100 - utilTarget}%)`} value={-buffer} color="var(--text3)" />
+          <FlowRow label={`예비 버퍼 (${100 - utilTarget}%)`} value={-buffer} color="var(--text-faint)" />
         )}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0 2px" }}>
           <span style={{ fontSize: 13, fontWeight: 700 }}>이달의 생활비 ({utilTarget}% 한도)</span>
-          <span style={{ fontSize: 16, fontWeight: 800, color: "var(--gold)" }}>{fmtS(avail)}원</span>
+          <span style={{ fontSize: 16, fontWeight: 800, color: "var(--primary)" }}>{fmtS(avail)}원</span>
         </div>
       </Card>
 
       {/* 섹션 2: 이달 예산 소진 */}
       <Card style={{ padding: "16px", marginBottom: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontSize: 11, color: "var(--text2)" }}>■ 이달 예산 소진 현황</div>
-          <button onClick={() => onTabChange("budget")} style={{ fontSize: 10, color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}>상세 →</button>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>■ 이달 예산 소진 현황</div>
+          <button onClick={() => onTabChange("budget")} style={{ fontSize: 10, color: "var(--text-faint)", background: "none", border: "none", cursor: "pointer" }}>상세 →</button>
         </div>
         {thisMonthTx.length === 0 ? (
-          <div style={{ fontSize: 12, color: "var(--text3)", padding: "8px 0" }}>이달 지출 내역이 없어요</div>
+          <div style={{ fontSize: 12, color: "var(--text-faint)", padding: "8px 0" }}>이달 지출 내역이 없어요</div>
         ) : (
           <>
             {CATS.map(c => {
@@ -666,12 +666,12 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
                 <div key={c.id} style={{ marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
                     <span>{c.icon} {c.label}</span>
-                    <span style={{ color: isOver ? "var(--red)" : "var(--text2)" }}>
+                    <span style={{ color: isOver ? "var(--danger)" : "var(--text-muted)" }}>
                       {fmtS(spent)} / {fmtS(budget)}원
                     </span>
                   </div>
-                  <div style={{ height: 4, borderRadius: 2, background: "var(--bg4)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pct}%`, background: isOver ? "var(--red)" : pct > 80 ? "var(--gold)" : c.color, borderRadius: 2 }} />
+                  <div style={{ height: 4, borderRadius: 2, background: "#F3F4F6", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: isOver ? "var(--danger)" : pct > 80 ? "var(--primary)" : c.color, borderRadius: 2 }} />
                   </div>
                 </div>
               );
@@ -679,12 +679,12 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
             <div style={{ borderTop: "1px solid var(--border)", paddingTop: 10, marginTop: 4 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
                 <span style={{ fontWeight: 700 }}>전체</span>
-                <span style={{ fontWeight: 700, color: totalSpent > totalBudget ? "var(--red)" : "var(--gold)" }}>
+                <span style={{ fontWeight: 700, color: totalSpent > totalBudget ? "var(--danger)" : "var(--primary)" }}>
                   {fmtS(totalSpent)} / {fmtS(totalBudget)}원 ({totalPct}%)
                 </span>
               </div>
-              <div style={{ height: 6, borderRadius: 3, background: "var(--bg4)", overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${totalPct}%`, background: totalSpent > totalBudget ? "var(--red)" : "var(--gold)", borderRadius: 3 }} />
+              <div style={{ height: 6, borderRadius: 3, background: "#F3F4F6", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${totalPct}%`, background: totalSpent > totalBudget ? "var(--danger)" : "var(--primary)", borderRadius: 3 }} />
               </div>
             </div>
           </>
@@ -695,12 +695,12 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
       {topFixed.length > 0 && (
         <Card style={{ padding: "16px", marginBottom: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 11, color: "var(--text2)" }}>■ 고정비 TOP {topFixed.length}</div>
-            <button onClick={() => onTabChange("fixed")} style={{ fontSize: 10, color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}>수정 →</button>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>■ 고정비 TOP {topFixed.length}</div>
+            <button onClick={() => onTabChange("fixed")} style={{ fontSize: 10, color: "var(--text-faint)", background: "none", border: "none", cursor: "pointer" }}>수정 →</button>
           </div>
           {topFixed.map((f, i) => (
             <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i < topFixed.length - 1 ? "1px solid var(--border)" : "none", fontSize: 13 }}>
-              <span style={{ color: "var(--text2)" }}>{i + 1}. {f.name}</span>
+              <span style={{ color: "var(--text-muted)" }}>{i + 1}. {f.name}</span>
               <span style={{ fontWeight: 700 }}>{fmtS(f.amount)}원</span>
             </div>
           ))}
@@ -711,12 +711,12 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
       {futureEvents.length > 0 && (
         <Card style={{ padding: "16px", marginBottom: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 11, color: "var(--text2)" }}>■ 다가오는 이벤트</div>
-            <button onClick={() => onTabChange("events")} style={{ fontSize: 10, color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}>수정 →</button>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>■ 다가오는 이벤트</div>
+            <button onClick={() => onTabChange("events")} style={{ fontSize: 10, color: "var(--text-faint)", background: "none", border: "none", cursor: "pointer" }}>수정 →</button>
           </div>
           {futureEvents.map(e => (
             <div key={e.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
-              <span style={{ color: "var(--text2)" }}>{e.month}월 · {e.title}</span>
+              <span style={{ color: "var(--text-muted)" }}>{e.month}월 · {e.title}</span>
               <span style={{ fontWeight: 700 }}>{fmtS(e.amount)}원</span>
             </div>
           ))}
@@ -738,7 +738,7 @@ function EventsTab({ plan, setPlan }) {
   return (
     <div>
       <Card style={{ padding: "16px", marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 12 }}>■ 새 이벤트 추가 (명절, 여행 등)</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>■ 새 이벤트 추가 (명절, 여행 등)</div>
         <input value={newEv.title} onChange={e => setNewEv(prev => ({ ...prev, title: e.target.value }))} placeholder="이벤트명" style={{ ...iStyle, marginBottom: 8 }} />
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
           <NumericInput value={newEv.amount} onChange={v => setNewEv(prev => ({ ...prev, amount: v }))} placeholder="예상 금액" style={{ ...iStyle, flex: 1 }} />
@@ -746,12 +746,12 @@ function EventsTab({ plan, setPlan }) {
             {MONTH_NAMES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
         </div>
-        <button onClick={addEvent} style={{ width: "100%", padding: "12px", background: "var(--gold)", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14 }}>이벤트 추가</button>
+        <button onClick={addEvent} style={{ width: "100%", padding: "12px", background: "var(--primary)", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14 }}>이벤트 추가</button>
       </Card>
       {events.map(e => (
         <Card key={e.id} style={{ padding: "12px 16px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div><div style={{ fontSize: 10, color: "var(--text3)" }}>{e.month}월</div><div style={{ fontSize: 14, fontWeight: 600 }}>{e.title}</div></div>
-          <div style={{ fontWeight: 700 }}>{fmtS(e.amount)}원 <button onClick={() => setPlan(p => ({ ...p, events: (p.events || []).filter(ev => ev.id !== e.id) }))} style={{ background: "none", border: "none", color: "var(--text3)", cursor: "pointer", marginLeft: 8 }}>✕</button></div>
+          <div><div style={{ fontSize: 10, color: "var(--text-faint)" }}>{e.month}월</div><div style={{ fontSize: 14, fontWeight: 600 }}>{e.title}</div></div>
+          <div style={{ fontWeight: 700 }}>{fmtS(e.amount)}원 <button onClick={() => setPlan(p => ({ ...p, events: (p.events || []).filter(ev => ev.id !== e.id) }))} style={{ background: "none", border: "none", color: "var(--text-faint)", cursor: "pointer", marginLeft: 8 }}>✕</button></div>
         </Card>
       ))}
     </div>
@@ -768,16 +768,16 @@ export function BudgetView({ plan, setPlan, budgets, setBudgets, tx, fixed, setF
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             flexShrink: 0, padding: "9px 12px", borderRadius: 11, cursor: "pointer", fontWeight: 700, fontSize: 11,
-            background: tab === t.id ? "var(--goldD)" : "var(--bg2)",
-            border: `1px solid ${tab === t.id ? "var(--gold)" : "var(--border)"}`,
-            color: tab === t.id ? "var(--gold)" : "var(--text2)",
+            background: tab === t.id ? "rgba(28,43,74,.08)" : "var(--surface)",
+            border: `1px solid ${tab === t.id ? "var(--primary)" : "var(--border)"}`,
+            color: tab === t.id ? "var(--primary)" : "var(--text-muted)",
           }}>{t.icon} {t.label}</button>
         ))}
       </div>
       <div style={{ flex: 1, overflow: "hidden" }}>
         <div style={{ padding: "0 16px 96px", overflowY: "auto", height: "100%" }}>
           <div style={{ padding: "18px 0 12px" }}>
-            <div style={{ fontSize: 11, color: "var(--text2)", letterSpacing: ".08em", marginBottom: 2 }}>{getYear()}년 재무 마스터 플랜</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: ".08em", marginBottom: 2 }}>{getYear()}년 재무 마스터 플랜</div>
             <div className="serif" style={{ fontSize: 20 }}>{TABS.find(t => t.id === tab)?.label}</div>
           </div>
           {tab === "income"    && <IncomeTab plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}

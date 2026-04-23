@@ -23,7 +23,7 @@ function StackedBar({data,total,height=24,showLegend=false}){
           {data.filter(d=>d.amount>0&&total>0&&d.amount/total>.01).map(d=>{
             const c=d.cat.endsWith("_internal") ? d : CAT[d.cat]; 
             const p=Math.round(d.amount/total*100);
-            return(<div key={d.cat} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:1,background:c?.color}}/><span style={{fontSize:10,color:"var(--text2)"}}>{c?.label} {p}%</span></div>);
+            return(<div key={d.cat} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:6,height:6,borderRadius:1,background:c?.color}}/><span style={{fontSize:10,color:"var(--text-muted)"}}>{c?.label} {p}%</span></div>);
           })}
         </div>
       )}
@@ -78,22 +78,22 @@ function ReportContent({tx: allTx, budgets, fixed, install, names,plan}){
       <div className="u1"><SectionHeader sub={`${YEAR}년 ${MONTH}월 · ${DAY}일 기준`} title="월간 경영 리포트"/></div>
 
       <Card className="u2" style={{padding:"18px",marginBottom:10}}>
-        <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".06em",marginBottom:14}}>■ 지출 구조 분석</div>
+        <div style={{fontSize:11,color:"var(--text-muted)",letterSpacing:".06em",marginBottom:14}}>■ 지출 구조 분석</div>
         <div style={{marginBottom:16}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
             <span style={{fontSize:12,fontWeight:600}}>이번 달 지출 구조 ({fmtS(curTotalAll)}원)</span>
           </div>
           {curTotalAll > 0
             ? <StackedBar data={catData} total={curTotalAll} height={24} showLegend/>
-            : <div style={{height:24,borderRadius:10,background:"var(--track)",display:"flex",alignItems:"center",paddingLeft:12}}><span style={{fontSize:11,color:"var(--text3)"}}>이번 달 지출 내역 없음</span></div>
+            : <div style={{height:24,borderRadius:10,background:"var(--track)",display:"flex",alignItems:"center",paddingLeft:12}}><span style={{fontSize:11,color:"var(--text-faint)"}}>이번 달 지출 내역 없음</span></div>
           }
         </div>
         {hasPrev && (
           <div>
-            <div style={{fontSize:11,color:"var(--text3)",marginBottom:8}}>전월 대비 ({prevLabel})</div>
+            <div style={{fontSize:11,color:"var(--text-faint)",marginBottom:8}}>전월 대비 ({prevLabel})</div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div style={{flex:1,marginRight:14}}><Bar pct={prevTotalAll>0?curTotalAll/prevTotalAll*100:0} color="var(--gold)" h={6}/></div>
-              <div style={{fontSize:12,fontWeight:700,color:curTotalAll>prevTotalAll?"var(--red)":"var(--green)"}}>
+              <div style={{flex:1,marginRight:14}}><Bar pct={prevTotalAll>0?curTotalAll/prevTotalAll*100:0} color="var(--primary)" h={6}/></div>
+              <div style={{fontSize:12,fontWeight:700,color:curTotalAll>prevTotalAll?"var(--danger)":"var(--success)"}}>
                 {curTotalAll > prevTotalAll ? `▲ ${fmtS(curTotalAll-prevTotalAll)}원` : `▼ ${fmtS(prevTotalAll-curTotalAll)}원`}
               </div>
             </div>
@@ -102,7 +102,7 @@ function ReportContent({tx: allTx, budgets, fixed, install, names,plan}){
       </Card>
 
       <Card className="u3" style={{padding:"18px",marginBottom:10}}>
-        <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".06em",marginBottom:16}}>■ 카테고리별 상세 비교 (vs 예산)</div>
+        <div style={{fontSize:11,color:"var(--text-muted)",letterSpacing:".06em",marginBottom:16}}>■ 카테고리별 상세 비교 (vs 예산)</div>
         {catData.map(d=>{
           const c=d.cat.endsWith("_internal") ? d : CAT[d.cat]; 
           const b=budgets[d.cat]||0; 
@@ -112,7 +112,7 @@ function ReportContent({tx: allTx, budgets, fixed, install, names,plan}){
             <div key={d.cat} style={{marginBottom:14}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{c?.icon||"➖"}</span><span style={{fontSize:12,fontWeight:500}}>{c?.label||"기타"}</span></div>
-                <div style={{fontSize:12,fontWeight:700}}>{fmtS(d.amount)}원 <span style={{fontSize:10,color:"var(--text2)",fontWeight:400}}>{!d.cat.endsWith("_internal") ? `/ ${fmtS(b)}원` : ""}</span></div>
+                <div style={{fontSize:12,fontWeight:700}}>{fmtS(d.amount)}원 <span style={{fontSize:10,color:"var(--text-muted)",fontWeight:400}}>{!d.cat.endsWith("_internal") ? `/ ${fmtS(b)}원` : ""}</span></div>
               </div>
               <Bar pct={!d.cat.endsWith("_internal") ? pct : 100} color={c?.color||"#888"} h={4}/>
             </div>
@@ -122,7 +122,7 @@ function ReportContent({tx: allTx, budgets, fixed, install, names,plan}){
 
       {!plan?.isSolo && (
         <Card className="u4" style={{padding:"18px"}}>
-          <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".06em",marginBottom:16}}>■ 파트너 기여도</div>
+          <div style={{fontSize:11,color:"var(--text-muted)",letterSpacing:".06em",marginBottom:16}}>■ 파트너 기여도</div>
           <div style={{display:"flex",gap:12,alignItems:"center"}}>
             <div style={{flex:1}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4}}><span>{names.husband}</span><span>{Math.round(hSpent/Math.max(totalSpent,1)*100)}%</span></div>
@@ -155,9 +155,9 @@ export function ReportView({tx, budgets, setBudgets, fixed, install, names, card
           <button key={t.id} onClick={()=>setTab(t.id)} style={{
             flexShrink:0,padding:"10px 12px",borderRadius:12,cursor:"pointer",
             fontWeight:700,fontSize:10,
-            background:tab===t.id?"var(--goldD)":"var(--bg2)",
-            border:`1px solid ${tab===t.id?"var(--gold)":"var(--border)"}`,
-            color:tab===t.id?"var(--gold)":"var(--text2)",
+            background:tab===t.id?"rgba(28,43,74,.08)":"var(--surface)",
+            border:`1px solid ${tab===t.id?"var(--primary)":"var(--border)"}`,
+            color:tab===t.id?"var(--primary)":"var(--text-muted)",
             transition:"all .15s"
           }}>{t.l}</button>
         ))}

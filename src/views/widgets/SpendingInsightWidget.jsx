@@ -29,21 +29,21 @@ export function SpendingInsightWidget({ tx }) {
     
     return {
       title: "Weekly Insight",
-      msg: `최근 7일간 <span style="color:var(--gold); font-weight:800;">${topCatName}</span>에 가장 많은 ${fmtS(catCounts[topCatId])}원을 지출하셨네요.`,
+      msg: `최근 7일간 <span style="color:var(--primary); font-weight:800;">${topCatName}</span>에 가장 많은 ${fmtS(catCounts[topCatId])}원을 지출하셨네요.`,
       summary: `총 ${fmtS(totalRecent)}원 지출 중 ${(catCounts[topCatId] / totalRecent * 100).toFixed(0)}% 차지`
     };
   }, [tx]);
 
   return (
     <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         {insight.title}
       </span>
       <div style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)', margin: 0 }}>
         <p dangerouslySetInnerHTML={{ __html: insight.msg }} style={{ margin: 0 }} />
       </div>
       {insight.summary && (
-        <p style={{ fontSize: 11, color: 'var(--text3)', margin: 0, fontStyle: 'italic' }}>
+        <p style={{ fontSize: 11, color: 'var(--text-faint)', margin: 0, fontStyle: 'italic' }}>
           {insight.summary}
         </p>
       )}

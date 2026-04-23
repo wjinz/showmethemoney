@@ -57,7 +57,7 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
         <input
           type="date" value={date} onChange={e => setDate(e.target.value)}
           style={{
-            background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 9,
+            background: "var(--surface-alt)", border: "1px solid var(--border)", borderRadius: 9,
             color: "var(--text)", fontSize: 12, padding: "5px 10px", outline: "none",
             cursor: "pointer",
           }}
@@ -70,9 +70,9 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
           {["husband", "wife"].map(r => (
             <button key={r} onClick={() => setWho(r)} style={{
               flex: 1, padding: "12px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 13,
-              background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--bg2)",
+              background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--surface)",
               border: `1px solid ${who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--border)"}`,
-              color: who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--text2)",
+              color: who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--text-muted)",
               transition: "all .2s",
             }}>{r === "husband" ? names.husband : names.wife}</button>
           ))}
@@ -82,8 +82,8 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
       {/* 금액 키패드 */}
       <Card className="u2" style={{ padding: "14px", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10, padding: "0 4px" }}>
-          <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700 }}>AMOUNT</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: amount ? "var(--text)" : "var(--text3)" }}>
+          <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700 }}>AMOUNT</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: amount ? "var(--text)" : "var(--text-faint)" }}>
             {amount ? parseInt(amount).toLocaleString() : 0}
             <span style={{ fontSize: 16, marginLeft: 4 }}>원</span>
           </div>
@@ -92,8 +92,8 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
           {[1,2,3,4,5,6,7,8,9,"C",0,"⌫"].map(v => (
             <button key={v} onClick={() => press(v)} style={{
               height: 48, borderRadius: 10, border: "1px solid var(--border)",
-              background: "var(--bg3)", fontSize: 18, fontWeight: 700, cursor: "pointer",
-              color: v === "C" ? "var(--red)" : v === "⌫" ? "var(--gold)" : "var(--text)",
+              background: "var(--surface-alt)", fontSize: 18, fontWeight: 700, cursor: "pointer",
+              color: v === "C" ? "var(--danger)" : v === "⌫" ? "var(--primary)" : "var(--text)",
             }}>{v}</button>
           ))}
         </div>
@@ -105,9 +105,9 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
           <button key={c.id} onClick={() => setCat(c.id)} style={{
             display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "10px 0",
             borderRadius: 12, cursor: "pointer", transition: "all .2s",
-            background: cat === c.id ? c.color + "22" : "var(--bg2)",
+            background: cat === c.id ? c.color + "22" : "var(--surface)",
             border: `1px solid ${cat === c.id ? c.color : "var(--border)"}`,
-            color: cat === c.id ? c.color : "var(--text2)",
+            color: cat === c.id ? c.color : "var(--text-muted)",
           }}>
             <span style={{ fontSize: 18 }}>{c.icon}</span>
             <span style={{ fontSize: 11, fontWeight: cat === c.id ? 700 : 400 }}>{c.label}</span>
@@ -120,12 +120,12 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
         <input value={memo} onChange={e => setMemo(e.target.value)} placeholder="어디에 쓰셨나요? (선택)"
           style={{ width: "100%", background: "none", border: "none", color: "var(--text)", fontSize: 14, outline: "none", padding: "4px" }} />
         {cards.length > 0 && (
-          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingTop: 10, borderTop: "1px solid var(--border2)", marginTop: 10 }}>
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingTop: 10, borderTop: "1px solid var(--border)", marginTop: 10 }}>
             {cards.map(c => (
               <button key={c.id} onClick={() => setCardId(cardId === c.id ? "" : c.id)} style={{
                 flexShrink: 0, padding: "6px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
-                background: cardId === c.id ? c.color : "var(--bg3)",
-                color: cardId === c.id ? getContrastText(c.color) : "var(--text3)",
+                background: cardId === c.id ? c.color : "var(--surface-alt)",
+                color: cardId === c.id ? getContrastText(c.color) : "var(--text-faint)",
                 border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
               }}>{c.icon} {c.label}</button>
             ))}
@@ -142,9 +142,9 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
         ].map(m => (
           <button key={m.id} onClick={() => setPayMethod(m.id)} style={{
             flex: 1, padding: "10px", borderRadius: 12, cursor: "pointer", fontSize: 12, fontWeight: 700,
-            background: payMethod === m.id ? "var(--goldD)" : "var(--bg3)",
-            border: `1px solid ${payMethod === m.id ? "var(--gold)" : "var(--border)"}`,
-            color: payMethod === m.id ? "var(--gold)" : "var(--text2)",
+            background: payMethod === m.id ? "rgba(28,43,74,.08)" : "var(--surface-alt)",
+            border: `1px solid ${payMethod === m.id ? "var(--primary)" : "var(--border)"}`,
+            color: payMethod === m.id ? "var(--primary)" : "var(--text-muted)",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
           }}><span>{m.i}</span>{m.l}</button>
         ))}
@@ -155,20 +155,20 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
         {/* 통합 AI 스캔 */}
         <label style={{
           width: 52, height: 52, borderRadius: 13, flexShrink: 0, cursor: "pointer",
-          background: "var(--bg3)", border: "1px solid var(--border)",
+          background: "var(--surface-alt)", border: "1px solid var(--border)",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
           transition: "background 0.2s"
         }}>
           <input type="file" accept="image/*" onChange={handleFileSelect} style={{ display: "none" }} />
           <span style={{ fontSize: 17, lineHeight: 1 }}>📸</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--text2)" }}>AI 스캔</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--text-muted)" }}>AI 스캔</span>
         </label>
         <button onClick={save} disabled={!amount || !cat} style={{
           flex: 1, padding: "15px",
-          background: saved ? "var(--greenD)" : (!amount || !cat) ? "var(--bg3)" : "var(--gold)",
-          border: `1px solid ${saved ? "var(--green)" : (!amount || !cat) ? "var(--border)" : "transparent"}`,
+          background: saved ? "var(--success-bg1)" : (!amount || !cat) ? "var(--surface-alt)" : "var(--primary)",
+          border: `1px solid ${saved ? "var(--success)" : (!amount || !cat) ? "var(--border)" : "transparent"}`,
           borderRadius: 13,
-          color: saved ? "var(--green)" : (!amount || !cat) ? "var(--text3)" : "#fff",
+          color: saved ? "var(--success)" : (!amount || !cat) ? "var(--text-faint)" : "#fff",
           fontWeight: 700, fontSize: 15, cursor: (!amount || !cat) ? "default" : "pointer",
           boxShadow: (!amount || !cat) || saved ? "none" : "0 4px 24px rgba(200,168,75,.3)",
           transition: "all .2s",
@@ -183,13 +183,13 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
           <span style={{ fontSize: 12, fontWeight: 700 }}>
             {date === nowStr() ? "오늘 내역" : `${date.replace(/-/g, ".")} 내역`}
           </span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--gold)" }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--primary)" }}>
             {fmtS(dateTx.reduce((s, t) => s + t.amount, 0))}원
           </span>
         </div>
 
         {dateTx.length === 0 ? (
-          <div style={{ padding: "24px 14px", textAlign: "center", color: "var(--text3)", fontSize: 12 }}>
+          <div style={{ padding: "24px 14px", textAlign: "center", color: "var(--text-faint)", fontSize: 12 }}>
             {date === nowStr() ? "오늘 입력된 내역이 없어요" : "해당 날짜에 내역이 없어요"}
           </div>
         ) : dateTx.map(t => {
@@ -207,7 +207,7 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
                 display: "flex", alignItems: "center", gap: 12,
                 cursor: "pointer", transition: "background .15s",
               }}
-              onMouseEnter={e => e.currentTarget.style.background = "var(--bg3)"}
+              onMouseEnter={e => e.currentTarget.style.background = "var(--surface-alt)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}
             >
               <div style={{ width: 34, height: 34, borderRadius: 9, background: c.color + "1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>
@@ -218,17 +218,17 @@ export function EntryView({ names, plan, onSave, onDelete, onEdit, tx, cards }) 
                   <span style={{ fontSize: 13, fontWeight: 600 }}>{c.label}</span>
                   <Chip who={t.who} names={names} />
                 </div>
-                <div style={{display:"flex", alignItems:"center", gap:4, fontSize:10, color:"var(--text3)"}}>
-                  <span style={{color:"var(--text2)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{t.memo||"—"}</span>
+                <div style={{display:"flex", alignItems:"center", gap:4, fontSize:10, color:"var(--text-faint)"}}>
+                  <span style={{color:"var(--text-muted)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{t.memo||"—"}</span>
                   <span>·</span>
-                  <span style={{background:"var(--bg2)", padding:"0 4px", borderRadius:4, fontSize:9, display:"flex", alignItems:"center", gap:2, border:"1px solid var(--border)"}}>
+                  <span style={{background:"var(--surface)", padding:"0 4px", borderRadius:4, fontSize:9, display:"flex", alignItems:"center", gap:2, border:"1px solid var(--border)"}}>
                     <span>{pmI}</span>
                     <span>{pmL}</span>
                   </span>
                 </div>
               </div>
               <span style={{ fontSize: 13, fontWeight: 700, flexShrink: 0, color: "var(--text)" }}>-{fmtS(t.amount)}원</span>
-              <span style={{ fontSize: 13, color: "var(--text3)", flexShrink: 0 }}>✎</span>
+              <span style={{ fontSize: 13, color: "var(--text-faint)", flexShrink: 0 }}>✎</span>
             </div>
           );
         })}

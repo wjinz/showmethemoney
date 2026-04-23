@@ -1,0 +1,225 @@
+# 디자인 재구성 계획 (new design, old function)
+
+작성일 2026-04-23
+업로드 참조: uploads/index.html, uploads/showmethemoney.html, uploads/app.jsx, uploads/components.jsx, uploads/views.jsx
+
+## 1. 문제 인식
+
+- 배포/로컬 화면에서 UI가 이전 어두운 골드 테마(구버전)로 렌더
+- 루트 index.html 은 이미 새 디자인 토큰만 정의
+- src/views/*, src/components/* 는 구버전 토큰(--gold, --bg2~4, --text2/3, --blueD, --red)을 참조
+- src/hooks/useTheme.js 가 data-theme=joint/private/kids 를 주입 → 구버전 토큰 세트를 상속
+- 결과: shell 은 새 디자인, 내용은 구버전
+
+## 2. 정답지 매핑
+
+새 디자인 = uploads/ 5개 파일
+- index.html, showmethemoney.html — CSS 토큰 및 shell
+- components.jsx — Icons, BottomNav, BudgetRing, NumPad, CategoryChip, AmountChip, PartnerAvatars
+- views.jsx — HomeView, HistoryView, PrivateView, SOSView, SettlementView, InputSheet, TxRow
+- app.jsx — App shell, sheet 애니메이션
+
+기능 유지 = 현재 src/ 기반
+- Supabase realtime, offlineQueue, Gemini AI 3종, OCR, Private PIN, Kids Mode, 위젯 대시보드, PWA
+
+## 3. 토큰 교체 맵
+
+| 이전 (구버전) | 새 (정답지) | 값 |
+|---|---|---|
+| --bg, --bg2, --bg3, --bg4 | --bg, --surface | #F4F6F8 / #FFFFFF |
+| --gold, --goldD, --goldL | --primary | #1C2B4A |
+| --blue, --blueD, --blueL | --secondary | #7A9E87 |
+| --red | --danger | #E8715A |
+| (신규) | --warning | #F59E0B |
+| --text | --text | #111827 |
+| --text2 | --muted | #6B7280 |
+| --text3 | --hint | #9CA3AF |
+| --border | --border | #E5E7EB |
+| (신규) | --border-lite | #F3F4F6 |
+| (신규) | --shadow | 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.05) |
+
+## 4. 3테마 시스템 처리
+
+- useTheme.js: joint/private 구분 제거, Kids 만 조건부 유지
+- Private 뷰는 컴포넌트 내부에서 #121212 배경 직접 지정
+- Kids Mode: data-theme="kids" 유지 + 전용 팔레트 블록 src/index.css 에 분리
+
+## 5. 타이포그래피 표준
+
+- Font: Pretendard Variable
+- Size: 10/11/12/13/14/15/16/18/20/22/32/38/42
+- Weight: 500/600/700/800/900
+- Letter-spacing: -0.5px (20~22), -1.5px (32~42 hero)
+- Line-height: 1.1 (hero), 1.5 (본문)
+
+## 6. 색상 규칙
+
+| 역할 | 색 |
+|---|---|
+| me (본인) | #1C2B4A |
+| partner (배우자) | #7A9E87 |
+| danger / SOS / 초과 | #E8715A |
+| warning (65~85%) | #F59E0B |
+| text primary | #111827 |
+| text muted | #6B7280 |
+| text hint | #9CA3AF |
+| border | #E5E7EB |
+| border-lite | #F3F4F6 |
+| bg pale | #F9FAFB |
+
+## 7. 카드/시트/FAB 표준
+
+- .card: radius 24px, shadow var(--shadow), padding 20px
+- .sheet: radius 28px 28px 0 0, max-height 92%, cubic-bezier transform
+- .overlay: rgba(0,0,0,.35)
+- .nav-fab: 56x56, linear-gradient(135deg, #1C2B4A, #2d4270), border 4px solid var(--bg)
+- .bottom-nav: 84px, rgba(255,255,255,.93) + backdrop-filter blur(20px)
+
+## 8. 네비게이션 구조
+
+업로드판: 홈 / 내역 / FAB(+) / 프라이빗 / 정산
+기존 src: 홈 / 리포트 / 자산 / 프라이빗 / 설정 (항목 불일치) → 사용자 확인 #1
+
+## 9. 재작업 대상 맵
+
+### 9.1 전역 스타일
+- src/index.css : :root 새 토큰 교체, 공통 클래스 표준화, data-theme 블록 정리
+
+### 9.2 공통 컴포넌트
+
+| 파일 | 작업 |
+|---|---|
+| UI.jsx (Card, SectionHeader, StatTile) | 색상 토큰 교체 |
+| BottomNav.jsx | 업로드판 SVG 아이콘 + 5항목 전면 교체 |
+| BudgetRing.jsx | r=54, stroke 10, 128x128 |
+| TxRow.jsx (신설) | 좌측 컬러바 + 이름배지 + 메모/금액/날짜 |
+| PartnerAvatars.jsx (신설) | 홈 헤더 |
+| AmountChip.jsx (신설) | |
+| CategoryChip.jsx (신설) | |
+| NumPad.jsx (신설) | InputSheet 재사용 |
+| QuickEntrySheet.jsx → InputSheet.jsx | tab / big amount / NumPad / privacy toggle / detail / gradient 저장버튼 |
+| SliderRow.jsx | 색상만 교체 |
+
+### 9.3 뷰
+
+| 파일 | 신 디자인 구조 |
+|---|---|
+| HomeView | Header(PartnerAvatars+날짜) / Hero Budget Card(남은예산+Ring+진행바) / Today's Spending 2-col / AI Coach Card / SOS Quick Entry / Recent Tx |
+| HistoryView | 월합계 카드 3분할 / 필터칩 row / TxRow 리스트 |
+| PrivateView | PIN 잠금(#121212) → PrivateDashboard(블랙 그라디언트 카드 + 내역) |
+| SOSView | 채팅 UI (좌우 버블, SOS 결재 카드 inline, Quick Amounts, Input) |
+| SettlementView | Status Card(surplus green / deficit red 그라디언트) / 카드결제 Breakdown / 현금 잔고 입력 |
+| SettingsView | 기능 유지, 버튼/입력 색만 교체 |
+| DashboardView (위젯 대시보드) | 래퍼를 .card 로 통일, 내부 색상 매핑 |
+| Budget/Report/Asset/Tax/Kids/Admin/BugReport/DataImport | 버튼/카드/입력 색상만 교체 |
+
+### 9.4 기타
+- useTheme.js Kids 조건만 유지
+- App.jsx theme/setTheme 찌꺼기 제거
+- PWA manifest theme_color #1C2B4A
+
+## 10. 단계별 구현 순서
+
+- M8 전역 스타일 재정의 (index.css + useTheme.js 간소화)
+- M9 공통 컴포넌트 정비 (UI/BottomNav/TxRow/NumPad/Avatars/Chip/Ring)
+- M10 InputSheet 리디자인
+- M11 HomeView / HistoryView / SettlementView 재작성
+- M12 PrivateView + SOSView 재작성
+- M13 SettingsView + DashboardView 팔레트 통일
+- M14 나머지 부가 뷰 버튼/카드 색 교체
+- M15 typecheck + 빌드 + 시각 회귀
+
+각 단계 끝 npx tsc --noEmit 실행, any/unknown 금지.
+
+## 11. 기능 보존 체크리스트
+
+- Supabase realtime 구독 / postgres_changes + sos_requests
+- offline queue flush / BG Sync
+- Gemini AI (Nudge/Budget/Kids)
+- OCR 영수증 파싱
+- Private PIN + Supabase 암호화 저장
+- 할부 / 카드 결제주기 계산
+- Kids Mode + Zustand store
+- react-grid-layout 위젯 추가/제거
+- PWA Share Target / Service Worker
+- Export CSV / Admin 페이지 진입
+
+## 12. 분량 추정
+
+- 수정 25~30 파일
+- 신규 5 파일 (InputSheet, TxRow, NumPad, PartnerAvatars, AmountChip+CategoryChip)
+- M8~M15 한 세션 목표
+
+## 13. 사용자 확인 필요 항목
+
+1. 메뉴 구조
+   - (A) 업로드판 {홈, 내역, 프라이빗, 정산} 4탭 + FAB
+   - (B) 기존 src {홈, 리포트, 자산, 프라이빗, 설정} 유지 + 스타일만 교체
+   - (C) 혼합 (홈/내역/프라이빗/정산 + 설정은 프로필 아이콘)
+
+2. QuickEntrySheet → InputSheet 전면 교체 OK?
+   - (A) 완전히 InputSheet 스타일로 교체
+   - (B) 기존 QuickEntrySheet 유지 + 색상만 교체
+
+---
+
+## 14. Antigravity의 추가 리뷰 및 개선 제안 (2026-04-23)
+
+> **작성자: Antigravity**
+
+작성하신 디자인 재구성 계획을 깊이 분석했습니다. 기존의 모듈형 구조(`src/`)에 새 디자인을 입히는 방향성은 매우 좋으나, **'디자인 무결성'**을 최우선으로 지키기 위해 다음 사항들을 강제/권장합니다.
+
+### 🔴 필수 수정 및 방향성
+1. **메뉴 구조(사용자 확인 항목 #1)에 대한 강력한 권장**
+   - **(C) 혼합 (홈/내역/프라이빗/정산 + 설정은 헤더 아이콘)** 채택을 강력히 권장합니다.
+   - 현재 업로드된 `index.html`의 하단 네비게이션(BottomNav) 형태를 그대로 유지해야 디자인 밸런스가 맞습니다. 기존 `src/`에 있던 `Report`, `Asset` 뷰 등은 하단 탭이 아닌, `History` 탭 내부의 서브 탭이나 `Settings` 메뉴 안으로 숨기는(Depth 이동) 방식이 디자인을 해치지 않습니다.
+2. **CSS 및 전역 스타일 덮어쓰기 주의**
+   - 기존 `src/index.css`를 '수정'하려고 하지 마십시오. 현재 `index.html` 최상단에 정의된 `<style>` 블록 전체를 복사하여 `src/index.css`를 **완전히 덮어쓰는 것(Overwrite)**이 안전합니다. 구버전 CSS 클래스가 남아있으면 렌더링 충돌이 발생할 확률이 매우 높습니다.
+3. **위젯 대시보드(DashboardView)에 대한 경고**
+   - 기존 `src/`의 `react-grid-layout` 위젯 구조를 그대로 가져가면서 내부 색상만 바꾸려 하면 (M13 단계), 패딩과 마진이 틀어져 `index.html`의 깔끔한 느낌이 훼손될 수 있습니다. 위젯 구조를 유지하더라도 외곽 카드(`Card`)의 형태는 `index.html`의 하드코딩된 `.card` CSS를 절대적으로 따르도록 클래스를 교체해야 합니다.
+
+### 💡 추가 아이디어
+1. **InputSheet의 통폐합 (사용자 확인 항목 #2)**
+   - **(A) 완전히 InputSheet 스타일로 교체**하는 것이 맞습니다. 다만 기존 `QuickEntrySheet`에 있던 '자주 쓰는 패턴(Frequent Pattern)' 기능은 새로운 `InputSheet`의 상단에 가로 스크롤(Chip) 형태로 작게 녹여넣으면 UX를 해치지 않으면서 기존 기능도 보존할 수 있습니다.
+2. **`useTheme.js` 완전 제거 고려**
+   - 3테마 시스템이 폐기되었고 Kids Mode 전용 팔레트 블록만 필요하다면, `useTheme.js`라는 복잡한 Context 훅을 유지할 이유가 없습니다. 전역 상태(`Zustand`의 `kidsStore` 등)에서 Kids 모드 토글 시 `document.body.classList.toggle('kids-mode')`를 호출하는 단순한 방식으로 전환하여 성능과 복잡도를 줄이는 것을 제안합니다.
+3. Private 뷰 다크 테마(#121212) 유지 OK?
+
+4. SOSView 채팅 UI 완전 교체 OK?
+
+5. react-grid-layout 위젯도 새 카드 스타일로 통일 OK?
+
+6. useTheme.js 3테마 로직 제거 Kids만 남김 OK?
+
+---
+
+## 15. showmethemoney-handoff-2 분석 및 보완 (2026-04-23)
+
+> **보완 작성자: Antigravity**
+
+사용자께서 제공하신 `showmethemoney-handoff-2` 및 관련 가이드 문서를 심층 분석한 결과, 기존 계획에 다음의 **프리미엄 디테일**을 반드시 추가하여 보완해야 합니다.
+
+### 15.1 고도화된 애니메이션 및 인터랙션 (Framer Motion)
+*   **바텀 시트 (ActionSheet)**: 단순한 `y` 이동이 아닌, `type: 'spring', damping: 25, stiffness: 200` 값을 적용하여 쫀득한 물리 효과를 구현해야 합니다.
+*   **PIN 번호 오류 피드백**: 프라이빗 뷰 PIN 입력 실패 시, `x: [-10, 10, -10, 10, 0]`의 쉐이크(Shake) 애니메이션을 적용하여 즉각적인 시각적 피드백을 제공합니다.
+*   **예산 링 (BudgetRing)**: 페이지 진입 시 링이 0에서 현재 집행률까지 차오르는 애니메이션을 필수로 적용합니다.
+
+### 15.2 프리미엄 시각 효과 (Visual Effects)
+*   **블랙 카드 리플렉션**: `PrivateView`의 블랙 카드 UI에는 `blur-3xl`이 적용된 원형 `div`를 절대 위치로 배치하여, 카드의 빛 반사 효과(Premium Stealth)를 시뮬레이션합니다.
+*   **정산 상태별 그라데이션**:
+    *   **흑자(Surplus)**: `linear-gradient(135deg, #ECFDF5, #D1FAE5)` + 초록색 테두리.
+    *   **적자(Deficit)**: `linear-gradient(135deg, #FFF5F3, #FDE8E4)` + 빨간색 테두리.
+*   **채팅 버블 디테일**: `SOSView`의 메시지는 보낸 이에 따라 `18px 18px 18px 4px` (지연)와 `18px 18px 4px 18px` (나)로 곡률을 비대칭 적용하여 대화형 뉘앙스를 강조합니다.
+
+### 15.3 기능적 보완 사항 (Functional Polish)
+*   **Bulk OCR 최적화**: 이미지 전송 시 `WebP/JPEG (0.8)` 압축을 강제하여 데이터 사용량과 업로드 속도를 50% 이상 개선합니다.
+*   **OCR Fallback**: AI 파싱 실패를 대비하여 정규식 기반의 `extractBulkItemsFallback` 로직을 `useOcrScan` 훅에 포함합니다.
+*   **마이크로 카피**: 모든 텍스트를 "사유 입력" 대신 "어디에 쓰셨나요? 🥺"와 같은 **공감형(Empathetic) 문구**로 전면 교체합니다.
+
+### 15.4 최종 수정 마일스톤 반영
+*   위의 보완 사항들을 **M9(공통 컴포넌트)** 및 **M10~M12(뷰 재작성)** 단계에 각각 녹여내어, 단순한 색상 교체가 아닌 **'프리미엄 경험'**의 이식이 되도록 합니다.
+
+---
+
+> [!IMPORTANT]
+> `handoff-2`의 `views.jsx` 소스코드는 완성된 UI의 정답지입니다. 로직을 이식할 때 이 파일의 JSX 구조와 인라인 스타일을 **'복사-붙여넣기' 수준으로 참조**하여 시각적 오차를 제로화하십시오.

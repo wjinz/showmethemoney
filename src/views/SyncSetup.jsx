@@ -89,7 +89,7 @@ export function SyncSetup({onDone}){
       <div style={{marginBottom:32,textAlign:"center"}}>
         <div style={{fontSize:48,marginBottom:12}}>💰</div>
         <div className="serif" style={{fontSize:26,marginBottom:6}}>가정 경영 가계부</div>
-        <div style={{fontSize:13,color:"var(--text2)"}}>부부가 함께 쓰는 가계부</div>
+        <div style={{fontSize:13,color:"var(--text-muted)"}}>부부가 함께 쓰는 가계부</div>
       </div>
 
       {/* 탭/모드 선택 */}
@@ -98,22 +98,22 @@ export function SyncSetup({onDone}){
           {[{id:"create",l:"새 가계부 만들기"},{id:"join",l:"코드로 참여하기"}].map(t=>(
             <button key={t.id} onClick={()=>{setTab(t.id);setErr("");}} style={{
               flex:1,padding:"11px",borderRadius:13,cursor:"pointer",fontWeight:700,fontSize:12,
-              background:tab===t.id?"var(--goldD)":"var(--bg2)",
-              border:`1px solid ${tab===t.id?"var(--gold)":"var(--border)"}`,
-              color:tab===t.id?"var(--gold)":"var(--text2)"
+              background:tab===t.id?"rgba(28,43,74,.08)":"var(--surface)",
+              border:`1px solid ${tab===t.id?"var(--primary)":"var(--border)"}`,
+              color:tab===t.id?"var(--primary)":"var(--text-muted)"
             }}>{t.l}</button>
           ))}
         </div>
         
         {tab==="create" && (
-          <div style={{display:"flex",gap:6,background:"var(--bg3)",padding:4,borderRadius:14,border:"1px solid var(--border)"}}>
+          <div style={{display:"flex",gap:6,background:"var(--surface-alt)",padding:4,borderRadius:14,border:"1px solid var(--border)"}}>
             {[{id:"couple",l:"👥 부부가 함께",e:"👨‍👩‍👧"},{id:"solo",l:"👤 나 혼자 관리",e:"🙋‍♂️"}].map(m=>(
               <button key={m.id} onClick={()=>setMode(m.id)} style={{
                 flex:1,padding:"10px",borderRadius:11,cursor:"pointer",fontSize:11,fontWeight:700,
                 background:mode===m.id?"var(--bg)":"transparent",
                 border:"none",
                 boxShadow:mode===m.id?"0 2px 8px rgba(0,0,0,0.2)":"none",
-                color:mode===m.id?"var(--gold)":"var(--text3)",
+                color:mode===m.id?"var(--primary)":"var(--text-faint)",
                 display:"flex",alignItems:"center",justifyContent:"center",gap:6
               }}>{m.e} {m.l}</button>
             ))}
@@ -123,20 +123,20 @@ export function SyncSetup({onDone}){
 
       {/* 카드 */}
       <div style={{
-        background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:20,
+        background:"var(--surface)",border:"1px solid var(--border)",borderRadius:20,
         padding:"24px",width:"100%",maxWidth:340
       }}>
         {/* 역할 선택 (커플 모드 또는 참여하기 시) */}
         {(tab==="join" || (tab==="create" && mode==="couple")) && (
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:12,color:"var(--text2)",marginBottom:10}}>내 역할</div>
+            <div style={{fontSize:12,color:"var(--text-muted)",marginBottom:10}}>내 역할</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
               {[{id:"husband",l:"남편",e:"👨"},{id:"wife",l:"와이프",e:"👩"}].map(r=>(
                 <button key={r.id} onClick={()=>setRole(r.id)} style={{
                   padding:"14px",borderRadius:13,cursor:"pointer",fontWeight:700,fontSize:14,
-                  background:role===r.id?(r.id==="husband"?"var(--hD)":"var(--wD)"):"var(--bg3)",
+                  background:role===r.id?(r.id==="husband"?"var(--hD)":"var(--wD)"):"var(--surface-alt)",
                   border:`1px solid ${role===r.id?(r.id==="husband"?"rgba(92,141,232,.4)":"rgba(217,127,168,.4)"):"var(--border)"}`,
-                  color:role===r.id?(r.id==="husband"?"var(--h)":"var(--w)"):"var(--text2)",
+                  color:role===r.id?(r.id==="husband"?"var(--h)":"var(--w)"):"var(--text-muted)",
                   display:"flex",flexDirection:"column",alignItems:"center",gap:6
                 }}>
                   <span style={{fontSize:28}}>{r.e}</span>
@@ -149,14 +149,14 @@ export function SyncSetup({onDone}){
 
         {tab==="join"&&(
           <div style={{marginBottom:16}}>
-            <div style={{fontSize:12,color:"var(--text2)",marginBottom:8}}>가정 코드 6자리</div>
+            <div style={{fontSize:12,color:"var(--text-muted)",marginBottom:8}}>가정 코드 6자리</div>
             <input
               value={code}
               onChange={e=>setCode(e.target.value.toUpperCase().slice(0,6))}
               placeholder="예: AB12CD"
               maxLength={6}
               style={{
-                width:"100%",background:"var(--bg3)",border:"1px solid var(--border2)",
+                width:"100%",background:"var(--surface-alt)",border:"1px solid var(--border)",
                 borderRadius:12,padding:"14px 16px",color:"var(--text)",fontSize:20,
                 fontWeight:700,letterSpacing:".15em",textAlign:"center",outline:"none"
               }}
@@ -167,8 +167,8 @@ export function SyncSetup({onDone}){
         {err&&(
           <div style={{
             padding:"10px 14px",borderRadius:10,marginBottom:14,
-            background:"var(--redD)",border:"1px solid rgba(170,32,32,.25)",
-            fontSize:12,color:"var(--red)"
+            background:"var(--danger-bg1)",border:"1px solid rgba(170,32,32,.25)",
+            fontSize:12,color:"var(--danger)"
           }}>{err}</div>
         )}
 
@@ -177,8 +177,8 @@ export function SyncSetup({onDone}){
           disabled={busy}
           style={{
             width:"100%",padding:"15px",borderRadius:14,border:"none",cursor:"pointer",
-            background:busy?"var(--bg3)":"var(--gold)",
-            color:busy?"var(--text3)":"#fff",fontWeight:700,fontSize:15,
+            background:busy?"var(--surface-alt)":"var(--primary)",
+            color:busy?"var(--text-faint)":"#fff",fontWeight:700,fontSize:15,
             transition:"all .2s"
           }}
         >
@@ -186,7 +186,7 @@ export function SyncSetup({onDone}){
         </button>
 
         {tab==="create"&&(
-          <div style={{fontSize:11,color:"var(--text3)",marginTop:12,textAlign:"center",lineHeight:1.7}}>
+          <div style={{fontSize:11,color:"var(--text-faint)",marginTop:12,textAlign:"center",lineHeight:1.7}}>
             만들면 6자리 코드가 생성돼요.<br/>
             와이프에게 코드를 공유해서 함께 사용하세요.
           </div>

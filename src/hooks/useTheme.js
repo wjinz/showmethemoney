@@ -1,16 +1,7 @@
-import { useEffect } from 'react';
-
 /**
- * 현재 뷰와 kidsMode에 따라 data-theme 속성을 .app-root에 적용
- * @param {string} view
- * @param {boolean} [kidsMode]
+ * @deprecated 단일 라이트 팔레트로 전환되어 더 이상 사용되지 않음 (M8).
+ *             호환성을 위해 no-op으로 유지. 신규 코드에서는 import 금지.
  */
-export function useTheme(view, kidsMode) {
-  useEffect(() => {
-    const theme = kidsMode ? 'kids' : view === 'private' ? 'private' : 'joint';
-    document.documentElement.setAttribute('data-theme', theme);
-    return () => {
-      document.documentElement.setAttribute('data-theme', 'joint');
-    };
-  }, [view, kidsMode]);
+export function useTheme() {
+  /* no-op */
 }

@@ -79,16 +79,16 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
       <div className="u1" style={{padding:"22px 0 14px", display:"flex", alignItems:"center", justifyContent:"space-between"}}>
         <button onClick={prevMonth} style={{
           width:34,height:34,borderRadius:10,border:"1px solid var(--border)",
-          background:"var(--bg2)",cursor:"pointer",fontSize:16,color:"var(--text2)",
+          background:"var(--surface)",cursor:"pointer",fontSize:16,color:"var(--text-muted)",
           display:"flex",alignItems:"center",justifyContent:"center"
         }}>‹</button>
         <div style={{textAlign:"center"}}>
-          <div style={{fontSize:11,color:"var(--text2)",letterSpacing:".08em",textTransform:"uppercase"}}>{viewYear}</div>
+          <div style={{fontSize:11,color:"var(--text-muted)",letterSpacing:".08em",textTransform:"uppercase"}}>{viewYear}</div>
           <div className="serif" style={{fontSize:22,lineHeight:1.2}}>{viewMonth}월</div>
         </div>
         <button onClick={nextMonth} style={{
           width:34,height:34,borderRadius:10,border:"1px solid var(--border)",
-          background:"var(--bg2)",cursor:"pointer",fontSize:16,color:"var(--text2)",
+          background:"var(--surface)",cursor:"pointer",fontSize:16,color:"var(--text-muted)",
           display:"flex",alignItems:"center",justifyContent:"center"
         }}>›</button>
       </div>
@@ -101,10 +101,10 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
               const s2=toDateStr(cp.cycleStart),e2=toDateStr(cp.cycleEnd);
               return s+tx.filter(t=>t.cardId===cp.card.id&&t.date>=s2&&t.date<=e2).reduce((a,t)=>a+t.amount,0);
             },0))+"원":"—", c:"var(--pink)"},
-            {l:"카드 수", v:cards.length+"개", c:"var(--blue)"},
+            {l:"카드 수", v:cards.length+"개", c:"#3B82F6"},
           ].map(s=>(
             <Card key={s.l} style={{padding:"11px 10px",textAlign:"center"}}>
-              <div style={{fontSize:10,color:"var(--text2)",marginBottom:4}}>{s.l}</div>
+              <div style={{fontSize:10,color:"var(--text-muted)",marginBottom:4}}>{s.l}</div>
               <div style={{fontSize:13,fontWeight:700,color:s.c}}>{s.v}</div>
             </Card>
           ))}
@@ -116,7 +116,7 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
           {DNAMES.map((d,i)=>(
             <div key={d} style={{
               textAlign:"center",fontSize:11,fontWeight:600,
-              color:i===0?"var(--red)":i===6?"var(--blue)":"var(--text3)",
+              color:i===0?"var(--danger)":i===6?"#3B82F6":"var(--text-faint)",
               padding:"3px 0"
             }}>{d}</div>
           ))}
@@ -147,19 +147,19 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
                 style={{
                   borderRadius:9,padding:"5px 2px 4px",cursor:"pointer",
                   textAlign:"center",position:"relative",
-                  background: isSel ? "var(--goldD)" : heatBg,
-                  border:`1px solid ${isSel?"var(--gold)":"transparent"}`,
+                  background: isSel ? "rgba(28,43,74,.08)" : heatBg,
+                  border:`1px solid ${isSel?"var(--primary)":"transparent"}`,
                   transition:"all .12s",
                   minHeight:46,
                 }}
               >
                 <div style={{
                   fontSize:12,fontWeight:isToday?700:400,lineHeight:1,
-                  color:isToday?"var(--gold)":isSel?"var(--gold)":weekday===0?"var(--red)":weekday===6?"var(--blue)":"var(--text)"
+                  color:isToday?"var(--primary)":isSel?"var(--primary)":weekday===0?"var(--danger)":weekday===6?"#3B82F6":"var(--text)"
                 }}>{d}</div>
 
                 {amt>0 && (
-                  <div style={{fontSize:8,color:isSel?"var(--goldL)":"var(--text2)",marginTop:2,lineHeight:1}}>
+                  <div style={{fontSize:8,color:isSel?"var(--primary)":"var(--text-muted)",marginTop:2,lineHeight:1}}>
                     {fmtS(amt)}
                   </div>
                 )}
@@ -176,7 +176,7 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
                   <div style={{
                     position:"absolute",top:2,right:2,
                     width:5,height:5,borderRadius:"50%",
-                    background:"var(--gold)"
+                    background:"var(--primary)"
                   }}/>
                 )}
               </div>
@@ -186,14 +186,14 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
 
         <div style={{display:"flex",gap:14,marginTop:12,paddingTop:10,borderTop:"1px solid var(--border)",flexWrap:"wrap"}}>
           {[
-            {color:"var(--gold)",label:"오늘"},
+            {color:"var(--primary)",label:"오늘"},
             {color:"rgba(77,171,135,.7)",label:"지출 있음"},
             {color:"rgba(217,95,95,.7)",label:"과지출 (1.5배↑)"},
             {color:"var(--pink)",label:"💳 카드 결제일"},
           ].map(l=>(
             <div key={l.label} style={{display:"flex",alignItems:"center",gap:5}}>
               <div style={{width:7,height:7,borderRadius:"50%",background:l.color,flexShrink:0}}/>
-              <span style={{fontSize:10,color:"var(--text2)"}}>{l.label}</span>
+              <span style={{fontSize:10,color:"var(--text-muted)"}}>{l.label}</span>
             </div>
           ))}
         </div>
@@ -215,7 +215,7 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
               }}>💳 결제일</span>
             )}
           </div>
-          <span style={{fontSize:13,fontWeight:700,color:selTotal>0?"var(--text)":"var(--text3)"}}>
+          <span style={{fontSize:13,fontWeight:700,color:selTotal>0?"var(--text)":"var(--text-faint)"}}>
             {selTotal>0 ? fmt(selTotal) : "지출 없음"}
           </span>
         </div>
@@ -233,11 +233,11 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
                 <div style={{display:"flex",alignItems:"center",gap:7}}>
                   <span style={{fontSize:15}}>{cp.card.icon}</span>
                   <span style={{fontSize:13,fontWeight:700}}>{cp.card.label}</span>
-                  <span style={{fontSize:10,color:"var(--text2)"}}>결제일</span>
+                  <span style={{fontSize:10,color:"var(--text-muted)"}}>결제일</span>
                 </div>
                 <span style={{fontSize:16,fontWeight:700,color:"var(--pink)"}}>{fmt(cardTotal)}</span>
               </div>
-              <div style={{fontSize:11,color:"var(--text2)"}}>
+              <div style={{fontSize:11,color:"var(--text-muted)"}}>
                 정산 기간: {fmtPeriodLabel(cp.cycleStart,cp.cycleEnd)}
               </div>
             </div>
@@ -245,7 +245,7 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
         })}
 
         {selTx.length===0 && selPayCards.length===0 ? (
-          <div style={{padding:"22px",textAlign:"center",color:"var(--text3)",fontSize:12}}>
+          <div style={{padding:"22px",textAlign:"center",color:"var(--text-faint)",fontSize:12}}>
             이 날의 기록이 없어요
           </div>
         ):selTx.map(t=>{
@@ -265,7 +265,7 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
                 cursor: canEdit ? "pointer" : "default",
                 transition: "background .15s",
               }}
-              onMouseEnter={e => { if(canEdit) e.currentTarget.style.background="var(--bg3)"; }}
+              onMouseEnter={e => { if(canEdit) e.currentTarget.style.background="var(--surface-alt)"; }}
               onMouseLeave={e => { e.currentTarget.style.background="transparent"; }}
             >
               <div style={{
@@ -277,17 +277,17 @@ export function CalendarView({tx, cards, names, budgets, onEdit, onDelete, loadT
                   <span style={{fontSize:12,fontWeight:600}}>{c.label}</span>
                   <Chip who={t.who} names={names}/>
                 </div>
-                <div style={{display:"flex", alignItems:"center", gap:4, fontSize:10, color:"var(--text3)"}}>
-                  <span style={{color:"var(--text2)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{t.memo||"—"}</span>
+                <div style={{display:"flex", alignItems:"center", gap:4, fontSize:10, color:"var(--text-faint)"}}>
+                  <span style={{color:"var(--text-muted)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{t.memo||"—"}</span>
                   <span>·</span>
-                  <span style={{background:"var(--bg2)", padding:"0 4px", borderRadius:4, fontSize:9, display:"flex", alignItems:"center", gap:2, border:"1px solid var(--border)"}}>
+                  <span style={{background:"var(--surface)", padding:"0 4px", borderRadius:4, fontSize:9, display:"flex", alignItems:"center", gap:2, border:"1px solid var(--border)"}}>
                     <span>{pmI}</span>
                     <span>{pmL}</span>
                   </span>
                 </div>
               </div>
               <span style={{fontSize:13,fontWeight:700,flexShrink:0, color:"var(--text)"}}>-{fmtS(t.amount)}원</span>
-              {canEdit && <span style={{fontSize:12,color:"var(--text3)",flexShrink:0}}>✎</span>}
+              {canEdit && <span style={{fontSize:12,color:"var(--text-faint)",flexShrink:0}}>✎</span>}
             </div>
           );
         })}

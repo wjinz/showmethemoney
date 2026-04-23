@@ -42,7 +42,7 @@ export function ReceiptSplitter({ items, onConfirm, onClose }) {
     }}>
       <div style={{
         width: '100%', maxWidth: 480, margin: '0 auto',
-        background: 'var(--bg2)', borderRadius: '20px 20px 0 0',
+        background: 'var(--surface)', borderRadius: '20px 20px 0 0',
         maxHeight: '80vh', display: 'flex', flexDirection: 'column',
         overflow: 'hidden',
       }}>
@@ -54,7 +54,7 @@ export function ReceiptSplitter({ items, onConfirm, onClose }) {
           <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>영수증 항목 분류</span>
           <button onClick={onClose} style={{
             background: 'none', border: 'none', fontSize: 18, cursor: 'pointer',
-            color: 'var(--text2)', padding: '0 4px',
+            color: 'var(--text-muted)', padding: '0 4px',
           }}>✕</button>
         </div>
 
@@ -102,7 +102,7 @@ export function ReceiptSplitter({ items, onConfirm, onClose }) {
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
                       {item.memo || catInfo?.label || item.cat}
                     </div>
-                    <div style={{ fontSize: 10, color: 'var(--text2)', marginTop: 2 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
                       {item.date} · {catInfo?.icon} {catInfo?.label}
                     </div>
                   </div>
@@ -123,7 +123,7 @@ export function ReceiptSplitter({ items, onConfirm, onClose }) {
         </div>
 
         {/* 하단 분할 요약 */}
-        <div style={{ padding: '8px 16px 4px', fontSize: 11, color: 'var(--text2)' }}>
+        <div style={{ padding: '8px 16px 4px', fontSize: 11, color: 'var(--text-muted)' }}>
           Splitting:{' '}
           <strong style={{ color: '#E8715A' }}>{fmtS(privateTotal)}원</strong> → 개인,{' '}
           <strong style={{ color: '#7A9E87' }}>{fmtS(sharedTotal)}원</strong> → 공동
@@ -149,9 +149,9 @@ function SplitBadge({ label, amount, color }) {
   return (
     <div style={{
       flex: 1, textAlign: 'center', padding: '6px 0',
-      borderRadius: 8, background: 'var(--bg3)',
+      borderRadius: 8, background: 'var(--surface-alt)',
     }}>
-      <div style={{ fontSize: 10, color: 'var(--text2)' }}>{label}</div>
+      <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{label}</div>
       <div style={{ fontSize: 14, fontWeight: 700, color }}>{fmtS(amount)}원</div>
     </div>
   );

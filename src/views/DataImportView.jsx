@@ -83,8 +83,8 @@ const analyze = (txs) => {
 const KrTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 12px", fontSize: 11 }}>
-      <div style={{ color: "var(--text2)", marginBottom: 2 }}>{label}</div>
+    <div style={{ background: "var(--surface-alt)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 12px", fontSize: 11 }}>
+      <div style={{ color: "var(--text-muted)", marginBottom: 2 }}>{label}</div>
       <div style={{ fontWeight: 700 }}>{fmtS(payload[0].value)}원</div>
     </div>
   );
@@ -201,13 +201,13 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
   if (stage === "idle") return (
     <div style={{ padding: "0 16px 96px", overflowY: "auto", height: "100%" }}>
       <div style={{ padding: "22px 0 14px" }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", letterSpacing: ".08em", marginBottom: 3 }}>Credit Card History</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: ".08em", marginBottom: 3 }}>Credit Card History</div>
         <div className="serif" style={{ fontSize: 21 }}>카드 데이터 불러오기</div>
       </div>
 
       {/* 안내 카드 */}
       <Card style={{ padding: "18px", marginBottom: 14 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 12 }}>■ 이런 분석을 해드려요</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>■ 이런 분석을 해드려요</div>
         {[
           ["📅","연간 월별 지출 흐름","어느 달에 얼마나 썼는지 한눈에"],
           ["🗂","카테고리별 지출 분해","식비·교통·문화 비중을 파악"],
@@ -218,15 +218,15 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
             <span style={{ fontSize: 20, flexShrink: 0 }}>{icon}</span>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{title}</div>
-              <div style={{ fontSize: 11, color: "var(--text2)" }}>{desc}</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{desc}</div>
             </div>
           </div>
         ))}
       </Card>
 
       {/* 파일 내보내기 가이드 */}
-      <Card style={{ padding: "16px", marginBottom: 14, background: "var(--goldD)", border: "1px solid var(--gold)" }}>
-        <div style={{ fontSize: 11, color: "var(--gold)", fontWeight: 700, marginBottom: 8 }}>📋 파일 받는 방법</div>
+      <Card style={{ padding: "16px", marginBottom: 14, background: "rgba(28,43,74,.08)", border: "1px solid var(--primary)" }}>
+        <div style={{ fontSize: 11, color: "var(--primary)", fontWeight: 700, marginBottom: 8 }}>📋 파일 받는 방법</div>
         {[
           "KB국민카드 앱 → 이용내역 → 기간설정 → Excel 다운로드",
           "신한카드 앱 → 이용내역 조회 → 엑셀다운로드",
@@ -235,7 +235,7 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
         ].map((g, i) => (
           <div key={i} style={{ fontSize: 11, color: "var(--text)", marginBottom: 5, paddingLeft: 4 }}>· {g}</div>
         ))}
-        <div style={{ fontSize: 10, color: "var(--text2)", marginTop: 6 }}>CSV, Excel(.xlsx, .xls) 모두 지원해요</div>
+        <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 6 }}>CSV, Excel(.xlsx, .xls) 모두 지원해요</div>
       </Card>
 
       {/* 업로드 존 */}
@@ -245,33 +245,33 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
         onDrop={onDrop}
         onClick={() => fileRef.current?.click()}
         style={{
-          border: `2px dashed ${dragOver ? "var(--gold)" : "var(--border)"}`,
+          border: `2px dashed ${dragOver ? "var(--primary)" : "var(--border)"}`,
           borderRadius: 16, padding: "40px 20px",
           textAlign: "center", cursor: "pointer",
-          background: dragOver ? "var(--goldD)" : "var(--bg2)",
+          background: dragOver ? "rgba(28,43,74,.08)" : "var(--surface)",
           transition: "all .2s",
         }}
       >
         <div style={{ fontSize: 36, marginBottom: 12 }}>📂</div>
         <div style={{ fontWeight: 700, marginBottom: 6 }}>파일을 여기에 끌어다 놓거나 클릭해서 선택</div>
-        <div style={{ fontSize: 11, color: "var(--text2)" }}>.xlsx · .xls · .csv 지원</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)" }}>.xlsx · .xls · .csv 지원</div>
         <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: "none" }}
           onChange={e => handleFile(e.target.files[0])} />
       </div>
 
       {/* 기존 분석 있으면 표시 */}
       {plan.importedAnalysis && (
-        <Card style={{ padding: "14px", marginTop: 14, border: "1px solid var(--green)" }}>
+        <Card style={{ padding: "14px", marginTop: 14, border: "1px solid var(--success)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: 12, color: "var(--green)", fontWeight: 700, marginBottom: 2 }}>✓ 이전 분석 데이터 있음</div>
-              <div style={{ fontSize: 11, color: "var(--text2)" }}>
+              <div style={{ fontSize: 12, color: "var(--success)", fontWeight: 700, marginBottom: 2 }}>✓ 이전 분석 데이터 있음</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
                 {new Date(plan.importedAnalysis.importedAt).toLocaleDateString("ko-KR")} 업로드 · {fmtS(plan.importedAnalysis.total)}원 분석됨
               </div>
             </div>
             <button onClick={onGoToPlan} style={{
-              padding: "8px 14px", borderRadius: 9, border: "1px solid var(--green)",
-              background: "none", color: "var(--green)", fontSize: 12, fontWeight: 700, cursor: "pointer",
+              padding: "8px 14px", borderRadius: 9, border: "1px solid var(--success)",
+              background: "none", color: "var(--success)", fontSize: 12, fontWeight: 700, cursor: "pointer",
             }}>계획 보기 →</button>
           </div>
         </Card>
@@ -285,11 +285,11 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
   if (stage === "mapping") {
     const ColSelect = ({ label, field }) => (
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 5 }}>{label}</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 5 }}>{label}</div>
         <select
           value={colMap[field]}
           onChange={e => setColMap(m => ({ ...m, [field]: parseInt(e.target.value) }))}
-          style={{ width: "100%", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: 9, padding: "9px 12px", color: "var(--text)", fontSize: 13, outline: "none" }}
+          style={{ width: "100%", background: "var(--surface-alt)", border: "1px solid var(--border)", borderRadius: 9, padding: "9px 12px", color: "var(--text)", fontSize: 13, outline: "none" }}
         >
           <option value={-1}>— 해당 없음 —</option>
           {headers.map((h, i) => <option key={i} value={i}>{h || `(열 ${i+1})`}</option>)}
@@ -301,11 +301,11 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
       <div style={{ padding: "0 16px 96px", overflowY: "auto", height: "100%" }}>
         <div style={{ padding: "22px 0 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div className="serif" style={{ fontSize: 21 }}>컬럼 확인</div>
-          <button onClick={() => setStage("idle")} style={{ background: "none", border: "none", color: "var(--text3)", cursor: "pointer", fontSize: 13 }}>← 다시</button>
+          <button onClick={() => setStage("idle")} style={{ background: "none", border: "none", color: "var(--text-faint)", cursor: "pointer", fontSize: 13 }}>← 다시</button>
         </div>
 
         <Card style={{ padding: "16px", marginBottom: 12 }}>
-          <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 각 항목이 어느 열인지 확인해주세요</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14 }}>■ 각 항목이 어느 열인지 확인해주세요</div>
           <ColSelect label="📅 날짜 열 *" field="dateIdx" />
           <ColSelect label="💰 금액 열 *" field="amtIdx" />
           <ColSelect label="🏪 가맹점명 열" field="merchantIdx" />
@@ -314,7 +314,7 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
 
         {/* 데이터 미리보기 */}
         <Card style={{ padding: "14px", marginBottom: 14, overflow: "hidden" }}>
-          <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 10 }}>■ 데이터 미리보기 (처음 5행)</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>■ 데이터 미리보기 (처음 5행)</div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10 }}>
               <thead>
@@ -322,7 +322,7 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
                   {headers.map((h, i) => (
                     <th key={i} style={{
                       padding: "4px 8px", borderBottom: "1px solid var(--border)",
-                      color: [colMap.dateIdx, colMap.amtIdx, colMap.merchantIdx].includes(i) ? "var(--gold)" : "var(--text2)",
+                      color: [colMap.dateIdx, colMap.amtIdx, colMap.merchantIdx].includes(i) ? "var(--primary)" : "var(--text-muted)",
                       fontWeight: [colMap.dateIdx, colMap.amtIdx, colMap.merchantIdx].includes(i) ? 700 : 400,
                       whiteSpace: "nowrap", textAlign: "left",
                     }}>{h || `열${i+1}`}</th>
@@ -334,7 +334,7 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
                   <tr key={ri}>
                     {headers.map((_, ci) => (
                       <td key={ci} style={{
-                        padding: "4px 8px", borderBottom: "1px solid var(--border2)",
+                        padding: "4px 8px", borderBottom: "1px solid var(--border)",
                         color: "var(--text)", whiteSpace: "nowrap",
                       }}>{String(row[ci] ?? "")}</td>
                     ))}
@@ -347,7 +347,7 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
 
         <button onClick={runAnalysis} style={{
           width: "100%", padding: "16px", borderRadius: 14, border: "none",
-          background: "var(--gold)", color: "#fff", fontWeight: 700, fontSize: 15,
+          background: "var(--primary)", color: "#fff", fontWeight: 700, fontSize: 15,
           cursor: "pointer", boxShadow: "0 6px 20px rgba(200,168,75,.3)",
         }}>
           분석 시작 ({rawRows.length.toLocaleString()}건)
@@ -373,19 +373,19 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
     <div style={{ padding: "0 16px 96px", overflowY: "auto", height: "100%" }}>
       <div style={{ padding: "22px 0 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div className="serif" style={{ fontSize: 21 }}>분석 결과</div>
-        <button onClick={() => setStage("idle")} style={{ background: "none", border: "none", color: "var(--text3)", cursor: "pointer", fontSize: 13 }}>← 다시</button>
+        <button onClick={() => setStage("idle")} style={{ background: "none", border: "none", color: "var(--text-faint)", cursor: "pointer", fontSize: 13 }}>← 다시</button>
       </div>
 
       {/* 요약 숫자 */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
         {[
           { label: "총 지출", value: fmtS(analysis.total) + "원", color: "var(--text)" },
-          { label: "월평균 지출", value: fmtS(analysis.avgMonthly) + "원", color: "var(--gold)" },
-          { label: "거래 건수", value: analysis.count.toLocaleString() + "건", color: "var(--blue)" },
-          { label: "분석 기간", value: analysis.months.length + "개월", color: "var(--green)" },
+          { label: "월평균 지출", value: fmtS(analysis.avgMonthly) + "원", color: "var(--primary)" },
+          { label: "거래 건수", value: analysis.count.toLocaleString() + "건", color: "#3B82F6" },
+          { label: "분석 기간", value: analysis.months.length + "개월", color: "var(--success)" },
         ].map(s => (
           <Card key={s.label} style={{ padding: "14px" }}>
-            <div style={{ fontSize: 10, color: "var(--text2)", marginBottom: 5 }}>{s.label}</div>
+            <div style={{ fontSize: 10, color: "var(--text-muted)", marginBottom: 5 }}>{s.label}</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
           </Card>
         ))}
@@ -393,15 +393,15 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
 
       {/* 월별 지출 바 차트 */}
       <Card style={{ padding: "16px", marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 월별 지출 추이</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14 }}>■ 월별 지출 추이</div>
         <ResponsiveContainer width="100%" height={160}>
           <BarChart data={monthlyChartData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
-            <XAxis dataKey="name" tick={{ fontSize: 10, fill: "var(--text3)" }} />
-            <YAxis tick={{ fontSize: 9, fill: "var(--text3)" }} tickFormatter={v => fmtS(v)} />
+            <XAxis dataKey="name" tick={{ fontSize: 10, fill: "var(--text-faint)" }} />
+            <YAxis tick={{ fontSize: 9, fill: "var(--text-faint)" }} tickFormatter={v => fmtS(v)} />
             <Tooltip content={<KrTooltip />} />
             <Bar dataKey="amount" radius={[5,5,0,0]}>
               {monthlyChartData.map((_, i) => (
-                <Cell key={i} fill={i === monthlyChartData.length - 1 ? "var(--gold)" : "#5c8de866"} />
+                <Cell key={i} fill={i === monthlyChartData.length - 1 ? "var(--primary)" : "#5c8de866"} />
               ))}
             </Bar>
           </BarChart>
@@ -410,7 +410,7 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
 
       {/* 카테고리별 지출 */}
       <Card style={{ padding: "16px", marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 14 }}>■ 카테고리별 지출 분석</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14 }}>■ 카테고리별 지출 분석</div>
         {catChartData.map(c => {
           const pct = Math.round(c.amount / analysis.total * 100);
           const monthlyAvg = Math.round(c.amount / (analysis.months.length || 1));
@@ -420,14 +420,14 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span style={{ fontSize: 14 }}>{c.icon}</span>
                   <span style={{ fontSize: 12, fontWeight: 600 }}>{c.label}</span>
-                  <span style={{ fontSize: 10, color: "var(--text3)" }}>{pct}%</span>
+                  <span style={{ fontSize: 10, color: "var(--text-faint)" }}>{pct}%</span>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <span style={{ fontSize: 12, fontWeight: 700 }}>{fmtS(c.amount)}원</span>
-                  <span style={{ fontSize: 10, color: "var(--text2)", marginLeft: 5 }}>월평균 {fmtS(monthlyAvg)}원</span>
+                  <span style={{ fontSize: 10, color: "var(--text-muted)", marginLeft: 5 }}>월평균 {fmtS(monthlyAvg)}원</span>
                 </div>
               </div>
-              <div style={{ height: 5, borderRadius: 3, background: "var(--bg3)", overflow: "hidden" }}>
+              <div style={{ height: 5, borderRadius: 3, background: "var(--surface-alt)", overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${pct}%`, background: c.color, borderRadius: 3, transition: "width .6s ease" }} />
               </div>
             </div>
@@ -438,13 +438,13 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
       {/* 자주 쓰는 가맹점 */}
       {analysis.topMerchants.length > 0 && (
         <Card style={{ padding: "16px", marginBottom: 14, overflow: "hidden" }}>
-          <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 12 }}>■ 자주 쓰는 곳 TOP {analysis.topMerchants.length}</div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 12 }}>■ 자주 쓰는 곳 TOP {analysis.topMerchants.length}</div>
           {analysis.topMerchants.map(([name, amt], i) => {
             const cat = guessCat(name);
             const c = CAT[cat] || CAT.etc;
             return (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: i < analysis.topMerchants.length - 1 ? "1px solid var(--border)" : "none" }}>
-                <span style={{ fontSize: 11, color: "var(--text3)", width: 16, flexShrink: 0 }}>{i+1}</span>
+                <span style={{ fontSize: 11, color: "var(--text-faint)", width: 16, flexShrink: 0 }}>{i+1}</span>
                 <div style={{ width: 26, height: 26, borderRadius: 7, background: c.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>{c.icon}</div>
                 <span style={{ flex: 1, fontSize: 12, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
                 <span style={{ fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{fmtS(amt)}원</span>
@@ -457,12 +457,12 @@ export function DataImportView({ plan, setPlan, onGoToPlan }) {
       {/* 재무계획에 반영 버튼 */}
       <button onClick={applyToPlan} style={{
         width: "100%", padding: "16px", borderRadius: 14, border: "none",
-        background: "var(--gold)", color: "#fff", fontWeight: 700, fontSize: 15,
+        background: "var(--primary)", color: "#fff", fontWeight: 700, fontSize: 15,
         cursor: "pointer", boxShadow: "0 6px 20px rgba(200,168,75,.3)", marginBottom: 10,
       }}>
         🎯 이 데이터로 재무계획 수립하기
       </button>
-      <div style={{ fontSize: 11, color: "var(--text3)", textAlign: "center" }}>
+      <div style={{ fontSize: 11, color: "var(--text-faint)", textAlign: "center" }}>
         카테고리별 월평균 지출이 예산 초안으로 자동 채워져요
       </div>
     </div>

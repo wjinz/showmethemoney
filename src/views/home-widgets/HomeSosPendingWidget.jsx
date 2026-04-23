@@ -30,7 +30,7 @@ export function HomeSosPendingWidget({ sosPending, onSosResolve }) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             style={{
-              background: "var(--bg2)",
+              background: "var(--surface)",
               borderRadius: T.radius.xl,
               border: "2px solid rgba(239,68,68,0.2)",
               padding: 20, marginBottom: 10,
@@ -47,7 +47,7 @@ export function HomeSosPendingWidget({ sosPending, onSosResolve }) {
             <div style={{ paddingLeft: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: 11, color: "var(--text2)", marginBottom: 4 }}>배우자의 애교 섞인 요청 🥺</p>
+                  <p style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 4 }}>배우자의 애교 섞인 요청 🥺</p>
                   <p style={{ fontSize: 16, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{req.reason}</p>
                 </div>
                 <p style={{ fontSize: 18, fontWeight: 800, color: "#EF4444", flexShrink: 0, marginLeft: 12 }}>

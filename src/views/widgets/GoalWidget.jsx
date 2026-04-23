@@ -78,7 +78,7 @@ export function GoalWidget({ plan, setPlan }) {
         padding: 20, boxSizing: 'border-box'
       }}>
         <div style={{
-          background: 'var(--bg2)', borderRadius: 16, padding: '24px 20px', width: '100%', maxWidth: 400,
+          background: 'var(--surface)', borderRadius: 16, padding: '24px 20px', width: '100%', maxWidth: 400,
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)', position: 'relative'
         }}>
           <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 20, color: 'var(--text)' }}>
@@ -86,31 +86,31 @@ export function GoalWidget({ plan, setPlan }) {
           </div>
           
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 6 }}>라벨 (예: 해외여행)</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>라벨 (예: 해외여행)</div>
             <input type="text" value={newLabel} onChange={e => setNewLabel(e.target.value)}
-              style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', padding: 12, color: 'var(--text)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
+              style={{ width: '100%', background: 'var(--surface-alt)', border: '1px solid var(--border)', padding: 12, color: 'var(--text)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
           </div>
           
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 6 }}>목표 금액</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>목표 금액</div>
             <input type="text" value={fmtC(newTarget)} onChange={e => setNewTarget(e.target.value.replace(/[^0-9]/g, ''))} placeholder="0"
-              style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', padding: 12, color: 'var(--text)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
+              style={{ width: '100%', background: 'var(--surface-alt)', border: '1px solid var(--border)', padding: 12, color: 'var(--text)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
           </div>
 
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 6 }}>현재 모은 금액</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>현재 모은 금액</div>
             <input type="text" value={fmtC(newSaved)} onChange={e => setNewSaved(e.target.value.replace(/[^0-9]/g, ''))} placeholder="0"
-              style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', padding: 12, color: 'var(--text)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
+              style={{ width: '100%', background: 'var(--surface-alt)', border: '1px solid var(--border)', padding: 12, color: 'var(--text)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
           </div>
 
           <div style={{ display: 'flex', gap: 8 }}>
             {editIndex !== -1 && (
-              <button onClick={handleDelete} style={{ flex: 1, background: 'rgba(255,100,100,0.1)', border: 'none', color: '#FF6B6B', padding: 14, borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>
+              <button onClick={handleDelete} style={{ flex: 1, background: 'rgba(255,100,100,0.1)', border: 'none', color: 'var(--danger)', padding: 14, borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>
                 삭제
               </button>
             )}
-            <button onClick={closeModal} style={{ flex: 1, background: 'var(--bg3)', border: 'none', color: 'var(--text)', padding: 14, borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>취소</button>
-            <button onClick={handleSave} style={{ flex: 2, background: 'var(--gold)', border: 'none', color: '#fff', padding: 14, borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 800 }}>저장</button>
+            <button onClick={closeModal} style={{ flex: 1, background: 'var(--surface-alt)', border: 'none', color: 'var(--text)', padding: 14, borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>취소</button>
+            <button onClick={handleSave} style={{ flex: 2, background: 'var(--primary)', border: 'none', color: '#fff', padding: 14, borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 800 }}>저장</button>
           </div>
         </div>
       </div>,
@@ -120,16 +120,16 @@ export function GoalWidget({ plan, setPlan }) {
 
   return (
     <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 12, display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12, display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
         <span>🎯 목표 저축</span>
         {setPlan && (
-          <button onClick={openAddModal} style={{ background: 'none', border: 'none', color: 'var(--gold)', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>+ 추가</button>
+          <button onClick={openAddModal} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>+ 추가</button>
         )}
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {!goals.length ? (
-          <div style={{ padding: 20, textAlign: 'center', color: 'var(--text3)', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+          <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-faint)', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
             공동 목표를 추가해보세요
           </div>
         ) : (
@@ -143,7 +143,7 @@ export function GoalWidget({ plan, setPlan }) {
                   </span>
                   <span style={{ fontSize: 12, color: '#7A9E87', fontWeight: 800 }}>{pct}%</span>
                 </div>
-                <div style={{ position: 'relative', height: 12, background: 'var(--bg4)', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ position: 'relative', height: 12, background: '#F3F4F6', borderRadius: 6, overflow: 'hidden' }}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}
@@ -164,7 +164,7 @@ export function GoalWidget({ plan, setPlan }) {
                     />
                   </motion.div>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 5, fontWeight: 600 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 5, fontWeight: 600 }}>
                   {fmtS(g.saved)}원 / {fmtS(g.target)}원
                 </div>
               </div>

@@ -26,7 +26,7 @@ export function HomeSummaryBarsWidget({ fixedTotal, installTotal, variableSpent 
         <div
           key={label}
           style={{
-            background: "var(--bg2)",
+            background: "var(--surface)",
             borderRadius: T.radius.lg,
             padding: "10px 12px",
             border: "1px solid var(--border-solid)",
@@ -35,8 +35,8 @@ export function HomeSummaryBarsWidget({ fixedTotal, installTotal, variableSpent 
             justifyContent: "center"
           }}
         >
-          <p style={{ fontSize: 9, color: "var(--text3)", marginBottom: 3 }}>{label}</p>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text2)" }}>{fmtS(value)}원</p>
+          <p style={{ fontSize: 9, color: "var(--text-faint)", marginBottom: 3 }}>{label}</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)" }}>{fmtS(value)}원</p>
         </div>
       ))}
     </div>

@@ -53,14 +53,14 @@ export function IncomeSavingsWidget({ plan, tx, fixed, install }) {
   return (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 700 }}>💰 수입 및 저축 목표</div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--gold)', background: 'var(--goldD)', padding: '2px 8px', borderRadius: 12 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>💰 수입 및 저축 목표</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', background: 'rgba(28,43,74,.08)', padding: '2px 8px', borderRadius: 12 }}>
           {targetPct}% 저축 목표
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <p style={{ fontSize: 11, color: 'var(--text3)' }}>
+        <p style={{ fontSize: 11, color: 'var(--text-faint)' }}>
           {isSolo ? '나의 수입' : '부부 합산 수입'}
         </p>
         <p style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)' }}>
@@ -68,33 +68,33 @@ export function IncomeSavingsWidget({ plan, tx, fixed, install }) {
         </p>
       </div>
 
-      <div style={{ background: 'var(--bg3)', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ background: 'var(--surface-alt)', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 12, color: 'var(--text2)' }}>목표 저축액</span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>목표 저축액</span>
           <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmtS(savingsTarget)}원</span>
         </div>
         
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 12, color: 'var(--text2)' }}>현재 잉여 자금</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: remainingCash < 0 ? 'var(--red)' : '#7A9E87' }}>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>현재 잉여 자금</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: remainingCash < 0 ? 'var(--danger)' : '#7A9E87' }}>
             {fmtS(remainingCash)}원
           </span>
         </div>
 
         {/* 2단 게이지 */}
         <div style={{ marginTop: 4 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginBottom: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-faint)', marginBottom: 4 }}>
             <span>수입 대비 비율</span>
           </div>
-          <div style={{ height: 6, background: 'var(--bg4)', borderRadius: 3, display: 'flex', overflow: 'hidden' }}>
+          <div style={{ height: 6, background: '#F3F4F6', borderRadius: 3, display: 'flex', overflow: 'hidden' }}>
             {/* 고정비 등 이미 나간 돈 영역 (회색) */}
-            <div style={{ width: `${Math.max(0, 100 - targetPct - remainingPct)}%`, background: 'var(--text3)', opacity: 0.3 }} />
+            <div style={{ width: `${Math.max(0, 100 - targetPct - remainingPct)}%`, background: 'var(--text-faint)', opacity: 0.3 }} />
             {/* 저축 목표 영역 (파란색) */}
-            <div style={{ width: `${targetPct}%`, background: 'var(--gold)' }} />
+            <div style={{ width: `${targetPct}%`, background: 'var(--primary)' }} />
             {/* 여유 자금 영역 (초록색) */}
             <div style={{ width: `${remainingPct}%`, background: '#7A9E87' }} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text3)', marginTop: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text-faint)', marginTop: 4 }}>
             <span>지출 {100 - targetPct - remainingPct}%</span>
             <span>목표 {targetPct}%</span>
             <span>여유 {remainingPct}%</span>

@@ -52,7 +52,7 @@ export function FixedExpenseWidget({ fixed = [], install = [], cards = [] }) {
       // 납입 회차 계산 로직 (추정치)
       let elapsedMonths = 0;
       if (i.date && card.billingStartDay) {
-        const _cardForCalc = /** @type {{ billingStartDay: number, billingEndDay: number, billingEndNextMonth: boolean, paymentDay: number }} */ (/** @type {unknown} */ (card));
+        const _cardForCalc = /** @type {{ billingStartDay: number, billingEndDay: number, billingEndNextMonth: boolean, paymentDay: number }} */ (card);
         const firstPayDate = getInstallmentFirstPayment(_cardForCalc, i.date);
         if (today > firstPayDate) {
           const mDiff = (currY - firstPayDate.getFullYear()) * 12 + (currM - (firstPayDate.getMonth() + 1));
@@ -89,7 +89,7 @@ export function FixedExpenseWidget({ fixed = [], install = [], cards = [] }) {
 
   if (!paymentItems.length) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text3)', fontSize: 12 }}>
+      <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-faint)', fontSize: 12 }}>
         등록된 고정비나 할부가 없습니다.
       </div>
     );
@@ -101,8 +101,8 @@ export function FixedExpenseWidget({ fixed = [], install = [], cards = [] }) {
   return (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 700 }}>📌 다가오는 결제일</div>
-        <div style={{ fontSize: 11, color: 'var(--text3)' }}>총 {paymentItems.length}건</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>📌 다가오는 결제일</div>
+        <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>총 {paymentItems.length}건</div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -115,8 +115,8 @@ export function FixedExpenseWidget({ fixed = [], install = [], cards = [] }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ 
                     fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
-                    background: item.type === 'fixed' ? 'var(--bg3)' : 'rgba(59, 130, 246, 0.1)',
-                    color: item.type === 'fixed' ? 'var(--text2)' : '#3B82F6'
+                    background: item.type === 'fixed' ? 'var(--surface-alt)' : 'rgba(59, 130, 246, 0.1)',
+                    color: item.type === 'fixed' ? 'var(--text-muted)' : '#3B82F6'
                   }}>
                     {item.day}일
                   </span>
@@ -124,7 +124,7 @@ export function FixedExpenseWidget({ fixed = [], install = [], cards = [] }) {
                     {item.label}
                   </span>
                   {isUrgent && (
-                    <span style={{ fontSize: 10, color: 'var(--red)', fontWeight: 700 }}>
+                    <span style={{ fontSize: 10, color: 'var(--danger)', fontWeight: 700 }}>
                       D-{item.daysLeft}
                     </span>
                   )}
@@ -136,13 +136,13 @@ export function FixedExpenseWidget({ fixed = [], install = [], cards = [] }) {
               
               {item.type === 'install' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                  <div style={{ flex: 1, height: 4, background: 'var(--bg4)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{ flex: 1, height: 4, background: '#F3F4F6', borderRadius: 2, overflow: 'hidden' }}>
                     <div style={{ 
                       width: `${Math.min(100, Math.max(0, (item.currentMonth / item.totalMonths) * 100))}%`, 
                       height: '100%', background: '#3B82F6', borderRadius: 2 
                     }} />
                   </div>
-                  <span style={{ fontSize: 10, color: 'var(--text3)' }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>
                     {item.currentMonth}/{item.totalMonths}회차
                   </span>
                 </div>
@@ -153,7 +153,7 @@ export function FixedExpenseWidget({ fixed = [], install = [], cards = [] }) {
       </div>
       
       {paymentItems.length > 5 && (
-        <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>
+        <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-faint)', marginTop: 4 }}>
           외 {paymentItems.length - 5}건 대기 중
         </div>
       )}

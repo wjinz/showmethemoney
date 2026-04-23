@@ -55,7 +55,7 @@ export function Nav({ view, setView, syncStatus, kidsMode = false }) {
           background: "none",
           border: "none",
           cursor: "pointer",
-          color: isActive ? "var(--gold)" : "var(--text3)",
+          color: isActive ? "var(--primary)" : "var(--text-faint)",
           transform: isActive ? "scale(1.1)" : "scale(1)",
           transition: "color 0.2s, transform 0.2s",
           position: "relative",
@@ -81,7 +81,7 @@ export function Nav({ view, setView, syncStatus, kidsMode = false }) {
               width: 7,
               height: 7,
               borderRadius: T.radius.full,
-              background: syncStatus === "error" ? "var(--red)" : "var(--gold)",
+              background: syncStatus === "error" ? "var(--danger)" : "var(--primary)",
               border: "1.5px solid var(--bg)",
             }}
           />
@@ -120,8 +120,8 @@ export function Nav({ view, setView, syncStatus, kidsMode = false }) {
             height: 60,
             borderRadius: T.radius.full,
             background: isEntry
-              ? "linear-gradient(135deg,#c8a84b,#e2c97e)"
-              : "linear-gradient(135deg,var(--text),#3B6FCC)",
+              ? "linear-gradient(135deg,#1C2B4A,#2d4270)"
+              : "linear-gradient(135deg,#1C2B4A,#2d4270)",
             border: "3px solid var(--bg)",
             boxShadow: isEntry
               ? "0 0 0 4px rgba(200,168,75,.3), 0 6px 24px rgba(200,168,75,.5)"

@@ -5,7 +5,9 @@
  * Task 5-3 구현
  */
 
-const QUEUE_KEY = 'budget_offline_queue';
+import { LS_KEYS } from './ls.js';
+
+const QUEUE_KEY = LS_KEYS.OFFLINE_QUEUE;
 
 /**
  * 오프라인 상태일 때 저장 요청을 큐에 쌓습니다.
@@ -107,7 +109,7 @@ export const clear = () => {
 
 // ── tx 단건/다건 큐 ───────────────────────────────────────────────────────────
 
-const TX_QUEUE_KEY = 'budget_offline_tx_queue';
+const TX_QUEUE_KEY = LS_KEYS.OFFLINE_TX_QUEUE;
 
 /**
  * 오프라인 중 insertTx 단건 큐 등록

@@ -18,7 +18,7 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
   return (
     <div
       style={{
-        background: "var(--bg2)",
+        background: "var(--surface)",
         borderRadius: T.radius.xl,
         padding: 20,
         border: "1px solid var(--border-solid)",
@@ -32,7 +32,7 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
       }}
     >
       <div style={{ flex: 1 }}>
-        <p style={{ fontSize: "var(--fluid-sm, 12px)", color: "var(--text2)", fontWeight: 500, marginBottom: 4 }}>
+        <p style={{ fontSize: "var(--fluid-sm, 12px)", color: "var(--text-muted)", fontWeight: 500, marginBottom: 4 }}>
           {isTotalMode ? "총 집행액" : "생활비 집행"}
         </p>
         <p style={{ fontSize: "var(--fluid-lg, 24px)", fontWeight: 700, color: "var(--text)", marginBottom: 8, whiteSpace: "nowrap" }}>
@@ -41,7 +41,7 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
         <div
           style={{
             display: "inline-flex",
-            background: "var(--bg3)",
+            background: "var(--surface-alt)",
             borderRadius: T.radius.md,
             padding: 3,
             border: "1px solid var(--border)",
@@ -55,8 +55,8 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
               style={{
                 padding: "4px 10px", borderRadius: T.radius.sm, fontSize: 10,
                 fontWeight: 700, cursor: "pointer", border: "none",
-                background: isTotalMode === v ? "var(--gold)" : "none",
-                color: isTotalMode === v ? "#fff" : "var(--text2)",
+                background: isTotalMode === v ? "var(--primary)" : "none",
+                color: isTotalMode === v ? "#fff" : "var(--text-muted)",
                 transition: "all .2s",
               }}
             >
@@ -68,8 +68,8 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
           className="responsive-hide"
           style={{
             display: "inline-block",
-            fontSize: 10, fontWeight: 600, color: "var(--gold)",
-            background: "var(--goldD)",
+            fontSize: 10, fontWeight: 600, color: "var(--primary)",
+            background: "rgba(28,43,74,.08)",
             padding: "3px 8px", borderRadius: T.radius.sm,
             marginLeft: 8,
           }}
@@ -83,10 +83,10 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
           style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}
           viewBox="0 0 100 100"
         >
-          <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--bg3)" strokeWidth="12" />
+          <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--surface-alt)" strokeWidth="12" />
           <motion.circle
             cx="50" cy="50" r="40" fill="transparent"
-            stroke="var(--gold)" strokeWidth="12"
+            stroke="var(--primary)" strokeWidth="12"
             strokeDasharray={ringDash}
             initial={{ strokeDasharray: `0 ${CIRC}` }}
             animate={{ strokeDasharray: ringDash }}
@@ -102,7 +102,7 @@ export function HomeProgressRingWidget({ isTotalMode, setIsTotalMode, totalSpent
           }}
         >
           <span style={{ fontSize: "clamp(12px, 4cqw, 16px)", fontWeight: 800, color: "var(--text)" }}>{ringPct}%</span>
-          <span style={{ fontSize: "clamp(7px, 2cqw, 8px)", color: "var(--text3)", marginTop: 1 }}>집행</span>
+          <span style={{ fontSize: "clamp(7px, 2cqw, 8px)", color: "var(--text-faint)", marginTop: 1 }}>집행</span>
         </div>
       </div>
     </div>

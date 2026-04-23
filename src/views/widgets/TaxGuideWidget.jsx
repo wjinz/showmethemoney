@@ -51,7 +51,7 @@ export function TaxGuideWidget({ tx, plan, names }) {
 
   if (!guide) {
     return (
-      <div style={{ padding: 16, color: 'var(--text3)', fontSize: 12 }}>
+      <div style={{ padding: 16, color: 'var(--text-faint)', fontSize: 12 }}>
         급여 정보를 입력하면 세금 가이드를 볼 수 있어요
       </div>
     );
@@ -61,14 +61,14 @@ export function TaxGuideWidget({ tx, plan, names }) {
     <div style={{ padding: '14px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{ fontSize: 18 }}>{guide.icon}</span>
-        <span style={{ fontSize: 11, color: 'var(--text2)', fontWeight: 700 }}>Tax Guide</span>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700 }}>Tax Guide</span>
         <span style={{ fontSize: 18, marginLeft: 'auto' }}>💳</span>
       </div>
       <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5, fontWeight: 600 }}>
         {guide.msg}
       </div>
       {guide.tip && (
-        <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>{guide.tip}</div>
+        <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 4 }}>{guide.tip}</div>
       )}
     </div>
   );

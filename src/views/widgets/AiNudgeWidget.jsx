@@ -29,7 +29,7 @@ export function AiNudgeWidget({ budgets, tx }) {
     : pct >= 60 ? `이달 ${pct}% 소진. 하루 ${fmtS(dailyLeft)}원 페이스.` 
     : `예산 여유 충분. 하루 ${fmtS(dailyLeft)}원 가능.`;
   const defaultIcon = pct >= 100 ? '🚨' : pct >= 80 ? '⚠️' : pct >= 60 ? '💡' : '✅';
-  const defaultColor = pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--gold)' : pct >= 60 ? 'var(--blue)' : 'var(--green)';
+  const defaultColor = pct >= 100 ? 'var(--danger)' : pct >= 80 ? 'var(--primary)' : pct >= 60 ? '#3B82F6' : 'var(--success)';
 
   const fetchNudge = async () => {
     setIsLoading(true);
@@ -54,7 +54,7 @@ export function AiNudgeWidget({ budgets, tx }) {
   return (
     <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6, height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 11, color: 'var(--text2)', fontWeight: 700 }}>AI Nudge</div>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700 }}>AI Nudge</div>
         <button onClick={fetchNudge} disabled={isLoading} style={{
           background: "none", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text)", cursor: isLoading ? "not-allowed" : "pointer", fontSize: 10, padding: "4px 8px"
         }}>
@@ -64,12 +64,12 @@ export function AiNudgeWidget({ budgets, tx }) {
       
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginTop: 4, flex: 1 }}>
         <span style={{ fontSize: 24, marginTop: -2 }}>{nudgeMsg ? '🤖' : defaultIcon}</span>
-        <span style={{ fontSize: 12, color: nudgeMsg ? 'var(--gold)' : defaultColor, fontWeight: 600, lineHeight: 1.4 }}>
+        <span style={{ fontSize: 12, color: nudgeMsg ? 'var(--primary)' : defaultColor, fontWeight: 600, lineHeight: 1.4 }}>
           {nudgeMsg || defaultMsg}
         </span>
       </div>
       
-      <div style={{ fontSize: 9, color: 'var(--text3)', textAlign: 'right', marginTop: 'auto' }}>
+      <div style={{ fontSize: 9, color: 'var(--text-faint)', textAlign: 'right', marginTop: 'auto' }}>
         분석 기준: 이번 달 최근 10건 내역
       </div>
     </div>

@@ -54,16 +54,16 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
         onClick={(e) => e.stopPropagation()}
       >
         {/* 핸들 바 */}
-        <div style={{ width: 40, height: 5, background: "var(--border2)", borderRadius: 99, margin: "0 auto 20px" }} />
+        <div style={{ width: 40, height: 5, background: "var(--border)", borderRadius: 99, margin: "0 auto 20px" }} />
 
         {/* 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div className="serif" style={{ fontSize: 22 }}>지출 직접 입력</div>
-          <button onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ background: "none", border: "none", fontSize: 20, color: "var(--text3)", cursor: "pointer" }}>✕</button>
+          <button onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ background: "none", border: "none", fontSize: 20, color: "var(--text-faint)", cursor: "pointer" }}>✕</button>
         </div>
 
         {/* 날짜 선택 */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--bg3)", borderRadius: 12, padding: "10px 14px", marginBottom: 18, border: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--surface-alt)", borderRadius: 12, padding: "10px 14px", marginBottom: 18, border: "1px solid var(--border)" }}>
           <span style={{ fontSize: 15 }}>📅</span>
           <input
             type="date"
@@ -82,9 +82,9 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
                 onClick={(e) => { e.stopPropagation(); setWho(r); }}
                 style={{
                   flex: 1, padding: "12px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 13,
-                  background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--bg2)",
+                  background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--surface)",
                   border: `1px solid ${who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--border)"}`,
-                  color: who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--text2)",
+                  color: who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--text-muted)",
                 }}
               >
                 {r === "husband" ? names.husband : names.wife}
@@ -94,10 +94,10 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
         )}
 
         {/* 금액 키패드 */}
-        <div style={{ background: "var(--bg3)", borderRadius: 16, padding: "20px", marginBottom: 20, border: "1px solid var(--border2)" }}>
+        <div style={{ background: "var(--surface-alt)", borderRadius: 16, padding: "20px", marginBottom: 20, border: "1px solid var(--border)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700 }}>금액</div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: amount ? "var(--text)" : "var(--text3)" }}>
+            <div style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700 }}>금액</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: amount ? "var(--text)" : "var(--text-faint)" }}>
               {amount ? fmtC(amount) : 0}
               <span style={{ fontSize: 18, marginLeft: 4, fontWeight: 500 }}>원</span>
             </div>
@@ -107,7 +107,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
               <button
                 key={v}
                 onClick={(e) => press(String(v), e)}
-                style={{ height: 52, borderRadius: 12, border: "1px solid var(--border)", background: "var(--bg2)", fontSize: 20, fontWeight: 700, cursor: "pointer" }}
+                style={{ height: 52, borderRadius: 12, border: "1px solid var(--border)", background: "var(--surface)", fontSize: 20, fontWeight: 700, cursor: "pointer" }}
               >
                 {v}
               </button>
@@ -123,9 +123,9 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
               onClick={() => setCat(c.id)}
               style={{
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "12px 0", borderRadius: 14, cursor: "pointer",
-                background: cat === c.id ? c.color + "22" : "var(--bg3)",
+                background: cat === c.id ? c.color + "22" : "var(--surface-alt)",
                 border: `1px solid ${cat === c.id ? c.color : "var(--border)"}`,
-                color: cat === c.id ? c.color : "var(--text2)",
+                color: cat === c.id ? c.color : "var(--text-muted)",
                 transition: "all 0.15s ease",
               }}
             >
@@ -136,7 +136,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
         </div>
 
         {/* 메모 */}
-        <div style={{ background: "var(--bg3)", borderRadius: 14, padding: "4px 14px", marginBottom: 20, border: "1px solid var(--border)" }}>
+        <div style={{ background: "var(--surface-alt)", borderRadius: 14, padding: "4px 14px", marginBottom: 20, border: "1px solid var(--border)" }}>
           <input
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
@@ -158,9 +158,9 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
                 onClick={(e) => { e.stopPropagation(); setPayMethod(m.id); if(m.id==="cash") setCardId(""); }}
                 style={{
                   flex: 1, padding: "10px", borderRadius: 12, cursor: "pointer", fontSize: 12, fontWeight: 700,
-                  background: payMethod === m.id ? "var(--goldD)" : "var(--bg3)",
-                  border: `1px solid ${payMethod === m.id ? "var(--gold)" : "var(--border)"}`,
-                  color: payMethod === m.id ? "var(--gold)" : "var(--text2)",
+                  background: payMethod === m.id ? "rgba(28,43,74,.08)" : "var(--surface-alt)",
+                  border: `1px solid ${payMethod === m.id ? "var(--primary)" : "var(--border)"}`,
+                  color: payMethod === m.id ? "var(--primary)" : "var(--text-muted)",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 }}
               >
@@ -178,8 +178,8 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
                   onClick={(e) => { e.stopPropagation(); setCardId(cardId === c.id ? "" : c.id); }}
                   style={{
                     flexShrink: 0, padding: "8px 14px", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer",
-                    background: cardId === c.id ? c.color : "var(--bg3)",
-                    color: cardId === c.id ? getContrastText(c.color) : "var(--text2)",
+                    background: cardId === c.id ? c.color : "var(--surface-alt)",
+                    color: cardId === c.id ? getContrastText(c.color) : "var(--text-muted)",
                     border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
                     boxShadow: cardId === c.id ? `0 4px 12px ${c.color}44` : "none",
                     transition: "all 0.2s"
@@ -196,7 +196,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
         <div style={{ display: "flex", gap: 10 }}>
           <label style={{
             width: 55, height: 55, borderRadius: 14,
-            background: "var(--bg3)", border: "1px solid var(--border)",
+            background: "var(--surface-alt)", border: "1px solid var(--border)",
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
             cursor: "pointer", flexShrink: 0,
             transition: "all 0.2s ease",
@@ -208,7 +208,7 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
               style={{ display: "none" }}
             />
             <span style={{ fontSize: 18, lineHeight: 1 }}>📸</span>
-            <span style={{ fontSize: 9, fontWeight: 800, color: "var(--text2)" }}>AI 스캔</span>
+            <span style={{ fontSize: 9, fontWeight: 800, color: "var(--text-muted)" }}>AI 스캔</span>
           </label>
 
           <button
@@ -216,8 +216,8 @@ export function InputModal({ defaultWho, names, plan, cards, onClose, onSave, on
             disabled={!amount || !cat}
             style={{
               flex: 1, borderRadius: 16, border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer",
-              background: (!amount || !cat) ? "var(--bg3)" : "var(--gold)",
-              color: (!amount || !cat) ? "var(--text3)" : "#fff",
+              background: (!amount || !cat) ? "var(--surface-alt)" : "var(--primary)",
+              color: (!amount || !cat) ? "var(--text-faint)" : "#fff",
               boxShadow: (!amount || !cat) ? "none" : "0 8px 24px rgba(200,168,75,0.3)",
               transition: "all 0.2s ease",
             }}

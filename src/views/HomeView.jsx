@@ -31,6 +31,7 @@ import { HomeRecentTxWidget } from "./home-widgets/HomeRecentTxWidget.jsx";
  * @typedef {import('../constants/index.js').FixedItem} FixedItem
  * @typedef {import('../constants/index.js').InstallItem} InstallItem
  * @typedef {import('../constants/index.js').WidgetLayoutItem} WidgetLayoutItem
+ * @typedef {import('../constants/index.js').Plan} Plan
  */
 
 /**
@@ -102,7 +103,7 @@ export function HomeView({
   const paceMax    = sliderCfg.paceMaxDaily;
   const projected  = variableSpent + paceDaily * daysLeft;
   const projOver   = projected > totalBudget;
-  const paceColor  = pacePct <= 90 ? "var(--green)" : pacePct <= 110 ? "#d4b84a" : "var(--red)";
+  const paceColor  = pacePct <= 90 ? "var(--success)" : pacePct <= 110 ? "var(--warning)" : "var(--danger)";
   const paceStatus = pacePct <= 90 ? "안전한 페이스 ✓" : pacePct <= 110 ? "보통" : "주의";
 
   const currentPaceDaily = DAY > 0 ? Math.round(variableSpent / DAY) : 0;
@@ -125,7 +126,7 @@ export function HomeView({
   const estimatedSavings  = totalSalary - committed - projectedAtPace;
   const hasData           = thisMonthTx.length > 0;
   const savingsRate       = totalSalary > 0 ? Math.round(estimatedSavings / totalSalary * 100) : 0;
-  const savingsRateColor  = totalSalary === 0 || !hasData ? "var(--text3)" : (savingsRate >= 20 ? "var(--green)" : savingsRate >= 10 ? "var(--gold)" : "var(--red)");
+  const savingsRateColor  = totalSalary === 0 || !hasData ? "var(--text-faint)" : (savingsRate >= 20 ? "var(--success)" : savingsRate >= 10 ? "var(--primary)" : "var(--danger)");
 
   const paceProgressPct = totalBudget > 0 ? Math.min(Math.round(projectedAtPace / totalBudget * 100), 130) : 0;
   const remainingAtPace = totalBudget - projectedAtPace;
@@ -137,7 +138,7 @@ export function HomeView({
 
   // -- Allowance Data Calculation (Image 3 integration) --
   const allowanceData = useMemo(() => {
-    const p = plan || {};
+    const p = plan ?? /** @type {Plan} */ ({});
     if (p.isSolo) return null;
     const targets = p.allowance || { husband: 0, wife: 0 };
     
@@ -298,8 +299,8 @@ export function HomeView({
     <div ref={containerRef} style={{ padding: "0 4px 96px", overflowY: "auto", height: "100%", background: 'var(--bg)' }}>
       {/* 편집 모드 헤더 */}
       <div style={{ padding: '16px 12px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-          HOME {isEditMode && <span style={{ color: 'var(--gold)' }}>• Edit Mode</span>}
+        <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          HOME {isEditMode && <span style={{ color: 'var(--primary)' }}>• Edit Mode</span>}
         </span>
         <div style={{ display: 'flex', gap: 8 }}>
           {isEditMode && (
@@ -308,7 +309,7 @@ export function HomeView({
               style={{
                 background: 'rgba(255,100,100,0.1)', border: '1px solid rgba(255,100,100,0.3)',
                 borderRadius: 12, padding: '6px 12px', cursor: 'pointer',
-                fontSize: 12, fontWeight: 700, color: '#FF6B6B'
+                fontSize: 12, fontWeight: 700, color: 'var(--danger)'
               }}
             >
               초기화
@@ -317,10 +318,10 @@ export function HomeView({
           <button
             onClick={() => setIsEditMode(!isEditMode)}
             style={{
-              background: isEditMode ? 'var(--goldD)' : 'transparent',
-              border: `1px solid ${isEditMode ? 'var(--gold)' : 'var(--border)'}`,
+              background: isEditMode ? 'rgba(28,43,74,.08)' : 'transparent',
+              border: `1px solid ${isEditMode ? 'var(--primary)' : 'var(--border)'}`,
               borderRadius: 12, padding: '6px 12px', cursor: 'pointer',
-              fontSize: 12, fontWeight: 700, color: isEditMode ? 'var(--gold)' : 'var(--text2)',
+              fontSize: 12, fontWeight: 700, color: isEditMode ? 'var(--primary)' : 'var(--text-muted)',
               display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s'
             }}
           >
@@ -349,8 +350,8 @@ export function HomeView({
             key={key}
             className="widget-item-wrapper"
             style={{
-              background: 'var(--bg2)', borderRadius: 24,
-              border: `1px solid ${isEditMode ? 'var(--gold)' : 'transparent'}`,
+              background: 'var(--surface)', borderRadius: 24,
+              border: `1px solid ${isEditMode ? 'var(--primary)' : 'transparent'}`,
               boxShadow: isEditMode ? '0 12px 32px rgba(0,0,0,0.4)' : 'none',
               transition: 'border 0.2s, box-shadow 0.2s'
             }}
@@ -358,12 +359,12 @@ export function HomeView({
             {isEditMode && (
               <div
                 className="widget-handle"
-                style={{ height: 32, cursor: 'grab', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--bg3)', position: 'relative', zIndex: 10 }}
+                style={{ height: 32, cursor: 'grab', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--surface-alt)', position: 'relative', zIndex: 10 }}
               >
-                <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--gold)', opacity: 0.4 }} />
+                <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--primary)', opacity: 0.4 }} />
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDelete(key); }}
-                  style={{ position: 'absolute', right: 8, top: 4, background: 'transparent', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4 }}
+                  style={{ position: 'absolute', right: 8, top: 4, background: 'transparent', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', padding: 4 }}
                 >
                   ✕
                 </button>
@@ -378,7 +379,7 @@ export function HomeView({
 
       {isEditMode && hiddenKeys.length > 0 && (
         <div style={{ padding: '20px 16px', borderTop: '1px dashed var(--border)', marginTop: 20 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)', marginBottom: 12 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12 }}>
             <Sparkles size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
             추가 가능한 카드
           </p>
@@ -388,7 +389,7 @@ export function HomeView({
                 key={key}
                 onClick={() => handleAdd(key)}
                 style={{
-                  background: 'var(--bg3)', border: '1px solid var(--border)',
+                  background: 'var(--surface-alt)', border: '1px solid var(--border)',
                   borderRadius: 16, padding: '8px 16px',
                   fontSize: 12, fontWeight: 600, color: 'var(--text)',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,

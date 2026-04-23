@@ -25,8 +25,8 @@ export function ToastContainer({ toasts }) {
     }}>
       {toasts.map(t => (
         <div key={t.id} style={{
-          background: "var(--bg2)",
-          color: t.type === "error" ? "var(--red)" : "var(--green)",
+          background: "var(--surface)",
+          color: t.type === "error" ? "var(--danger)" : "var(--success)",
           border: `1px solid ${t.type === "error" ? "rgba(170,32,32,0.3)" : "rgba(60,180,100,0.3)"}`,
           padding: "12px 16px", borderRadius: 12,
           fontSize: 13, fontWeight: 700,

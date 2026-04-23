@@ -47,7 +47,7 @@ export function AdminView({ onClose, addToast }) {
         <SectionHeader sub="System Management" title="👨‍💻 관리자 페이지" />
         <button onClick={onClose} style={{
           padding: "8px 16px", borderRadius: 10, border: "none", 
-          background: "var(--bg3)", color: "var(--text3)", fontSize: 13, cursor: "pointer"
+          background: "var(--surface-alt)", color: "var(--text-faint)", fontSize: 13, cursor: "pointer"
         }}>나가기</button>
       </div>
 
@@ -55,33 +55,33 @@ export function AdminView({ onClose, addToast }) {
         {["all", "open", "resolved"].map(f => (
           <button key={f} onClick={() => setFilter(f)} style={{
             flex: 1, padding: "8px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
-            background: filter === f ? "var(--goldD)" : "var(--bg3)",
-            border: `1px solid ${filter === f ? "var(--gold)" : "var(--border)"}`,
-            color: filter === f ? "var(--gold)" : "var(--text2)"
+            background: filter === f ? "rgba(28,43,74,.08)" : "var(--surface-alt)",
+            border: `1px solid ${filter === f ? "var(--primary)" : "var(--border)"}`,
+            color: filter === f ? "var(--primary)" : "var(--text-muted)"
           }}>{f === "all" ? "전체" : f === "open" ? "대기중" : "해결됨"}</button>
         ))}
       </div>
 
       {loading ? (
-        <div style={{ padding: "100px 0", textAlign: "center", color: "var(--text3)" }}>로딩 중...</div>
+        <div style={{ padding: "100px 0", textAlign: "center", color: "var(--text-faint)" }}>로딩 중...</div>
       ) : filteredBugs.length === 0 ? (
-        <div style={{ padding: "100px 20px", textAlign: "center", color: "var(--text3)", fontSize: 13, background: "var(--bg2)", borderRadius: 20 }}>
+        <div style={{ padding: "100px 20px", textAlign: "center", color: "var(--text-faint)", fontSize: 13, background: "var(--surface)", borderRadius: 20 }}>
           {filter === "all" ? "신고된 버그가 없습니다." : `"${filter}" 상태의 항목이 없습니다.`}
         </div>
       ) : filteredBugs.map(b => (
-        <Card key={b.key} style={{ padding: 18, marginBottom: 12, border: b.status === "open" ? "1px solid var(--redD)" : "1px solid var(--border)" }}>
+        <Card key={b.key} style={{ padding: 18, marginBottom: 12, border: b.status === "open" ? "1px solid var(--danger-bg1)" : "1px solid var(--border)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, alignItems: "center" }}>
             <div style={{
               fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 6,
-              background: b.status === "open" ? "var(--redD)" : "var(--greenD)",
-              color: b.status === "open" ? "var(--red)" : "var(--green)"
+              background: b.status === "open" ? "var(--danger-bg1)" : "var(--success-bg1)",
+              color: b.status === "open" ? "var(--danger)" : "var(--success)"
             }}>{b.status.toUpperCase()}</div>
-            <div style={{ fontSize: 10, color: "var(--text3)" }}>{fmtMonthDay(new Date(b.updatedAt))}</div>
+            <div style={{ fontSize: 10, color: "var(--text-faint)" }}>{fmtMonthDay(new Date(b.updatedAt))}</div>
           </div>
 
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 12, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{b.content}</div>
           
-          <div style={{ background: "var(--bg3)", padding: 12, borderRadius: 10, fontSize: 10, color: "var(--text2)", marginBottom: 16 }}>
+          <div style={{ background: "var(--surface-alt)", padding: 12, borderRadius: 10, fontSize: 10, color: "var(--text-muted)", marginBottom: 16 }}>
             <div>📍 HID: {b.hid || "unknown"}</div>
             <div style={{ marginTop: 4 }}>💻 {b.userAgent}</div>
             <div style={{ marginTop: 4 }}>📐 {b.screen} | {b.platform}</div>
@@ -91,13 +91,13 @@ export function AdminView({ onClose, addToast }) {
             {b.status === "open" && (
               <button onClick={() => updateStatus(b, "resolved")} style={{
                 flex: 1, padding: "10px", borderRadius: 8, border: "none",
-                background: "var(--green)", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer"
+                background: "var(--success)", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer"
               }}>해결 완료 처리</button>
             )}
             {b.status === "resolved" && (
               <button onClick={() => updateStatus(b, "open")} style={{
                 flex: 1, padding: "10px", borderRadius: 8, border: "1px solid var(--border)",
-                background: "none", color: "var(--text3)", fontSize: 11, cursor: "pointer"
+                background: "none", color: "var(--text-faint)", fontSize: 11, cursor: "pointer"
               }}>대기로 변경</button>
             )}
           </div>

@@ -1,34 +1,47 @@
-export function NumPad({ value, onChange }) {
-  const press = (v, e) => {
-    if (e) e.stopPropagation();
-    if (v === "C") onChange("");
-    else if (v === "⌫") onChange(value.slice(0, -1));
-    else if (value.length < 9) onChange(value + v);
-  };
+import { IcoDel } from "./Icons.jsx";
 
+/**
+ * @typedef {{ value: string, onChange: (v: string) => void, style?: React.CSSProperties }} NumPadProps
+ * @param {NumPadProps} props
+ */
+export function NumPad({ value, onChange, style = {} }) {
+  const keys = ["1","2","3","4","5","6","7","8","9","00","0","⌫"];
+  const handleKey = (k) => {
+    if (k === "⌫") { onChange(value.slice(0, -1) || "0"); return; }
+    if (value === "0" || value === "") { onChange(k === "00" ? "0" : k); return; }
+    if (value.length >= 9) return;
+    onChange(value + k);
+  };
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 7 }}>
-      {[1,2,3,4,5,6,7,8,9,"C",0,"⌫"].map(v => (
-        <button
-          key={v}
-          onClick={(e) => press(String(v), e)}
-          style={{
-            height: 52, borderRadius: 13,
-            border: "1px solid var(--border)",
-            background: v === "C"
-              ? "rgba(217,95,95,0.08)"
-              : v === "⌫"
-              ? "rgba(200,168,75,0.08)"
-              : "var(--bg2)",
-            fontSize: 19, fontWeight: 700, cursor: "pointer",
-            color: v === "C" ? "var(--red)"
-              : v === "⌫" ? "var(--gold)"
-              : "var(--text)",
-            transition: "background .1s",
-            WebkitTapHighlightColor: "transparent"
-          }}
-        >{v}</button>
-      ))}
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, ...style }}>
+      {keys.map(k => <KeyButton key={k} k={k} onTap={handleKey} />)}
     </div>
+  );
+}
+
+/**
+ * @param {{ k: string, onTap: (k: string) => void }} props
+ */
+function KeyButton({ k, onTap }) {
+  const bg = k === "⌫" ? "#F3F4F6" : "transparent";
+  return (
+    <button
+      onClick={() => onTap(k)}
+      onMouseDown={(e) => { e.currentTarget.style.background = "#E5E7EB"; }}
+      onMouseUp={(e) => { e.currentTarget.style.background = bg; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = bg; }}
+      style={{
+        height: 52, borderRadius: 14,
+        background: bg,
+        fontSize: k === "⌫" ? 13 : 20,
+        fontWeight: 600, color: "#111827",
+        border: "none", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "background .1s",
+        fontFamily: "inherit",
+      }}
+    >
+      {k === "⌫" ? <IcoDel /> : k}
+    </button>
   );
 }

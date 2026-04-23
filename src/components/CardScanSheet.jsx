@@ -133,7 +133,7 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
   /** @type {import('react').CSSProperties} */
   const sheetStyle = {
     width: '100%', maxWidth: 480,
-    background: 'var(--bg2)', borderRadius: '20px 20px 0 0',
+    background: 'var(--surface)', borderRadius: '20px 20px 0 0',
     borderTop: '1px solid var(--border)',
     maxHeight: '90dvh', display: 'flex', flexDirection: 'column',
   };
@@ -158,13 +158,13 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
     <div style={overlayStyle} onClick={onClose}>
       <div style={sheetStyle} onClick={e => e.stopPropagation()}>
         <div style={{ padding: '12px 16px 14px', flexShrink: 0 }}>
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border2)', margin: '0 auto 14px', opacity: 0.5 }} />
+          <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 14px', opacity: 0.5 }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', marginBottom: 2, letterSpacing: ".05em" }}>AI SMART SCAN</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--primary)', marginBottom: 2, letterSpacing: ".05em" }}>AI SMART SCAN</div>
               <div style={{ fontSize: 18, fontWeight: 800 }}>내역 검토 및 입력</div>
             </div>
-            <button onClick={onClose} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text3)', width: 32, height: 32, borderRadius: "50%", cursor: 'pointer' }}>✕</button>
+            <button onClick={onClose} style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text-faint)', width: 32, height: 32, borderRadius: "50%", cursor: 'pointer' }}>✕</button>
           </div>
         </div>
 
@@ -174,10 +174,10 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
               <div
                 onClick={() => cooldown <= 0 && fileRef.current?.click()}
                 style={{
-                  border: '2px dashed var(--border2)', borderRadius: 16,
+                  border: '2px dashed var(--border)', borderRadius: 16,
                   padding: '48px 20px', textAlign: 'center', 
                   cursor: cooldown > 0 ? 'not-allowed' : 'pointer',
-                  background: 'var(--bg3)', marginBottom: 16,
+                  background: 'var(--surface-alt)', marginBottom: 16,
                   opacity: cooldown > 0 ? 0.6 : 1,
                 }}
               >
@@ -185,7 +185,7 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
                 <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 8 }}>
                   {cooldown > 0 ? `AI 엔진 냉각 중 (${cooldown}초)` : '사진 업로드 또는 촬영'}
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text2)' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                   영수증이나 카드 내역 스크린샷을 자동 분석해드립니다.
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
@@ -193,8 +193,8 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
               {errMsg && (
                 <div style={{ 
                   borderRadius: 12, padding: '12px 16px', 
-                  background: 'var(--redD)', border: '1px solid var(--red)', 
-                  fontSize: 13, color: 'var(--red)', marginBottom: 16,
+                  background: 'var(--danger-bg1)', border: '1px solid var(--danger)', 
+                  fontSize: 13, color: 'var(--danger)', marginBottom: 16,
                   maxHeight: '200px', overflowY: 'auto', whiteSpace: 'pre-wrap',
                   lineHeight: '1.5'
                 }}>
@@ -209,13 +209,13 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 0', gap: 20 }}>
               <div style={{ position: "relative", width: 64, height: 64 }}>
                 <svg width="64" height="64" viewBox="0 0 24 24" style={{ animation: 'spin 1.2s linear infinite' }}>
-                  <circle cx="12" cy="12" r="9" fill="none" stroke="var(--gold)" strokeWidth="2" strokeDasharray="40 20" strokeLinecap="round" />
+                  <circle cx="12" cy="12" r="9" fill="none" stroke="var(--primary)" strokeWidth="2" strokeDasharray="40 20" strokeLinecap="round" />
                 </svg>
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🧠</div>
               </div>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>Gemma 4 엔진 분석 중...</div>
-                <div style={{ fontSize: 13, color: 'var(--text3)' }}>이미지에서 날짜와 금액을 추출하고 있습니다.</div>
+                <div style={{ fontSize: 13, color: 'var(--text-faint)' }}>이미지에서 날짜와 금액을 추출하고 있습니다.</div>
               </div>
               {previewUrl && (
                 <img src={previewUrl} alt="Preview" style={{ maxWidth: '80%', maxHeight: '200px', borderRadius: 12, border: '1px solid var(--border)' }} />
@@ -226,10 +226,10 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
           {phase === 'review' && (
             <div>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>
                   {items.length}건 인식됨 · {selectedCount}건 선택됨
                 </div>
-                <button onClick={() => toggleAll(!allSelected)} style={{ background: "none", border: "1px solid var(--border)", borderRadius: 8, padding: "4px 10px", fontSize: 11, color: "var(--text2)", cursor: "pointer" }}>
+                <button onClick={() => toggleAll(!allSelected)} style={{ background: "none", border: "1px solid var(--border)", borderRadius: 8, padding: "4px 10px", fontSize: 11, color: "var(--text-muted)", cursor: "pointer" }}>
                   {allSelected ? "전체 해제" : "전체 선택"}
                 </button>
               </div>
@@ -239,23 +239,23 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
                   const catInfo = CAT[item.cat] || CATS[8];
                   return (
                     <div key={item.id} style={{
-                      position: "relative", border: `1px solid ${item.selected ? 'var(--gold)' : 'var(--border)'}`,
-                      borderRadius: 14, padding: '12px', background: item.selected ? 'var(--goldD)' : 'var(--bg3)',
+                      position: "relative", border: `1px solid ${item.selected ? 'var(--primary)' : 'var(--border)'}`,
+                      borderRadius: 14, padding: '12px', background: item.selected ? 'rgba(28,43,74,.08)' : 'var(--surface-alt)',
                     }}>
-                      <button onClick={() => removeItem(item.id)} style={{ position: "absolute", top: -8, right: -8, background: "var(--bg2)", border: "1px solid var(--border)", width: 22, height: 22, borderRadius: "50%", cursor: "pointer" }}>✕</button>
+                      <button onClick={() => removeItem(item.id)} style={{ position: "absolute", top: -8, right: -8, background: "var(--surface)", border: "1px solid var(--border)", width: 22, height: 22, borderRadius: "50%", cursor: "pointer" }}>✕</button>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                        <div onClick={() => toggleSelect(item.id)} style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${item.selected ? 'var(--gold)' : 'var(--border2)'}`, background: item.selected ? 'var(--gold)' : 'none', cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+                        <div onClick={() => toggleSelect(item.id)} style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${item.selected ? 'var(--primary)' : 'var(--border)'}`, background: item.selected ? 'var(--primary)' : 'none', cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
                           {item.selected && "✓"}
                         </div>
                         <span style={{ fontSize: 24 }}>{catInfo.icon}</span>
-                        <input type="number" value={item.amount} onChange={e => updateItem(item.id, 'amount', Number(e.target.value))} style={{ flex: 1, background: 'none', border: 'none', color: Number(item.amount) <= 0 ? 'var(--red)' : 'var(--text)', fontSize: 18, fontWeight: 900, outline: 'none' }} />
-                        <input type="date" value={item.date} onChange={e => updateItem(item.id, 'date', e.target.value)} style={{ background: 'var(--bg4)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 11, padding: '4px' }} />
+                        <input type="number" value={item.amount} onChange={e => updateItem(item.id, 'amount', Number(e.target.value))} style={{ flex: 1, background: 'none', border: 'none', color: Number(item.amount) <= 0 ? 'var(--danger)' : 'var(--text)', fontSize: 18, fontWeight: 900, outline: 'none' }} />
+                        <input type="date" value={item.date} onChange={e => updateItem(item.id, 'date', e.target.value)} style={{ background: '#F3F4F6', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 11, padding: '4px' }} />
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <select value={item.cat} onChange={e => updateItem(item.id, 'cat', e.target.value)} style={{ background: 'var(--bg4)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 12 }}>
+                        <select value={item.cat} onChange={e => updateItem(item.id, 'cat', e.target.value)} style={{ background: '#F3F4F6', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 12 }}>
                           {CATS.map(c => <option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
                         </select>
-                        <input value={item.memo} placeholder="가맹점명" onChange={e => updateItem(item.id, 'memo', e.target.value)} style={{ flex: 1, background: 'var(--bg4)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 12, padding: '6px' }} />
+                        <input value={item.memo} placeholder="가맹점명" onChange={e => updateItem(item.id, 'memo', e.target.value)} style={{ flex: 1, background: '#F3F4F6', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 12, padding: '6px' }} />
                       </div>
                     </div>
                   );
@@ -263,9 +263,9 @@ export function CardScanSheet({ who, onSave, onSaveAll, onClose }) {
               </div>
 
               <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={handleReset} style={{ flex: 1, padding: '14px', borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg3)', cursor: 'pointer' }}>재촬영</button>
-                <button onClick={() => setShowSplitter(true)} disabled={selectedCount === 0} style={{ flex: 1, padding: '14px', borderRadius: 16, border: `1px solid ${selectedCount > 0 ? '#E8715A' : 'var(--border)'}`, color: selectedCount > 0 ? '#E8715A' : 'var(--text3)', cursor: selectedCount > 0 ? 'pointer' : 'default' }}>분류</button>
-                <button onClick={handleSaveAll} disabled={selectedCount === 0} style={{ flex: 2, padding: '14px', borderRadius: 16, border: 'none', background: selectedCount > 0 ? (hasInvalidAmount ? 'var(--red)' : 'var(--gold)') : 'var(--bg4)', color: '#fff', fontWeight: 800, cursor: selectedCount > 0 ? 'pointer' : 'default' }}>
+                <button onClick={handleReset} style={{ flex: 1, padding: '14px', borderRadius: 16, border: '1px solid var(--border)', background: 'var(--surface-alt)', cursor: 'pointer' }}>재촬영</button>
+                <button onClick={() => setShowSplitter(true)} disabled={selectedCount === 0} style={{ flex: 1, padding: '14px', borderRadius: 16, border: `1px solid ${selectedCount > 0 ? '#E8715A' : 'var(--border)'}`, color: selectedCount > 0 ? '#E8715A' : 'var(--text-faint)', cursor: selectedCount > 0 ? 'pointer' : 'default' }}>분류</button>
+                <button onClick={handleSaveAll} disabled={selectedCount === 0} style={{ flex: 2, padding: '14px', borderRadius: 16, border: 'none', background: selectedCount > 0 ? (hasInvalidAmount ? 'var(--danger)' : 'var(--primary)') : '#F3F4F6', color: '#fff', fontWeight: 800, cursor: selectedCount > 0 ? 'pointer' : 'default' }}>
                   {selectedCount > 0 ? `${selectedCount}건 저장` : '선택 필요'}
                 </button>
               </div>

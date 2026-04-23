@@ -23,6 +23,7 @@ import { SettlementSummaryWidget } from './widgets/SettlementSummaryWidget.jsx';
  * @typedef {import('../constants/index.js').TxItem} TxItem
  * @typedef {import('../constants/index.js').FixedItem} FixedItem
  * @typedef {import('../constants/index.js').WidgetLayoutItem} WidgetLayoutItem
+ * @typedef {import('../constants/index.js').Plan} Plan
  * @typedef {import('react-grid-layout').LayoutItem} RGLItem
  * @typedef {import('../constants/index.js').SosRequest} SosRequest
  * @typedef {import('../constants/index.js').InstallItem} InstallItem
@@ -135,7 +136,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
     settlement_summary: '결제 정산기',
   };
 
-  /** @type {Record<string, React.ComponentType<import('../context/BudgetContext.jsx').BudgetContextType | Object>>} */
+  /** @type {Record<string, React.ComponentType<import('../context/BudgetContext.jsx').BudgetContextValue | Object>>} */
   const WIDGET_MAP = useMemo(() => ({
     sos_status:       SosStatusWidget,
     allowance_insight: AllowanceInsightWidget,
@@ -173,20 +174,20 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
       {/* 웰컴 섹션 */}
       <div style={{ padding: '24px 16px 12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-          <Sparkles size={16} color="var(--gold)" />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold)' }}>AI REPORT</span>
+          <Sparkles size={16} color="var(--primary)" />
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>AI REPORT</span>
         </div>
         <h2 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', margin: 0, letterSpacing: '-0.02em' }}>
           안녕하세요, {name}님!
         </h2>
-        <p style={{ fontSize: 13, color: 'var(--text2)', marginTop: 6, fontWeight: 500 }}>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>
           오늘의 금융 리포트를 확인해보세요.
         </p>
       </div>
 
       <div style={{ padding: '0 12px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-          Widgets {isEditMode && <span style={{ color: 'var(--gold)' }}>• Edit Mode</span>}
+        <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          Widgets {isEditMode && <span style={{ color: 'var(--primary)' }}>• Edit Mode</span>}
         </span>
         <div style={{ display: 'flex', gap: 8 }}>
           {isEditMode && (
@@ -196,7 +197,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
                 background: 'rgba(255,100,100,0.1)',
                 border: '1px solid rgba(255,100,100,0.3)',
                 borderRadius: 12, padding: '6px 12px', cursor: 'pointer',
-                fontSize: 12, fontWeight: 700, color: '#FF6B6B',
+                fontSize: 12, fontWeight: 700, color: 'var(--danger)',
                 transition: 'all 0.2s'
               }}
             >
@@ -206,10 +207,10 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
           <button
             onClick={() => setIsEditMode(!isEditMode)}
             style={{
-              background: isEditMode ? 'var(--goldD)' : 'transparent',
-              border: `1px solid ${isEditMode ? 'var(--gold)' : 'var(--border)'}`,
+              background: isEditMode ? 'rgba(28,43,74,.08)' : 'transparent',
+              border: `1px solid ${isEditMode ? 'var(--primary)' : 'var(--border)'}`,
               borderRadius: 12, padding: '6px 12px', cursor: 'pointer',
-              fontSize: 12, fontWeight: 700, color: isEditMode ? 'var(--gold)' : 'var(--text2)',
+              fontSize: 12, fontWeight: 700, color: isEditMode ? 'var(--primary)' : 'var(--text-muted)',
               display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s'
             }}
           >
@@ -238,8 +239,8 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
             <div
               key={key}
               style={{
-                background: 'var(--bg2)', borderRadius: 24,
-                border: `1px solid ${isEditMode ? 'var(--gold)' : 'var(--border)'}`,
+                background: 'var(--surface)', borderRadius: 24,
+                border: `1px solid ${isEditMode ? 'var(--primary)' : 'var(--border)'}`,
                 overflowX: 'hidden', overflowY: 'auto', 
                 boxShadow: isEditMode ? '0 12px 32px rgba(0,0,0,0.4)' : 'none',
                 transition: 'border 0.2s, box-shadow 0.2s'
@@ -248,12 +249,12 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
               {isEditMode && (
                 <div
                   className="widget-handle"
-                  style={{ height: 32, cursor: 'grab', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--bg3)', position: 'relative' }}
+                  style={{ height: 32, cursor: 'grab', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--surface-alt)', position: 'relative' }}
                 >
-                  <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--gold)', opacity: 0.4 }} />
+                  <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--primary)', opacity: 0.4 }} />
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(key); }}
-                    style={{ position: 'absolute', right: 8, top: 4, background: 'transparent', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4 }}
+                    style={{ position: 'absolute', right: 8, top: 4, background: 'transparent', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', padding: 4 }}
                   >
                     ✕
                   </button>
@@ -270,7 +271,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
       {/* 위젯 추가 섹션 (편집 모드에서만 노출) */}
       {isEditMode && hiddenKeys.length > 0 && (
         <div style={{ padding: '20px 16px', borderTop: '1px dashed var(--border)', marginTop: 20 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)', marginBottom: 12 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12 }}>
             <Sparkles size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
             추가 가능한 위젯
           </p>
@@ -280,7 +281,7 @@ export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [],
                 key={key}
                 onClick={() => handleAdd(key)}
                 style={{
-                  background: 'var(--bg3)',
+                  background: 'var(--surface-alt)',
                   border: '1px solid var(--border)',
                   borderRadius: 16, padding: '8px 16px',
                   fontSize: 12, fontWeight: 600, color: 'var(--text)',

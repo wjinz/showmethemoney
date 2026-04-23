@@ -29,7 +29,7 @@ export function SosPendingSheet({ requests, names, onResolve, onClose }) {
   return (
     <BottomSheet isOpen onClose={onClose} title="📬 가불 요청" maxHeight="70dvh">
       {requests.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text3)', fontSize: 13 }}>
+        <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-faint)', fontSize: 13 }}>
           대기 중인 요청이 없습니다
         </div>
       ) : (
@@ -38,16 +38,16 @@ export function SosPendingSheet({ requests, names, onResolve, onClose }) {
           const isLoading = loadingId === r.id;
           return (
             <div key={r.id} style={{
-              padding: 14, background: 'var(--bg3)', borderRadius: 12, marginBottom: 10,
+              padding: 14, background: 'var(--surface-alt)', borderRadius: 12, marginBottom: 10,
               border: '1px solid var(--border-solid)',
             }}>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, color: 'var(--text)' }}>
                 {requesterName} · {fmtS(r.amount)}원
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 2 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>
                 사유: {r.reason}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 12 }}>
                 상환: {r.repay_plan}
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -56,7 +56,7 @@ export function SosPendingSheet({ requests, names, onResolve, onClose }) {
                   disabled={isLoading}
                   style={{
                     flex: 1, padding: 10, borderRadius: 10, border: 'none',
-                    background: isLoading ? 'var(--bg4)' : 'var(--green)',
+                    background: isLoading ? '#F3F4F6' : 'var(--success)',
                     color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: 13,
                   }}
                 >
@@ -67,7 +67,7 @@ export function SosPendingSheet({ requests, names, onResolve, onClose }) {
                   disabled={isLoading}
                   style={{
                     flex: 1, padding: 10, borderRadius: 10, border: 'none',
-                    background: 'var(--bg4)', color: 'var(--red)',
+                    background: '#F3F4F6', color: 'var(--danger)',
                     fontWeight: 700, cursor: 'pointer', fontSize: 13,
                   }}
                 >

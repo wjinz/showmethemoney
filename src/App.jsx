@@ -13,6 +13,7 @@ import "./styles/theme.css";
 import { validate } from "./utils/validate.js";
 import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued, flushTxQueue, hasTxQueued } from "./utils/offlineQueue.js";
 import { idbEnqueue } from "./utils/offlineIDB.js";
+import { LS_KEYS, lsGet, lsSet, lsRemove, lsMigrateLegacy } from "./utils/ls.js";
 import { useKidsStore } from "./stores/kidsStore.js";
 import {
   CATS, INIT_BUDGETS, DEFAULT_SLIDER_CFG, DEFAULT_TAX_CONFIG,
@@ -20,7 +21,6 @@ import {
   DEFAULT_WIDGET_LAYOUT, DEFAULT_HOME_LAYOUT,
   getYear,
 } from "./constants/index.js";
-import { useTheme } from "./hooks/useTheme.js";
 import { SyncSetup } from "./views/SyncSetup.jsx";
 const HomeView           = lazy(() => import("./views/HomeView.jsx").then(m => ({ default: m.HomeView })));
 const EntryView          = lazy(() => import("./views/EntryView.jsx").then(m => ({ default: m.EntryView })));
@@ -33,6 +33,10 @@ const BudgetView         = lazy(() => import("./views/BudgetView.jsx").then(m =>
 const AdminView          = lazy(() => import("./views/AdminView.jsx").then(m => ({ default: m.AdminView })));
 const SettlementView     = lazy(() => import("./views/SettlementView.jsx").then(m => ({ default: m.SettlementView })));
 const KidsView           = lazy(() => import("./views/KidsView.jsx").then(m => ({ default: m.KidsView })));
+const AssetView          = lazy(() => import("./views/AssetView.jsx").then(m => ({ default: m.AssetView })));
+const TaxOptimizerView   = lazy(() => import("./views/TaxOptimizerView.jsx").then(m => ({ default: m.TaxOptimizerView })));
+const DataImportView     = lazy(() => import("./views/DataImportView.jsx").then(m => ({ default: m.DataImportView })));
+const CalendarView       = lazy(() => import("./views/CalendarView.jsx").then(m => ({ default: m.CalendarView })));
 import { ParentKidsMgmtView } from "./views/ParentKidsMgmtView.jsx";
 import { Nav } from "./components/Nav.jsx";
 import { InputModal } from "./components/InputModal.jsx";
@@ -78,11 +82,8 @@ export default function App() {
     [sosRequests, myRole]
   );
 
-  // Kids Mode 상태 (useTheme보다 먼저 선언)
   const [kidsMode, setKidsModeRaw] = useState(false);
 
-  // 뷰에 따른 테마 전환 (joint ↔ private ↔ kids)
-  useTheme(view, kidsMode);
 
   // 공유 데이터 필드들
   const [tx, setTxRaw] = useState(EMPTY_TX);
@@ -111,14 +112,14 @@ export default function App() {
   // kidsMode 토글 — localStorage + DB에 동기화
   const setKidsMode = useCallback(/** @param {boolean} v */ (v) => {
     setKidsModeRaw(v);
-    try { localStorage.setItem('kidsMode', JSON.stringify(v)); } catch {}
+    lsSet(LS_KEYS.KIDS_MODE, v);
     if (householdId) db.save(householdId, 'kidsMode', v).catch(console.error);
   }, [householdId]);
 
   // 로컬/비공개 데이터 저장소
   const savePrivate = useCallback((key, value) => {
-    try { localStorage.setItem(key, JSON.stringify(value)); }
-    catch (e) { console.error("private save error:", e); }
+    if (value === null || value === undefined) { lsRemove(key); return; }
+    lsSet(key, value);
   }, []);
 
   // 로드된 연도 추적 (tx Lazy Loading용)
@@ -293,22 +294,19 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const safeGet = (key) => {
-          try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; }
-          catch { return null; }
-        };
-        const savedHid    = safeGet("householdId");
-        const savedRole   = safeGet("myRole");
-        const savedSlider = safeGet("sliderCfg");
-        const savedTheme  = safeGet("theme");
-        const savedIsAdmin = safeGet("isAdmin");
+        lsMigrateLegacy();
+        const savedHid    = lsGet(LS_KEYS.HOUSEHOLD_ID);
+        const savedRole   = lsGet(LS_KEYS.MY_ROLE);
+        const savedSlider = lsGet(LS_KEYS.SLIDER_CFG);
+        const savedTheme  = lsGet(LS_KEYS.THEME);
+        const savedIsAdmin = lsGet(LS_KEYS.IS_ADMIN);
 
         if (savedSlider) {
           setSliderCfgRaw(prev => ({ ...DEFAULT_SLIDER_CFG, ...savedSlider }));
         }
         if (savedTheme) setThemeRaw(savedTheme);
         if (savedIsAdmin) setIsAdmin(true);
-        const savedKidsMode = safeGet('kidsMode');
+        const savedKidsMode = lsGet(LS_KEYS.KIDS_MODE);
         if (typeof savedKidsMode === 'boolean') setKidsModeRaw(savedKidsMode);
         if (savedHid) {
           setHouseholdId(savedHid);
@@ -560,8 +558,8 @@ export default function App() {
   const setBudgets = useCallback(v => setShared("budgets", typeof v === 'function' ? v(budgets) : v, setBudgetsRaw), [budgets, setShared]);
   const setNames = useCallback(v => setShared("names", typeof v === 'function' ? v(names) : v, setNamesRaw), [names, setShared]);
 
-  const setSliderCfg = useCallback(v => { setSliderCfgRaw(v); savePrivate("sliderCfg", v); }, [savePrivate]);
-  const setTheme = useCallback(v => { setThemeRaw(v); savePrivate("theme", v); }, [savePrivate]);
+  const setSliderCfg = useCallback(v => { setSliderCfgRaw(v); savePrivate(LS_KEYS.SLIDER_CFG, v); }, [savePrivate]);
+  const setTheme = useCallback(v => { setThemeRaw(v); savePrivate(LS_KEYS.THEME, v); }, [savePrivate]);
 
   // 위젯 레이아웃 저장
   const setWidgetLayout = useCallback(
@@ -692,15 +690,15 @@ export default function App() {
   }, [householdId, loadShared, addToast]);
 
   const leaveHousehold = useCallback(async () => {
-    await savePrivate("householdId", null);
+    await savePrivate(LS_KEYS.HOUSEHOLD_ID, null);
     setHouseholdId(""); setSetupDone(false);
   }, [savePrivate]);
 
   const handleSetupDone = useCallback(async (hid, role) => {
     setHouseholdId(hid);
     setMyRole(role);
-    await savePrivate("householdId", hid);
-    await savePrivate("myRole", role);
+    await savePrivate(LS_KEYS.HOUSEHOLD_ID, hid);
+    await savePrivate(LS_KEYS.MY_ROLE, role);
     await loadShared(hid);
     setSetupDone(true);
   }, [loadShared, savePrivate]);
@@ -748,13 +746,13 @@ export default function App() {
 
   const handleAdminLogin = useCallback(async () => {
     setIsAdmin(true);
-    await savePrivate("isAdmin", true);
+    await savePrivate(LS_KEYS.IS_ADMIN, true);
     setView("admin");
   }, [savePrivate]);
 
   const handleAdminLogout = useCallback(async () => {
     setIsAdmin(false);
-    await savePrivate("isAdmin", false);
+    await savePrivate(LS_KEYS.IS_ADMIN, false);
     setView("settings");
   }, [savePrivate]);
 
@@ -764,7 +762,7 @@ export default function App() {
       <div className="app-root" style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 20, padding: 20, textAlign: "center" }}>
         <div style={{ fontSize: 48 }}>⚠️</div>
         <div className="serif" style={{ fontSize: 20 }}>설정 오류</div>
-        <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6 }}>
+        <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
           Supabase 환경 변수가 설정되지 않았습니다.<br/>
           Vercel 대시보드에서 <b>VITE_SUPABASE_URL</b> 및 <b>VITE_SUPABASE_ANON_KEY</b>를 확인해 주세요.
         </div>
@@ -777,7 +775,7 @@ export default function App() {
       <style dangerouslySetInnerHTML={{ __html: G }} />
       <div className="app-root" style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
         <div style={{ fontSize: 28, animation: "spin 1s linear infinite" }}>⟳</div>
-        <div style={{ fontSize: 13, color: "var(--text2)" }}>초기화 중...</div>
+        <div style={{ fontSize: 13, color: "var(--text-muted)" }}>초기화 중...</div>
       </div>
     </>
   );
@@ -785,7 +783,7 @@ export default function App() {
   if (!setupDone) return (
     <>
       <style dangerouslySetInnerHTML={{ __html: G }} />
-      <div className={`app-root ${theme !== "dark" ? theme : ""}`.trim()}>
+      <div className="app-root">
         <SyncSetup onDone={handleSetupDone} />
       </div>
     </>
@@ -797,10 +795,10 @@ export default function App() {
       width: "100%", maxWidth: 480, zIndex: 200,
       display: "flex", justifyContent: "space-between", alignItems: "center",
       padding: "6px 14px",
-      background: syncStatus === "error" ? "var(--redD)" : "var(--nav-bg)",
+      background: syncStatus === "error" ? "var(--danger-bg1)" : "var(--nav-bg)",
       backdropFilter: "blur(10px)",
       borderBottom: `1px solid ${syncStatus === "error" ? "rgba(170,32,32,.3)" : "var(--border)"}`,
-      fontSize: 10, color: syncStatus === "error" ? "var(--red)" : "var(--text3)",
+      fontSize: 10, color: syncStatus === "error" ? "var(--danger)" : "var(--text-faint)",
       transition: "all .3s"
     }}>
       <div 
@@ -815,16 +813,16 @@ export default function App() {
       >
         <div style={{
           width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-          background: syncStatus === "syncing" ? "var(--gold)" : syncStatus === "error" ? "var(--red)" : "var(--green)",
+          background: syncStatus === "syncing" ? "var(--primary)" : syncStatus === "error" ? "var(--danger)" : "var(--success)",
           animation: syncStatus === "syncing" ? "spin 1s linear infinite" : "none",
-          boxShadow: `0 0 8px ${syncStatus === "syncing" ? "var(--gold)" : syncStatus === "error" ? "var(--red)" : "var(--green)"}80`
+          boxShadow: `0 0 8px ${syncStatus === "syncing" ? "var(--primary)" : syncStatus === "error" ? "var(--danger)" : "var(--success)"}80`
         }} />
         <span style={{ fontWeight: 600 }}>
           {syncStatus === "error" ? "서버 연결 오류" : syncStatus === "syncing" ? "동기화 중..." : "클라우드 실시간 연결됨 ⟳"}
         </span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ letterSpacing: ".08em", fontWeight: 700, color: "var(--gold)" }}>{householdId}</span>
+        <span style={{ letterSpacing: ".08em", fontWeight: 700, color: "var(--primary)" }}>{householdId}</span>
         <span style={{
           background: myRole === "husband" ? "var(--hD)" : "var(--wD)",
           color: myRole === "husband" ? "var(--h)" : "var(--w)",
@@ -844,7 +842,7 @@ export default function App() {
   };
 
   const lazyFallback = (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text3)", fontSize: 24 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-faint)", fontSize: 24 }}>
       ⟳
     </div>
   );
@@ -852,10 +850,7 @@ export default function App() {
   return (
     <BudgetContext.Provider value={budgetContextValue}>
       <style dangerouslySetInnerHTML={{ __html: G }} />
-      <div className={`app-root ${theme === "light" ? "light" : ""}`.trim()}
-        data-theme={kidsMode ? "kids" : view === "private" ? "private" : "joint"}
-        data-color-scheme={theme}
-        style={{ maxWidth: 480, margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="app-root" style={{ height: "100dvh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <SyncBar />
         <div style={{ flex: 1, overflow: "hidden", marginTop: 28 }}>
           <Suspense fallback={lazyFallback}>
@@ -868,7 +863,7 @@ export default function App() {
               // 2. 키즈 모드인 경우
               if (kidsMode) {
                 if (view === "settings") {
-                  return <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />;
+                  return <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />;
                 }
                 return <KidsView />;
               }
@@ -880,10 +875,14 @@ export default function App() {
                 case "budget":    return <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />;
                 case "report":    return <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />;
                 case "settlement":return <SettlementView onBack={() => setView("settings")} />;
-                case "settings":  return <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} theme={theme} setTheme={setTheme} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />;
+                case "settings":  return <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />;
                 case "admin":     return isAdmin ? <AdminView onClose={handleAdminLogout} addToast={addToast} /> : null;
                 case "dashboard": return <DashboardView plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} install={install} cards={cards} names={names} myRole={myRole} mySosPending={mySosPending} sosRequests={sosRequests} onSosUpdate={handleSosUpdate} onSosCancel={handleSosCancel} widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout} onSettings={(viewName) => setView(typeof viewName === 'string' && viewName ? viewName : "settings")} />;
                 case "private":   return <PrivateWalletView plan={plan} tx={tx} myRole={myRole} names={names} householdId={householdId} onSosSubmit={handleSosSubmit} onAdd={() => setModal({ who: myRole, isPrivate: true })} onSettings={() => setView("settings")} onSosRequest={() => setShowSosRequest(true)} />;
+                case "asset":     return <AssetView assets={assets} setAssets={setAssets} />;
+                case "tax":       return <TaxOptimizerView tx={tx} names={names} taxConfig={taxConfig} setTaxConfig={setTaxConfig} />;
+                case "dataImport":return <DataImportView plan={plan} setPlan={setPlan} onGoToPlan={() => setView("budget")} />;
+                case "calendar":  return <CalendarView tx={tx} cards={cards} names={names} budgets={budgets} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} />;
                 default:          return <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />;
               }
             })()}

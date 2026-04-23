@@ -30,7 +30,7 @@ export function AdminLoginModal({ onLogin, onClose, addToast }) {
           onChange={e => setId(e.target.value)}
           placeholder="관리자 아이디"
           style={{
-            width: "100%", background: "var(--bg4)", border: "1px solid var(--border)",
+            width: "100%", background: "#F3F4F6", border: "1px solid var(--border)",
             borderRadius: 10, padding: "12px", marginBottom: 10, color: "var(--text)", 
             fontSize: 13, outline: "none", textAlign: "center"
           }}
@@ -42,7 +42,7 @@ export function AdminLoginModal({ onLogin, onClose, addToast }) {
           onChange={e => setPw(e.target.value)}
           placeholder="비밀번호"
           style={{
-            width: "100%", background: "var(--bg4)", border: "1px solid var(--border)",
+            width: "100%", background: "#F3F4F6", border: "1px solid var(--border)",
             borderRadius: 10, padding: "12px", marginBottom: 24, color: "var(--text)", 
             fontSize: 13, outline: "none", textAlign: "center"
           }}
@@ -51,11 +51,11 @@ export function AdminLoginModal({ onLogin, onClose, addToast }) {
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={onClose} style={{
             flex: 1, padding: "12px", borderRadius: 10, border: "1px solid var(--border)",
-            background: "var(--bg3)", color: "var(--text3)", fontSize: 13, cursor: "pointer"
+            background: "var(--surface-alt)", color: "var(--text-faint)", fontSize: 13, cursor: "pointer"
           }}>취소</button>
           <button onClick={handleSubmit} style={{
             flex: 1, padding: "12px", borderRadius: 10, border: "none",
-            background: "var(--gold)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer"
+            background: "var(--primary)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer"
           }}>인증하기</button>
         </div>
       </Card>

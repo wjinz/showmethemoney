@@ -5,3 +5,7 @@ dist
 .env
 .vercel
 .env*.local
+dist-*/
+vite.config.js.timestamp-*.mjs
+.claude/
+최근파일/

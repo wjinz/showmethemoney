@@ -35,14 +35,14 @@ export function PredictionView({tx, fixed}){
       <div className="u1"><SectionHeader sub="Smart Forecasting" title="지능형 지출 예측"/></div>
 
       <Card className="u2" style={{padding:18, marginBottom:16}}>
-        <div style={{fontSize:11, color:"var(--text2)", marginBottom:14}}>💡 과거 데이터를 기반으로 한 이번 달 예상 지출</div>
+        <div style={{fontSize:11, color:"var(--text-muted)", marginBottom:14}}>💡 과거 데이터를 기반으로 한 이번 달 예상 지출</div>
         <div style={{fontSize:13, color:"var(--text)"}}>
           고정비로 등록되지 않았지만 매달 반복되는 지출 패턴을 분석했습니다.
         </div>
       </Card>
 
       {predictions.length === 0 ? (
-        <div style={{padding:"40px 20px", textAlign:"center", color:"var(--text3)", fontSize:13}}>
+        <div style={{padding:"40px 20px", textAlign:"center", color:"var(--text-faint)", fontSize:13}}>
           분석을 위한 데이터가 부족합니다.<br/>지출 내역이 쌓이면 자동으로 예측을 시작합니다.
         </div>
       ) : predictions.map((p, idx) => {
@@ -54,19 +54,19 @@ export function PredictionView({tx, fixed}){
             </div>
             <div style={{flex:1}}>
               <div style={{fontSize:14, fontWeight:700}}>{p.memo || c.label}</div>
-              <div style={{fontSize:10, color:"var(--text3)"}}>{p.count}개월 지출 패턴 분석됨</div>
+              <div style={{fontSize:10, color:"var(--text-faint)"}}>{p.count}개월 지출 패턴 분석됨</div>
             </div>
             <div style={{textAlign:"right"}}>
-              <div style={{fontSize:15, fontWeight:800, color:"var(--gold)"}}>~{fmtS(p.avg)}원</div>
-              <div style={{fontSize:9, color:"var(--text3)"}}>평균 지출액</div>
+              <div style={{fontSize:15, fontWeight:800, color:"var(--primary)"}}>~{fmtS(p.avg)}원</div>
+              <div style={{fontSize:9, color:"var(--text-faint)"}}>평균 지출액</div>
             </div>
           </Card>
         );
       })}
 
-      <Card style={{padding:16, marginTop:10, background:"var(--bg3)", border:"1px solid var(--border2)"}}>
-        <div style={{fontSize:11, fontWeight:700, color:"var(--text2)", marginBottom:8}}>📊 AI 예측 알림</div>
-        <div style={{fontSize:11, color:"var(--text3)", lineHeight:1.5}}>
+      <Card style={{padding:16, marginTop:10, background:"var(--surface-alt)", border:"1px solid var(--border)"}}>
+        <div style={{fontSize:11, fontWeight:700, color:"var(--text-muted)", marginBottom:8}}>📊 AI 예측 알림</div>
+        <div style={{fontSize:11, color:"var(--text-faint)", lineHeight:1.5}}>
           계절성 지출(여름 냉방비, 겨울 난방비)이나 정기 구독 서비스 등 잊기 쉬운 지출을 미리 예산에 반영해 보세요. 
           항목 우측의 버튼을 통해 바로 고정비로 등록할 수 있는 기능이 곧 추가될 예정입니다.
         </div>

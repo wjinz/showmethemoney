@@ -58,7 +58,7 @@ export function ScheduleScanSheet({ names, onSave, onClose }) {
   });
 
   const sheetStyle = /** @type {import('react').CSSProperties} */ ({
-    width: '100%', maxWidth: 480, background: 'var(--bg2)', 
+    width: '100%', maxWidth: 480, background: 'var(--surface)', 
     borderRadius: '20px 20px 0 0', borderTop: '1px solid var(--border)',
     maxHeight: '90dvh', display: 'flex', flexDirection: 'column',
     animation: "slideUp 0.3s cubic-bezier(0.32,0.72,0,1)",
@@ -66,7 +66,7 @@ export function ScheduleScanSheet({ names, onSave, onClose }) {
 
   const gridStyle = /** @type {import('react').CSSProperties} */ ({
     display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px',
-    background: 'var(--bg3)', padding: '12px', borderRadius: '12px',
+    background: 'var(--surface-alt)', padding: '12px', borderRadius: '12px',
     border: '1px solid var(--border)', marginTop: '8px'
   });
 
@@ -75,62 +75,62 @@ export function ScheduleScanSheet({ names, onSave, onClose }) {
       <div style={sheetStyle} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={{ padding: '12px 16px 14px', flexShrink: 0 }}>
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border2)', margin: '0 auto 14px', opacity: 0.5 }} />
+          <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 14px', opacity: 0.5 }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--blue)', marginBottom: 2, letterSpacing: ".05em" }}>MANUAL SCHEDULE ENTRY</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#3B82F6', marginBottom: 2, letterSpacing: ".05em" }}>MANUAL SCHEDULE ENTRY</div>
               <div style={{ fontSize: 18, fontWeight: 800 }}>근무표 수기 등록</div>
             </div>
-            <button onClick={onClose} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text3)', width: 32, height: 32, borderRadius: "50%", display:"flex", alignItems:"center", justifyContent:"center", cursor: 'pointer' }}>✕</button>
+            <button onClick={onClose} style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text-faint)', width: 32, height: 32, borderRadius: "50%", display:"flex", alignItems:"center", justifyContent:"center", cursor: 'pointer' }}>✕</button>
           </div>
         </div>
 
         {/* Content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 24px' }}>
           {/* 가이드 */}
-          <div style={{ background: 'var(--bg3)', borderRadius: 12, padding: '12px', marginBottom: 20, border: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--surface-alt)', borderRadius: 12, padding: '12px', marginBottom: 20, border: '1px solid var(--border)' }}>
             <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 8, color: 'var(--text)' }}>💡 코드 가이드</div>
-            <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--text2)' }}>
+            <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--text-muted)' }}>
               <span><b>D</b> 주간</span>
               <span><b>N</b> 야간</span>
               <span><b>M</b> M12</span>
               <span><b>X</b> 오프</span>
             </div>
-            <div style={{ marginTop: 8, fontSize: 10, color: 'var(--text3)' }}>* 공백이나 콤마로 구분하여 순서대로 입력하세요.</div>
+            <div style={{ marginTop: 8, fontSize: 10, color: 'var(--text-faint)' }}>* 공백이나 콤마로 구분하여 순서대로 입력하세요.</div>
           </div>
 
           {/* 설정 섹션 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 8 }}>입력 대상 및 시작일</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 8 }}>입력 대상 및 시작일</label>
               <div style={{ display: 'flex', gap: 8 }}>
-                <select value={selWho} onChange={e => setSelWho(/** @type {"husband"|"wife"} */ (e.target.value))} style={{ flex: 1, padding: '12px', borderRadius: 10, background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: 13, outline: 'none' }}>
+                <select value={selWho} onChange={e => setSelWho(/** @type {"husband"|"wife"} */ (e.target.value))} style={{ flex: 1, padding: '12px', borderRadius: 10, background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: 13, outline: 'none' }}>
                   <option value="husband">{names.husband}</option>
                   <option value="wife">{names.wife}</option>
                 </select>
-                <input type="date" value={startDateStr} onChange={e => setStartDateStr(e.target.value)} style={{ flex: 1.5, padding: '12px', borderRadius: 10, background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: 13, outline: 'none' }} />
+                <input type="date" value={startDateStr} onChange={e => setStartDateStr(e.target.value)} style={{ flex: 1.5, padding: '12px', borderRadius: 10, background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: 13, outline: 'none' }} />
               </div>
             </div>
 
             <div>
-              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 8 }}>근무 코드 시퀀스</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 8 }}>근무 코드 시퀀스</label>
               <textarea 
                 value={codeText}
                 onChange={e => setCodeText(e.target.value)}
                 placeholder="예: D D N N X X M M ..."
-                style={{ width: '100%', height: 120, padding: '14px', borderRadius: 12, background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: 14, outline: 'none', resize: 'none', lineHeight: 1.6 }}
+                style={{ width: '100%', height: 120, padding: '14px', borderRadius: 12, background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: 14, outline: 'none', resize: 'none', lineHeight: 1.6 }}
               />
             </div>
 
             {/* 프리뷰 */}
             {previewSchedules.length > 0 && (
               <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 8 }}>입력 내역 미리보기 ({previewSchedules.length}일분)</label>
+                <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 8 }}>입력 내역 미리보기 ({previewSchedules.length}일분)</label>
                 <div style={gridStyle}>
                   {previewSchedules.slice(0, 31).map((s, idx) => (
-                    <div key={idx} style={{ textAlign: 'center', padding: '6px 2px', borderRadius: 6, background: 'var(--bg4)', border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 8, color: 'var(--text3)', marginBottom: 2 }}>{s.date.slice(8, 10)}</div>
-                      <div style={{ fontSize: 11, fontWeight: 800, color: s.code === 'X' ? 'var(--text3)' : s.code === 'N' ? 'var(--blue)' : s.code === 'M' ? 'var(--gold)' : 'var(--text)' }}>{s.code}</div>
+                    <div key={idx} style={{ textAlign: 'center', padding: '6px 2px', borderRadius: 6, background: '#F3F4F6', border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 8, color: 'var(--text-faint)', marginBottom: 2 }}>{s.date.slice(8, 10)}</div>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: s.code === 'X' ? 'var(--text-faint)' : s.code === 'N' ? '#3B82F6' : s.code === 'M' ? 'var(--primary)' : 'var(--text)' }}>{s.code}</div>
                     </div>
                   ))}
                 </div>
@@ -146,7 +146,7 @@ export function ScheduleScanSheet({ names, onSave, onClose }) {
             disabled={previewSchedules.length === 0}
             style={{ 
               width: '100%', padding: '16px', borderRadius: 16, border: 'none', 
-              background: previewSchedules.length > 0 ? 'var(--blue)' : 'var(--bg4)', 
+              background: previewSchedules.length > 0 ? '#3B82F6' : '#F3F4F6', 
               color: '#fff', fontWeight: 800, fontSize: 16, cursor: 'pointer',
               boxShadow: previewSchedules.length > 0 ? '0 8px 24px rgba(64,120,224,0.3)' : 'none',
               transition: 'all 0.2s'

@@ -33,11 +33,11 @@ export function HomeExecutionSummaryWidget({
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, padding: '20px 0' }}>
         <span style={{ fontSize: 32 }}>📊</span>
-        <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text2)' }}>이번 달 예산이 설정되지 않았습니다</p>
+        <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-muted)' }}>이번 달 예산이 설정되지 않았습니다</p>
         <button
           onClick={() => onSettings("budget")}
           style={{
-            padding: '8px 16px', borderRadius: 99, background: 'var(--gold)', color: '#fff',
+            padding: '8px 16px', borderRadius: 99, background: 'var(--primary)', color: '#fff',
             border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer'
           }}
         >
@@ -52,7 +52,7 @@ export function HomeExecutionSummaryWidget({
       {/* 상단: 집행액 및 링 그래프 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: "var(--fluid-sm, 12px)", color: "var(--text2)", fontWeight: 500, marginBottom: 4 }}>
+          <p style={{ fontSize: "var(--fluid-sm, 12px)", color: "var(--text-muted)", fontWeight: 500, marginBottom: 4 }}>
             {isTotalMode ? "총 집행액" : "생활비 집행"}
           </p>
           <p style={{ fontSize: "var(--fluid-lg, 28px)", fontWeight: 800, color: "var(--text)", marginBottom: 10, whiteSpace: "nowrap" }}>
@@ -63,7 +63,7 @@ export function HomeExecutionSummaryWidget({
             <div
               style={{
                 display: "inline-flex",
-                background: "var(--bg3)",
+                background: "var(--surface-alt)",
                 borderRadius: T.radius.md,
                 padding: 3,
                 border: "1px solid var(--border)",
@@ -77,8 +77,8 @@ export function HomeExecutionSummaryWidget({
                   style={{
                     padding: "4px 10px", borderRadius: T.radius.sm, fontSize: 10,
                     fontWeight: 700, cursor: "pointer", border: "none",
-                    background: isTotalMode === v ? "var(--gold)" : "none",
-                    color: isTotalMode === v ? "#fff" : "var(--text2)",
+                    background: isTotalMode === v ? "var(--primary)" : "none",
+                    color: isTotalMode === v ? "#fff" : "var(--text-muted)",
                     transition: "all .2s",
                   }}
                 >
@@ -89,8 +89,8 @@ export function HomeExecutionSummaryWidget({
             <span
               className="responsive-hide"
               style={{
-                fontSize: 10, fontWeight: 700, color: "var(--gold)",
-                background: "var(--goldD)",
+                fontSize: 10, fontWeight: 700, color: "var(--primary)",
+                background: "rgba(28,43,74,.08)",
                 padding: "4px 8px", borderRadius: T.radius.sm,
               }}
             >
@@ -104,10 +104,10 @@ export function HomeExecutionSummaryWidget({
             style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}
             viewBox="0 0 100 100"
           >
-            <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--bg3)" strokeWidth="12" />
+            <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--surface-alt)" strokeWidth="12" />
             <motion.circle
               cx="50" cy="50" r="40" fill="transparent"
-              stroke="var(--gold)" strokeWidth="12"
+              stroke="var(--primary)" strokeWidth="12"
               strokeDasharray={ringDash}
               initial={{ strokeDasharray: `0 ${CIRC}` }}
               animate={{ strokeDasharray: ringDash }}
@@ -123,7 +123,7 @@ export function HomeExecutionSummaryWidget({
             }}
           >
             <span style={{ fontSize: "clamp(12px, 4cqw, 18px)", fontWeight: 800, color: "var(--text)" }}>{ringPct}%</span>
-            <span style={{ fontSize: "clamp(7px, 2cqw, 9px)", color: "var(--text3)", marginTop: 1 }}>{isTotalMode ? "종합" : "생활"}</span>
+            <span style={{ fontSize: "clamp(7px, 2cqw, 9px)", color: "var(--text-faint)", marginTop: 1 }}>{isTotalMode ? "종합" : "생활"}</span>
           </div>
         </div>
       </div>
@@ -138,7 +138,7 @@ export function HomeExecutionSummaryWidget({
           <div
             key={label}
             style={{
-              background: "var(--bg3)",
+              background: "var(--surface-alt)",
               borderRadius: T.radius.lg,
               padding: "12px 14px",
               border: "1px solid var(--border)",
@@ -147,8 +147,8 @@ export function HomeExecutionSummaryWidget({
               gap: 4
             }}
           >
-            <p style={{ fontSize: 9, color: "var(--text3)", fontWeight: 600 }}>{label}</p>
-            <p style={{ fontSize: 13, fontWeight: 800, color: "var(--text2)" }}>{fmtS(value)}원</p>
+            <p style={{ fontSize: 9, color: "var(--text-faint)", fontWeight: 600 }}>{label}</p>
+            <p style={{ fontSize: 13, fontWeight: 800, color: "var(--text-muted)" }}>{fmtS(value)}원</p>
           </div>
         ))}
       </div>
@@ -158,7 +158,7 @@ export function HomeExecutionSummaryWidget({
         <div style={{ marginTop: 4, padding: '16px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: T.radius.lg, border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
              <span style={{ fontSize: 13 }}>🐷</span>
-             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)' }}>부부 용돈 현황</span>
+             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)' }}>부부 용돈 현황</span>
           </div>
           
           {['husband', 'wife'].map(role => {
@@ -171,14 +171,14 @@ export function HomeExecutionSummaryWidget({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
                     <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
-                      {names[role]} <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500, marginLeft: 2 }}>{data.pct}%</span>
+                      {names[role]} <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 500, marginLeft: 2 }}>{data.pct}%</span>
                     </span>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)' }}>
-                    {fmtS(data.remaining)}원 <span style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 500 }}>남음</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>
+                    {fmtS(data.remaining)}원 <span style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 500 }}>남음</span>
                   </span>
                 </div>
-                <div style={{ height: 6, background: 'var(--bg4)', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ height: 6, background: '#F3F4F6', borderRadius: 99, overflow: 'hidden' }}>
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${data.pct}%` }}
@@ -190,7 +190,7 @@ export function HomeExecutionSummaryWidget({
             );
           })}
           
-          <div style={{ fontSize: 9, color: 'var(--text3)', textAlign: 'center', marginTop: 10, opacity: 0.6 }}>
+          <div style={{ fontSize: 9, color: 'var(--text-faint)', textAlign: 'center', marginTop: 10, opacity: 0.6 }}>
             * 개인별 비밀 용돈 지출 기반 🤫
           </div>
         </div>

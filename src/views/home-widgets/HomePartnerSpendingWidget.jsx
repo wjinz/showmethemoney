@@ -19,7 +19,7 @@ export function HomePartnerSpendingWidget({ plan, totalSpent, hSpent, wSpent, na
         <button
           onClick={() => onAdd("husband")}
           style={{
-            width: "100%", background: "var(--gold)", border: "none", borderRadius: T.radius.lg, padding: "16px",
+            width: "100%", background: "var(--primary)", border: "none", borderRadius: T.radius.lg, padding: "16px",
             color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", boxShadow: "0 4px 12px rgba(200,168,75,0.2)",
           }}
         >
@@ -32,7 +32,7 @@ export function HomePartnerSpendingWidget({ plan, totalSpent, hSpent, wSpent, na
   return (
     <Card className="u5" style={{ padding: "14px", marginBottom: 0, height: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
       <div>
-        <div style={{ fontSize: 11, color: "var(--text2)", marginBottom: 10 }}>파트너별 지출</div>
+        <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>파트너별 지출</div>
         <div style={{ display: "flex", height: 5, borderRadius: 99, overflow: "hidden", marginBottom: 10 }}>
           <div style={{ width: `${totalSpent > 0 ? hSpent / totalSpent * 100 : 50}%`, background: "var(--h)", transition: "width .7s ease" }} />
           <div style={{ flex: 1, background: "var(--w)" }} />
@@ -42,7 +42,7 @@ export function HomePartnerSpendingWidget({ plan, totalSpent, hSpent, wSpent, na
             <div key={p.w} style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: p.w === "husband" ? "var(--h)" : "var(--w)" }} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 10, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis" }}>{names[p.w]}</div>
+                <div style={{ fontSize: 10, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis" }}>{names[p.w]}</div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{fmtS(p.a)}원</div>
               </div>
             </div>

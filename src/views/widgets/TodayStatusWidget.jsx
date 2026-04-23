@@ -33,24 +33,24 @@ export function TodayStatusWidget({ budgets, tx }) {
   return (
     <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Daily Guide
         </span>
-        <span style={{ fontSize: 10, color: 'var(--text3)' }}>D-{daysLeft}</span>
+        <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>D-{daysLeft}</span>
       </div>
       
       <div>
-        <h3 style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4, fontWeight: 500 }}>
-          오늘 하루 <span style={{ color: isOver ? '#EF4444' : 'var(--gold)', fontWeight: 800 }}>{fmtS(dailySafe)}원</span> 이내로
+        <h3 style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 500 }}>
+          오늘 하루 <span style={{ color: isOver ? 'var(--danger)' : 'var(--primary)', fontWeight: 800 }}>{fmtS(dailySafe)}원</span> 이내로
         </h3>
         <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', margin: 0 }}>
           {isOver ? "지출을 멈춰야 해요! 🛑" : "쓰면 안전해요 ✅"}
         </p>
       </div>
 
-      <div style={{ padding: '10px 14px', background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
+      <div style={{ padding: '10px 14px', background: 'var(--surface-alt)', borderRadius: 12, border: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-          <span style={{ color: 'var(--text3)' }}>남은 예산</span>
+          <span style={{ color: 'var(--text-faint)' }}>남은 예산</span>
           <span style={{ color: 'var(--text)', fontWeight: 700 }}>{fmtS(leftAmt)}원</span>
         </div>
       </div>

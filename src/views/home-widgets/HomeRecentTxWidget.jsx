@@ -53,7 +53,7 @@ export function HomeRecentTxWidget({
   return (
     <div
       style={{
-        background: "var(--bg2)",
+        background: "var(--surface)",
         borderRadius: T.radius.xl,
         border: "1px solid var(--border-solid)",
         boxShadow: T.shadow.sm,
@@ -76,12 +76,12 @@ export function HomeRecentTxWidget({
             {searchTerm ? "검색 결과" : "최근 지출"}
           </span>
           {!searchTerm && (
-            <span style={{ fontSize: 11, color: "var(--text2)", marginTop: 2 }}>이번 주 지출: {fmtC(weeklySum)}원</span>
+            <span style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>이번 주 지출: {fmtC(weeklySum)}원</span>
           )}
         </div>
         <button
           onClick={() => setShowFull(!showFull)}
-          style={{ background: "none", border: "none", color: "var(--gold)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+          style={{ background: "none", border: "none", color: "var(--primary)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
         >
           {showFull ? "간략히" : "전체보기"}
         </button>
@@ -93,7 +93,7 @@ export function HomeRecentTxWidget({
           onChange={e => setSearchTerm(e.target.value)}
           placeholder="🔎 지출 처 또는 카테고리 검색"
           style={{
-            width: "100%", background: "var(--bg3)", border: "1px solid var(--border-solid)",
+            width: "100%", background: "var(--surface-alt)", border: "1px solid var(--border-solid)",
             borderRadius: T.radius.md, padding: "8px 12px",
             color: "var(--text)", fontSize: 12, outline: "none",
             boxSizing: "border-box",
@@ -104,7 +104,7 @@ export function HomeRecentTxWidget({
       <div style={{ flex: 1, overflowY: "auto" }}>
         {grouped.length === 0 ? (
           <div style={{ padding: "24px 16px", textAlign: "center" }}>
-            <div style={{ fontSize: 13, color: "var(--text2)" }}>내역이 없습니다.</div>
+            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>내역이 없습니다.</div>
           </div>
         ) : (
           grouped.map(group => {
@@ -116,7 +116,7 @@ export function HomeRecentTxWidget({
 
             return (
               <div key={`header-${group.date}`}>
-                <div style={{ padding: "8px 16px", fontSize: 12, fontWeight: 700, color: "var(--text2)", background: "var(--bg3)", borderTop: "1px solid var(--border-solid)", borderBottom: "1px solid var(--border-solid)" }}>
+                <div style={{ padding: "8px 16px", fontSize: 12, fontWeight: 700, color: "var(--text-muted)", background: "var(--surface-alt)", borderTop: "1px solid var(--border-solid)", borderBottom: "1px solid var(--border-solid)" }}>
                   {label}
                 </div>
                 {group.items.map((t, itemIdx) => {
@@ -134,7 +134,7 @@ export function HomeRecentTxWidget({
                         display: "flex", alignItems: "center", gap: 12,
                         cursor: "pointer", transition: "background .15s",
                       }}
-                      onMouseOver={e => { e.currentTarget.style.background = "var(--bg3)"; }}
+                      onMouseOver={e => { e.currentTarget.style.background = "var(--surface-alt)"; }}
                       onMouseOut={e => { e.currentTarget.style.background = "none"; }}
                     >
                       <div
@@ -153,14 +153,14 @@ export function HomeRecentTxWidget({
                           <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{c.label}</span>
                           {!plan?.isSolo && <Chip who={t.who} names={names} />}
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--text3)" }}>
-                          <span style={{ color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--text-faint)" }}>
+                          <span style={{ color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {t.memo || "—"}
                           </span>
                           <span>·</span>
                           <span
                             style={{
-                              background: "var(--bg3)", padding: "1px 4px", borderRadius: 4,
+                              background: "var(--surface-alt)", padding: "1px 4px", borderRadius: 4,
                               fontSize: 9, display: "flex", alignItems: "center", gap: 2,
                               border: "1px solid var(--border)",
                             }}

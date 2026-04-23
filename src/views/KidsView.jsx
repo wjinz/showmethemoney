@@ -75,9 +75,9 @@ export function KidsView() {
       background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center',
     }}>
       {!kid ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-faint)' }}>
           <div style={{ fontSize: 64, marginBottom: 16 }}>🧑‍🧑‍🧒</div>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: 'var(--text2)' }}>프로필이 없습니다</div>
+          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: 'var(--text-muted)' }}>프로필이 없습니다</div>
           <div style={{ fontSize: 13, textAlign: 'center', lineHeight: 1.5 }}>
             부모님 모드에서 아이 프로필을<br/>먼진 추가해주세요.
           </div>
@@ -101,10 +101,10 @@ export function KidsView() {
 
       {/* 원형 게이지 SVG */}
       <svg width={160} height={160} style={{ marginBottom: 8 }}>
-        <circle cx={80} cy={80} r={70} fill="none" stroke="var(--bg3)" strokeWidth={14} />
+        <circle cx={80} cy={80} r={70} fill="none" stroke="var(--surface-alt)" strokeWidth={14} />
         <circle
           cx={80} cy={80} r={70} fill="none"
-          stroke={goalPct >= 100 ? '#22c55e' : 'var(--gold)'}
+          stroke={goalPct >= 100 ? '#22c55e' : 'var(--primary)'}
           strokeWidth={14}
           strokeLinecap="round"
           strokeDasharray={String(circumference)}
@@ -118,10 +118,10 @@ export function KidsView() {
         </text>
       </svg>
 
-      <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>
+      <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>
         🎯 {kid?.goal_label}
       </div>
-      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 24 }}>
+      <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 24 }}>
         {kid?.saved_amount.toLocaleString()}원 / {kid?.goal_amount.toLocaleString()}원
       </div>
 
@@ -144,7 +144,7 @@ export function KidsView() {
       </AnimatePresence>
 
       {/* Tap-to-Record 카테고리 그리드 */}
-      <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12, fontWeight: 700 }}>
+      <div style={{ fontSize: 12, color: 'var(--text-faint)', marginBottom: 12, fontWeight: 700 }}>
         오늘 뭘 샀어?
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, width: '100%', maxWidth: 320 }}>
@@ -155,15 +155,15 @@ export function KidsView() {
             animate={tappedCat === cat.id ? { scale: [1, 1.15, 1] } : { scale: 1 }}
             transition={{ duration: 0.3 }}
             style={{
-              background: tappedCat === cat.id ? 'var(--goldD)' : 'var(--bg2)',
-              border: `1px solid ${tappedCat === cat.id ? 'var(--gold)' : 'var(--border)'}`,
+              background: tappedCat === cat.id ? 'rgba(28,43,74,.08)' : 'var(--surface)',
+              border: `1px solid ${tappedCat === cat.id ? 'var(--primary)' : 'var(--border)'}`,
               borderRadius: 16, padding: '18px 8px',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
               cursor: 'pointer', minHeight: 80,
             }}
           >
             <span style={{ fontSize: 28 }}>{cat.icon}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)' }}>{cat.label}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{cat.label}</span>
           </motion.button>
         ))}
       </div>

@@ -50,23 +50,28 @@ export function SosRequestSheet({ myRole, allowance, spentPct, onSubmit, onClose
     }}>
       <div style={{
         width: '100%', maxWidth: 480, margin: '0 auto',
-        background: 'var(--bg2)', borderRadius: '20px 20px 0 0',
+        background: 'var(--surface)', borderRadius: '28px 28px 0 0',
         padding: '20px 16px 32px', display: 'flex', flexDirection: 'column', gap: 14,
         boxShadow: '0 -10px 40px rgba(0,0,0,0.4)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>🆘 {partnerName}에게 긴급 가불 요청</span>
-          <button onClick={onClose} style={{ background: 'var(--bg4)', border: 'none', width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text2)' }}>✕</button>
+          <span style={{ fontSize: 16, fontWeight: 900, color: 'var(--text)' }}>{partnerName}에게 부드럽게 부탁해보세요</span>
+          <button onClick={onClose} style={{ background: '#F3F4F6', border: 'none', width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
         </div>
 
-        {/* 용돈 현황 */}
-        <div style={{ padding: '12px 14px', background: 'var(--bg3)', borderRadius: 12, fontSize: 12, color: 'var(--text2)', border: '1px solid var(--border)' }}>
-          최대 가불 가능 금액 <strong style={{ color: 'var(--text)', marginLeft: 4 }}>{fmtS(maxAmount)}원</strong>
+        {/* 말풍선 안내 — 비대칭 곡률 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+          <div style={{ alignSelf: 'flex-start', maxWidth: '80%', padding: '10px 14px', background: 'var(--surface-alt)', borderRadius: '18px 18px 18px 4px', fontSize: 13, color: 'var(--text)', lineHeight: 1.45 }}>
+            {partnerName}이(가) 여유 금액 안에서 부탁드리면 편하게 대답해줄 거예요
+          </div>
+          <div style={{ alignSelf: 'flex-end', maxWidth: '80%', padding: '10px 14px', background: 'linear-gradient(135deg, #1C2B4A 0%, #2d4270 100%)', color: '#fff', borderRadius: '18px 18px 4px 18px', fontSize: 12, fontWeight: 600 }}>
+            여유 금액 {fmtS(maxAmount)}원
+          </div>
         </div>
 
         {/* 금액 입력 */}
         <div>
-          <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 6, marginLeft: 4 }}>가불 금액</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, marginLeft: 4 }}>얼마가 필요하세요?</div>
           <input
             type="text" inputMode="numeric"
             value={amountStr}
@@ -74,28 +79,28 @@ export function SosRequestSheet({ myRole, allowance, spentPct, onSubmit, onClose
             placeholder="0"
             style={{
               width: '100%', padding: '14px', borderRadius: 12,
-              border: `1px solid ${amount > maxAmount ? '#EF4444' : 'var(--border)'}`,
-              background: 'var(--bg3)', color: 'var(--text)',
+              border: `1px solid ${amount > maxAmount ? '#E8715A' : 'var(--border)'}`,
+              background: 'var(--surface-alt)', color: 'var(--text)',
               fontSize: 20, fontWeight: 800, outline: 'none',
               boxSizing: 'border-box',
             }}
           />
           {amount > maxAmount && (
-            <div style={{ fontSize: 11, color: '#EF4444', marginTop: 6, marginLeft: 4 }}>
-              최대 {fmtS(maxAmount)}원까지 신청 가능합니다
+            <div style={{ fontSize: 11, color: '#E8715A', marginTop: 6, marginLeft: 4 }}>
+              여유 금액({fmtS(maxAmount)}원) 안에서 부탁해보세요
             </div>
           )}
         </div>
 
-        {/* 사유 선택 */}
+        {/* 어떤 일이신가요? */}
         <div>
-          <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 8, marginLeft: 4 }}>사유 선택</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, marginLeft: 4 }}>어떤 일이신가요?</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {REASONS.map(r => (
               <button key={r} onClick={() => setReason(r)} style={{
-                padding: '8px 16px', borderRadius: 99, border: `1px solid ${reason === r ? '#EF4444' : 'var(--border)'}`,
-                background: reason === r ? 'rgba(239,68,68,0.1)' : 'var(--bg3)',
-                color: reason === r ? '#EF4444' : 'var(--text2)',
+                padding: '8px 16px', borderRadius: 99, border: `1px solid ${reason === r ? '#E8715A' : 'var(--border)'}`,
+                background: reason === r ? 'rgba(239,68,68,0.1)' : 'var(--surface-alt)',
+                color: reason === r ? '#E8715A' : 'var(--text-muted)',
                 fontSize: 12, fontWeight: 700, cursor: 'pointer',
                 transition: 'all 0.2s',
               }}>{r}</button>
@@ -103,16 +108,16 @@ export function SosRequestSheet({ myRole, allowance, spentPct, onSubmit, onClose
           </div>
         </div>
 
-        {/* 상환 방법 */}
+        {/* 어떻게 갚으시겠어요? */}
         <div>
-          <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 8, marginLeft: 4 }}>상환 방법</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, marginLeft: 4 }}>어떻게 갚으시겠어요?</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {REPAYS.map(r => (
               <button key={r} onClick={() => setRepayPlan(r)} style={{
                 flex: 1, padding: '10px 4px', borderRadius: 10,
-                border: `1px solid ${repayPlan === r ? '#EF4444' : 'var(--border)'}`,
-                background: repayPlan === r ? 'rgba(239,68,68,0.1)' : 'var(--bg3)',
-                color: repayPlan === r ? '#EF4444' : 'var(--text2)',
+                border: `1px solid ${repayPlan === r ? '#E8715A' : 'var(--border)'}`,
+                background: repayPlan === r ? 'rgba(239,68,68,0.1)' : 'var(--surface-alt)',
+                color: repayPlan === r ? '#E8715A' : 'var(--text-muted)',
                 fontSize: 12, fontWeight: 700, cursor: 'pointer',
                 transition: 'all 0.2s',
               }}>{r}</button>
@@ -126,14 +131,14 @@ export function SosRequestSheet({ myRole, allowance, spentPct, onSubmit, onClose
           disabled={loading || !isValid} 
           style={{
             width: '100%', padding: 18, borderRadius: 16, border: 'none',
-            background: isValid ? '#EF4444' : 'var(--bg4)',
-            color: isValid ? '#fff' : 'var(--text3)',
+            background: isValid ? '#E8715A' : '#F3F4F6',
+            color: isValid ? '#fff' : 'var(--text-faint)',
             fontWeight: 800, fontSize: 16, cursor: isValid ? 'pointer' : 'default',
             marginTop: 8, boxShadow: isValid ? '0 8px 24px rgba(239,68,68,0.3)' : 'none',
             transition: 'all .25s',
           }}
         >
-          {loading ? '심사 요청 중...' : `${partnerName}에게 SOS 보내기 🥺`}
+          {loading ? '보내는 중...' : `${partnerName}에게 부탁하기 `}
         </button>
       </div>
     </div>

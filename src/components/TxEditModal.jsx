@@ -53,16 +53,16 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete, 
         onClick={e => e.stopPropagation()}
       >
         {/* 핸들 */}
-        <div style={{ width: 40, height: 5, background: "var(--border2)", borderRadius: 99, margin: "0 auto 18px" }} />
+        <div style={{ width: 40, height: 5, background: "var(--border)", borderRadius: 99, margin: "0 auto 18px" }} />
 
         {/* 헤더 */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div className="serif" style={{ fontSize: 20 }}>내역 수정</div>
-          <button onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ background: "none", border: "none", fontSize: 20, color: "var(--text3)", cursor: "pointer" }}>✕</button>
+          <button onClick={(e) => { e.stopPropagation(); onClose(); }} style={{ background: "none", border: "none", fontSize: 20, color: "var(--text-faint)", cursor: "pointer" }}>✕</button>
         </div>
 
         {/* 날짜 */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--bg3)", borderRadius: 12, padding: "9px 14px", marginBottom: 14, border: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--surface-alt)", borderRadius: 12, padding: "9px 14px", marginBottom: 14, border: "1px solid var(--border)" }}>
           <span>📅</span>
           <input
             type="date" value={date} onChange={e => setDate(e.target.value)}
@@ -74,18 +74,18 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete, 
           {["husband", "wife"].map(r => (
             <button key={r} onClick={(e) => { e.stopPropagation(); setWho(r); }} style={{
               flex: 1, padding: "11px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 13,
-              background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--bg2)",
+              background: who === r ? (r === "husband" ? "var(--hD)" : "var(--wD)") : "var(--surface)",
               border: `1px solid ${who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--border)"}`,
-              color: who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--text2)",
+              color: who === r ? (r === "husband" ? "var(--h)" : "var(--w)") : "var(--text-muted)",
             }}>{r === "husband" ? names.husband : names.wife}</button>
           ))}
         </div>
 
         {/* 금액 키패드 */}
-        <div style={{ background: "var(--bg3)", borderRadius: 16, padding: "16px", marginBottom: 14, border: "1px solid var(--border2)" }}>
+        <div style={{ background: "var(--surface-alt)", borderRadius: 16, padding: "16px", marginBottom: 14, border: "1px solid var(--border)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-            <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700 }}>금액</span>
-            <span style={{ fontSize: 28, fontWeight: 800, color: amount ? "var(--text)" : "var(--text3)" }}>
+            <span style={{ fontSize: 11, color: "var(--text-faint)", fontWeight: 700 }}>금액</span>
+            <span style={{ fontSize: 28, fontWeight: 800, color: amount ? "var(--text)" : "var(--text-faint)" }}>
               {amount ? parseInt(amount).toLocaleString() : 0}
               <span style={{ fontSize: 16, marginLeft: 4, fontWeight: 500 }}>원</span>
             </span>
@@ -94,8 +94,8 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete, 
             {[1,2,3,4,5,6,7,8,9,"C",0,"⌫"].map(v => (
               <button key={v} onClick={(e) => press(String(v), e)} style={{
                 height: 48, borderRadius: 11, border: "1px solid var(--border)",
-                background: "var(--bg2)", fontSize: 18, fontWeight: 700, cursor: "pointer",
-                color: v === "C" ? "var(--red)" : v === "⌫" ? "var(--gold)" : "var(--text)",
+                background: "var(--surface)", fontSize: 18, fontWeight: 700, cursor: "pointer",
+                color: v === "C" ? "var(--danger)" : v === "⌫" ? "var(--primary)" : "var(--text)",
               }}>{v}</button>
             ))}
           </div>
@@ -107,9 +107,9 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete, 
             <button key={c.id} onClick={() => setCat(c.id)} style={{
               display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "10px 0",
               borderRadius: 13, cursor: "pointer", transition: "all .15s",
-              background: cat === c.id ? c.color + "22" : "var(--bg3)",
+              background: cat === c.id ? c.color + "22" : "var(--surface-alt)",
               border: `1px solid ${cat === c.id ? c.color : "var(--border)"}`,
-              color: cat === c.id ? c.color : "var(--text2)",
+              color: cat === c.id ? c.color : "var(--text-muted)",
             }}>
               <span style={{ fontSize: 18 }}>{c.icon}</span>
               <span style={{ fontSize: 11, fontWeight: cat === c.id ? 700 : 400 }}>{c.label}</span>
@@ -118,7 +118,7 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete, 
         </div>
 
         {/* 메모 */}
-        <div style={{ background: "var(--bg3)", borderRadius: 13, padding: "4px 14px", marginBottom: 14, border: "1px solid var(--border)" }}>
+        <div style={{ background: "var(--surface-alt)", borderRadius: 13, padding: "4px 14px", marginBottom: 14, border: "1px solid var(--border)" }}>
           <input value={memo} onChange={e => setMemo(e.target.value)} placeholder="메모 (선택)"
             style={{ width: "100%", background: "none", border: "none", color: "var(--text)", fontSize: 14, padding: "12px 0", outline: "none" }} />
         </div>
@@ -131,9 +131,9 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete, 
           ].map(m => (
             <button key={m.id} onClick={(e) => { e.stopPropagation(); setPayMethod(m.id); }} style={{
               flex: 1, padding: "9px", borderRadius: 12, cursor: "pointer", fontSize: 11, fontWeight: 700,
-              background: payMethod === m.id ? "var(--goldD)" : "var(--bg3)",
-              border: `1px solid ${payMethod === m.id ? "var(--gold)" : "var(--border)"}`,
-              color: payMethod === m.id ? "var(--gold)" : "var(--text2)",
+              background: payMethod === m.id ? "rgba(28,43,74,.08)" : "var(--surface-alt)",
+              border: `1px solid ${payMethod === m.id ? "var(--primary)" : "var(--border)"}`,
+              color: payMethod === m.id ? "var(--primary)" : "var(--text-muted)",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
             }}><span>{m.i}</span>{m.l}</button>
           ))}
@@ -144,8 +144,8 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete, 
             {cards.map(c => (
               <button key={c.id} onClick={(e) => { e.stopPropagation(); setCardId(cardId === c.id ? "" : c.id); }} style={{
                 flexShrink: 0, padding: "6px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
-                background: cardId === c.id ? c.color : "var(--bg3)",
-                color: cardId === c.id ? getContrastText(c.color) : "var(--text3)",
+                background: cardId === c.id ? c.color : "var(--surface-alt)",
+                color: cardId === c.id ? getContrastText(c.color) : "var(--text-faint)",
                 border: `1px solid ${cardId === c.id ? c.color : "var(--border)"}`,
               }}>{c.icon} {c.label}</button>
             ))}
@@ -159,9 +159,9 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete, 
             style={{
               width: confirmDel ? "auto" : 52, flexShrink: 0,
               padding: confirmDel ? "0 16px" : "0",
-              height: 52, borderRadius: 14, border: `1px solid ${confirmDel ? "var(--red)" : "var(--border)"}`,
-              background: confirmDel ? "var(--redD)" : "var(--bg3)",
-              color: confirmDel ? "var(--red)" : "var(--text3)",
+              height: 52, borderRadius: 14, border: `1px solid ${confirmDel ? "var(--danger)" : "var(--border)"}`,
+              background: confirmDel ? "var(--danger-bg1)" : "var(--surface-alt)",
+              color: confirmDel ? "var(--danger)" : "var(--text-faint)",
               cursor: "pointer", fontSize: confirmDel ? 12 : 18, fontWeight: 700,
               transition: "all .2s", whiteSpace: "nowrap",
             }}
@@ -173,15 +173,15 @@ export function TxEditModal({ tx, names, cards = [], onClose, onEdit, onDelete, 
           {confirmDel && (
             <button onClick={() => setConfirmDel(false)} style={{
               flexShrink: 0, padding: "0 12px", height: 52, borderRadius: 14,
-              border: "1px solid var(--border)", background: "var(--bg3)",
-              color: "var(--text2)", cursor: "pointer", fontSize: 12, fontWeight: 700,
+              border: "1px solid var(--border)", background: "var(--surface-alt)",
+              color: "var(--text-muted)", cursor: "pointer", fontSize: 12, fontWeight: 700,
             }}>취소</button>
           )}
 
           <button onClick={save} disabled={!amount || !cat} style={{
             flex: 1, height: 52, borderRadius: 14, border: "none", fontSize: 15, fontWeight: 700,
-            background: (!amount || !cat) ? "var(--bg3)" : "var(--gold)",
-            color: (!amount || !cat) ? "var(--text3)" : "#fff",
+            background: (!amount || !cat) ? "var(--surface-alt)" : "var(--primary)",
+            color: (!amount || !cat) ? "var(--text-faint)" : "#fff",
             cursor: (!amount || !cat) ? "default" : "pointer",
             boxShadow: (!amount || !cat) ? "none" : "0 6px 20px rgba(200,168,75,.3)",
             transition: "all .2s",

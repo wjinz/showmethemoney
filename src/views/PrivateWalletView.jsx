@@ -65,13 +65,13 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
           <h1
             style={{
               fontSize: T.font.xxl, fontWeight: 800, letterSpacing: '-0.02em',
-              color: 'var(--gold)', margin: 0,
+              color: 'var(--secondary)', margin: 0,
               display: 'flex', alignItems: 'center', gap: 8,
             }}
           >
             나만의 비상금 <EyeOff size={20} strokeWidth={2} />
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4, fontWeight: 500 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>
             {name}님만 볼 수 있는 프라이빗 지갑
           </p>
         </div>
@@ -79,9 +79,9 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
           onClick={onSettings}
           style={{
             padding: 10, borderRadius: T.radius.full,
-            background: 'var(--bg3)', border: '1px solid var(--border-solid)',
+            background: 'var(--surface-alt)', border: '1px solid var(--border-solid)',
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--text2)',
+            color: 'var(--text-muted)',
           }}
         >
           ⚙️
@@ -101,7 +101,7 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
       >
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-            <ShieldCheck size={28} color='var(--gold)' strokeWidth={1.5} style={{ opacity: 0.8 }} />
+            <ShieldCheck size={28} color='var(--secondary)' strokeWidth={1.5} style={{ opacity: 0.8 }} />
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: '#6B7280' }}>PRIVATE WALLET</span>
           </div>
           <p style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 4 }}>이번 달 비밀 지출 합계</p>
@@ -119,21 +119,21 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
 
       {/* 예산 게이지 가이드 */}
       {allowance > 0 && (
-        <div style={{ background: 'var(--bg2)', borderRadius: T.radius.xl, padding: 20, marginBottom: 16, border: '1px solid var(--border)' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: T.radius.xl, padding: 20, marginBottom: 16, border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14 }}>
             <div>
-              <p style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 600, marginBottom: 4 }}>남은 예산</p>
-              <h3 style={{ fontSize: 20, fontWeight: 800, color: leftAmt < 0 ? '#EF4444' : 'var(--text)' }}>{fmtS(leftAmt)}원</h3>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 4 }}>남은 예산</p>
+              <h3 style={{ fontSize: 20, fontWeight: 800, color: leftAmt < 0 ? 'var(--danger)' : 'var(--text)' }}>{fmtS(leftAmt)}원</h3>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: 12, fontWeight: 800, color: 'var(--gold)' }}>{pct}% 소진</p>
+              <p style={{ fontSize: 12, fontWeight: 800, color: 'var(--secondary)' }}>{pct}% 소진</p>
             </div>
           </div>
-          <div style={{ height: 6, background: 'var(--bg3)', borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{ height: 6, background: 'var(--surface-alt)', borderRadius: 3, overflow: 'hidden' }}>
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${pct}%` }}
-              style={{ height: '100%', background: pct > 90 ? '#EF4444' : 'var(--gold)', borderRadius: 3 }}
+              style={{ height: '100%', background: pct > 90 ? 'var(--danger)' : 'var(--secondary)', borderRadius: 3 }}
             />
           </div>
         </div>
@@ -144,10 +144,10 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
         <button
           onClick={onAdd}
           style={{
-            width: '100%', background: 'var(--gold)', border: 'none',
+            width: '100%', background: 'var(--secondary)', border: 'none',
             borderRadius: T.radius.lg, padding: '16px',
             color: '#fff', fontWeight: 800, fontSize: 16, cursor: 'pointer',
-            boxShadow: '0 8px 24px var(--goldD)',
+            boxShadow: '0 8px 24px rgba(122,158,135,.25)',
             transition: 'all 0.2s'
           }}
           onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
@@ -163,19 +163,19 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
           onClick={onSosRequest}
           style={{
             width: '100%', padding: 16, borderRadius: T.radius.lg,
-            background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444',
+            background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)',
             fontWeight: 800, fontSize: 15, cursor: 'pointer',
             border: '2px solid rgba(239, 68, 68, 0.2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             transition: 'all 0.2s'
           }}
           onMouseOver={e => {
-            e.currentTarget.style.background = '#EF4444';
+            e.currentTarget.style.background = 'var(--danger)';
             e.currentTarget.style.color = '#fff';
           }}
           onMouseOut={e => {
             e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-            e.currentTarget.style.color = '#EF4444';
+            e.currentTarget.style.color = 'var(--danger)';
           }}
         >
           🚨 {partnerName}에게 긴급 가불 요청하기
@@ -183,16 +183,16 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
       </div>
 
       {/* 비밀 지출 내역 */}
-      <div style={{ background: 'var(--bg2)', borderRadius: T.radius.xl, border: '1px solid var(--border-solid)', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+      <div style={{ background: 'var(--surface)', borderRadius: T.radius.xl, border: '1px solid var(--border-solid)', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>비밀 지출 내역</p>
-          <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>이번 달</span>
+          <span style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 600 }}>이번 달</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {privateTx.length === 0 ? (
             <div style={{ padding: '40px 20px', textAlign: 'center' }}>
               <div style={{ fontSize: 24, marginBottom: 12, opacity: 0.5 }}>🤐</div>
-              <p style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 500 }}>아직 비밀 지출 내역이 없습니다.</p>
+              <p style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500 }}>아직 비밀 지출 내역이 없습니다.</p>
             </div>
           ) : (
             privateTx.sort((a,b) => b.date.localeCompare(a.date)).slice(0, 30).map((t, idx) => {
@@ -210,14 +210,14 @@ export function PrivateWalletView({ plan, tx, myRole, names, householdId: _house
                 >
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--gold)' }}>{c.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--secondary)' }}>{c.label}</span>
                       <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.memo || '지출'}</span>
                     </div>
-                    <p style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 500 }}>{t.date}</p>
+                    <p style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 500 }}>{t.date}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>-{fmtS(t.amount)}원</p>
-                    <p style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 600 }}>{t.payMethod === 'cash' ? '현금' : '카드'}</p>
+                    <p style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 600 }}>{t.payMethod === 'cash' ? '현금' : '카드'}</p>
                   </div>
                 </div>
               );

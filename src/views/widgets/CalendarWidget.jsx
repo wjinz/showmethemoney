@@ -79,16 +79,16 @@ export function CalendarWidget({ plan, tx, cards, names, setPlan }) {
       {/* Header */}
       <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(200,168,75,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)' }}>
+          <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(200,168,75,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
             <CalendarIcon size={18} />
           </div>
           <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>부부 캘린더</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button onClick={() => setShowScan(true)} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--blue)', cursor: 'pointer', padding: '6px 12px', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}><Briefcase size={12} /> 근무표 스캔</button>
-          <button onClick={prevMonth} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text3)', cursor: 'pointer', padding: '4px 8px', fontSize: 16 }}>‹</button>
+          <button onClick={() => setShowScan(true)} style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 8, color: '#3B82F6', cursor: 'pointer', padding: '6px 12px', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}><Briefcase size={12} /> 근무표 스캔</button>
+          <button onClick={prevMonth} style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-faint)', cursor: 'pointer', padding: '4px 8px', fontSize: 16 }}>‹</button>
           <span style={{ fontSize: 14, fontWeight: 700 }}>{viewYear}.{String(viewMonth).padStart(2,'0')}</span>
-          <button onClick={nextMonth} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text3)', cursor: 'pointer', padding: '4px 8px', fontSize: 16 }}>›</button>
+          <button onClick={nextMonth} style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-faint)', cursor: 'pointer', padding: '4px 8px', fontSize: 16 }}>›</button>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ export function CalendarWidget({ plan, tx, cards, names, setPlan }) {
         {/* 요일 헤더 */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", marginBottom: 6 }}>
           {DNAMES.map((d,i) => (
-            <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: i===0 ? "var(--red)" : i===6 ? "var(--blue)" : "var(--text3)", padding: "3px 0" }}>{d}</div>
+            <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: i===0 ? "var(--danger)" : i===6 ? "#3B82F6" : "var(--text-faint)", padding: "3px 0" }}>{d}</div>
           ))}
         </div>
 
@@ -117,7 +117,7 @@ export function CalendarWidget({ plan, tx, cards, names, setPlan }) {
             const weekday = (firstDay + i) % 7;
             const dayScheds = getSchedsForDate(dateStr);
             const intensity = amt>0 ? Math.min(amt/maxDaily, 1) : 0;
-            const heatBg = amt > 0 ? `rgba(${isOver?"217,95,95":"77,171,135"}, ${0.15 + intensity*0.5})` : "var(--bg3)";
+            const heatBg = amt > 0 ? `rgba(${isOver?"217,95,95":"77,171,135"}, ${0.15 + intensity*0.5})` : "var(--surface-alt)";
             
             const hasHusband = dayScheds.some(s => s.who === 'husband');
             const hasWife = dayScheds.some(s => s.who === 'wife');
@@ -133,23 +133,23 @@ export function CalendarWidget({ plan, tx, cards, names, setPlan }) {
               if (code === 'D') return '#5AB2FF';   // 하늘색 (주간)
               if (code === 'X') return '#9CA3AF';   // 회색 (오프)
               if (code?.includes('M')) return '#A855F7'; // 보라색 (M12)
-              return 'var(--blue)';
+              return '#3B82F6';
             };
 
             return (
               <div key={d} onClick={() => setSelDate(dateStr)} style={{
                 borderRadius: 8, padding: "4px 2px", cursor: "pointer", textAlign: "center", position: "relative",
-                background: isSel ? "var(--goldD)" : heatBg,
-                border: `1px solid ${isSel ? "var(--gold)" : "transparent"}`,
+                background: isSel ? "rgba(28,43,74,.08)" : heatBg,
+                border: `1px solid ${isSel ? "var(--primary)" : "transparent"}`,
                 transition: "all .12s", minHeight: 52, overflow: "hidden"
               }}>
                 <div style={{
                   fontSize: 12, fontWeight: isToday ? 800 : 500, lineHeight: 1,
-                  color: isToday ? "var(--gold)" : isSel ? "var(--gold)" : (isRedHoliday || weekday===0) ? "var(--red)" : weekday===6 ? "var(--blue)" : "var(--text)"
+                  color: isToday ? "var(--primary)" : isSel ? "var(--primary)" : (isRedHoliday || weekday===0) ? "var(--danger)" : weekday===6 ? "#3B82F6" : "var(--text)"
                 }}>{d}</div>
                 
-                {holidayName && <div style={{ fontSize: 9, color: isRedHoliday ? "var(--red)" : "var(--text3)", marginTop: 2, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: 0.9 }}>{holidayName}</div>}
-                {amt > 0 && <div style={{ fontSize: 8, color: isSel ? "var(--goldL)" : "var(--text2)", marginTop: 2, lineHeight: 1, transform: "scale(0.9)" }}>{fmtS(amt)}</div>}
+                {holidayName && <div style={{ fontSize: 9, color: isRedHoliday ? "var(--danger)" : "var(--text-faint)", marginTop: 2, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: 0.9 }}>{holidayName}</div>}
+                {amt > 0 && <div style={{ fontSize: 8, color: isSel ? "var(--primary)" : "var(--text-muted)", marginTop: 2, lineHeight: 1, transform: "scale(0.9)" }}>{fmtS(amt)}</div>}
                 
                 {/* 근무 레이블 또는 점 표시 */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 2, position: 'absolute', bottom: 3, width: '100%', padding: '0 2px' }}>
@@ -178,7 +178,7 @@ export function CalendarWidget({ plan, tx, cards, names, setPlan }) {
                     <>
                       {hasHusband && <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--h)' }} title={`${names.husband} 일정`} />}
                       {hasWife && <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--w)' }} title={`${names.wife} 일정`} />}
-                      {hasJoint && <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--gold)' }} title="공동 일정" />}
+                      {hasJoint && <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--primary)' }} title="공동 일정" />}
                     </>
                   )}
                 </div>
@@ -193,31 +193,31 @@ export function CalendarWidget({ plan, tx, cards, names, setPlan }) {
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
               {selDateLabel} 일정/지출
             </span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: selTotal>0 ? 'var(--gold)' : 'var(--text3)' }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: selTotal>0 ? 'var(--primary)' : 'var(--text-faint)' }}>
               {selTotal>0 ? `${fmtS(selTotal)}원 지출` : '지출 없음'}
             </span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {selHoliday && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: isSelRedHoliday ? 'rgba(217,95,95,0.1)' : 'var(--bg3)', borderRadius: 8, border: `1px solid ${isSelRedHoliday ? 'rgba(217,95,95,0.3)' : 'var(--border)'}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: isSelRedHoliday ? 'rgba(217,95,95,0.1)' : 'var(--surface-alt)', borderRadius: 8, border: `1px solid ${isSelRedHoliday ? 'rgba(217,95,95,0.3)' : 'var(--border)'}` }}>
                 <span style={{ fontSize: 14 }}>{isSelRedHoliday ? '🎊' : '🎉'}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: isSelRedHoliday ? 'var(--red)' : 'var(--text)' }}>{selHoliday}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: isSelRedHoliday ? 'var(--danger)' : 'var(--text)' }}>{selHoliday}</span>
               </div>
             )}
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
               <div style={{ display: 'flex', gap: 6, width: '100%' }}>
-                <select value={newSchedWho} onChange={e => setNewSchedWho(e.target.value)} style={{ padding: '8px', borderRadius: 8, background: 'var(--bg3)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--text)', outline: 'none' }}>
+                <select value={newSchedWho} onChange={e => setNewSchedWho(e.target.value)} style={{ padding: '8px', borderRadius: 8, background: 'var(--surface-alt)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--text)', outline: 'none' }}>
                   <option value="husband">{names.husband} 일정</option>
                   <option value="wife">{names.wife} 일정</option>
                   <option value="joint">공동 일정</option>
                 </select>
-                <input value={newSched} onChange={e => setNewSched(e.target.value)} placeholder="새 일정 (생일, 회식 등)" onKeyDown={e => e.key === 'Enter' && handleAddSchedule()} style={{ flex: 1, padding: '8px 10px', borderRadius: 8, background: 'var(--bg3)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--text)', outline: 'none', minWidth: 100 }} />
-                <button onClick={handleAddSchedule} style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--gold)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Plus size={16} strokeWidth={3} /></button>
+                <input value={newSched} onChange={e => setNewSched(e.target.value)} placeholder="새 일정 (생일, 회식 등)" onKeyDown={e => e.key === 'Enter' && handleAddSchedule()} style={{ flex: 1, padding: '8px 10px', borderRadius: 8, background: 'var(--surface-alt)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--text)', outline: 'none', minWidth: 100 }} />
+                <button onClick={handleAddSchedule} style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--primary)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Plus size={16} strokeWidth={3} /></button>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
-                <select value={newCycle} onChange={e => setNewCycle(e.target.value)} style={{ padding: '6px 10px', borderRadius: 6, background: 'var(--bg3)', border: 'none', fontSize: 11, color: 'var(--text2)', outline: 'none', width: 'fit-content', cursor: 'pointer' }}>
+                <select value={newCycle} onChange={e => setNewCycle(e.target.value)} style={{ padding: '6px 10px', borderRadius: 6, background: 'var(--surface-alt)', border: 'none', fontSize: 11, color: 'var(--text-muted)', outline: 'none', width: 'fit-content', cursor: 'pointer' }}>
                   <option value="none">단일 일정 (반복 없음)</option>
                   <option value="monthly">매월 반복 (월세, 공과금 등)</option>
                   <option value="yearly_solar">매년 반복 (결혼기념일, 생일 등)</option>
@@ -226,15 +226,15 @@ export function CalendarWidget({ plan, tx, cards, names, setPlan }) {
             </div>
 
             {selScheds.map(s => (
-              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg2)', borderRadius: 8, border: '1px solid var(--border)' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: s.who === 'husband' ? 'var(--h)' : s.who === 'wife' ? 'var(--w)' : 'var(--gold)' }} />
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--surface)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: s.who === 'husband' ? 'var(--h)' : s.who === 'wife' ? 'var(--w)' : 'var(--primary)' }} />
                 <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
                   {s.title}
-                  {(s.isAnnual || s.cycle === 'yearly_solar') && <span style={{ fontSize: 9, color: 'var(--gold)', border: '1px solid var(--gold)', borderRadius: 4, padding: '1px 4px', background: 'var(--goldD)' }}>매년</span>}
-                  {s.cycle === 'monthly' && <span style={{ fontSize: 9, color: 'var(--blue)', border: '1px solid var(--blue)', borderRadius: 4, padding: '1px 4px', background: 'rgba(59,130,246,0.1)' }}>매월</span>}
-                  {s.isWork && <span style={{ fontSize: 9, color: 'var(--blue)', border: '1px solid var(--blue)', borderRadius: 4, padding: '1px 4px', background: 'var(--bg4)' }}>근무</span>}
+                  {(s.isAnnual || s.cycle === 'yearly_solar') && <span style={{ fontSize: 9, color: 'var(--primary)', border: '1px solid var(--primary)', borderRadius: 4, padding: '1px 4px', background: 'rgba(28,43,74,.08)' }}>매년</span>}
+                  {s.cycle === 'monthly' && <span style={{ fontSize: 9, color: '#3B82F6', border: '1px solid #3B82F6', borderRadius: 4, padding: '1px 4px', background: 'rgba(59,130,246,0.1)' }}>매월</span>}
+                  {s.isWork && <span style={{ fontSize: 9, color: '#3B82F6', border: '1px solid #3B82F6', borderRadius: 4, padding: '1px 4px', background: '#F3F4F6' }}>근무</span>}
                 </div>
-                <button onClick={() => handleDelSchedule(s.id)} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 14 }}>✕</button>
+                <button onClick={() => handleDelSchedule(s.id)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 14 }}>✕</button>
               </div>
             ))}
 
@@ -257,7 +257,7 @@ export function CalendarWidget({ plan, tx, cards, names, setPlan }) {
                       <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{c?.label}</span>
                       <Chip who={t.who} names={names} />
                     </div>
-                    <div style={{ fontSize: 10, color: 'var(--text3)' }}>{t.memo || '—'}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{t.memo || '—'}</div>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>-{fmtS(t.amount)}원</span>
                 </div>
@@ -265,7 +265,7 @@ export function CalendarWidget({ plan, tx, cards, names, setPlan }) {
             })}
             
             {selScheds.length === 0 && selTx.length === 0 && (
-              <div style={{ padding: '16px', textAlign: 'center', fontSize: 11, color: 'var(--text3)' }}>등록된 일정이나 지출이 없습니다.</div>
+              <div style={{ padding: '16px', textAlign: 'center', fontSize: 11, color: 'var(--text-faint)' }}>등록된 일정이나 지출이 없습니다.</div>
             )}
           </div>
         </div>

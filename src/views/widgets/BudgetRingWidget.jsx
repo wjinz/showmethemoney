@@ -36,7 +36,7 @@ export function BudgetRingWidget({ budgets, tx }) {
 
   return (
     <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-      <div style={{ fontSize: 11, color: 'var(--text2)', alignSelf: 'flex-start', fontWeight: 600 }}>이번 달 카테고리 예산</div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', alignSelf: 'flex-start', fontWeight: 600 }}>이번 달 카테고리 예산</div>
       <svg width={110} height={110} style={{ overflow: 'visible', margin: '4px 0' }}>
         <circle cx={55} cy={55} r={r} fill="none" stroke="var(--border)" strokeWidth={8} />
         <motion.circle
@@ -50,20 +50,20 @@ export function BudgetRingWidget({ budgets, tx }) {
           transform="rotate(-90 55 55)"
         />
         <text x={55} y={50} textAnchor="middle" fontSize={18} fontWeight={800} fill="var(--text)">{pct}%</text>
-        <text x={55} y={65} textAnchor="middle" fontSize={9} fill="var(--text2)">Spent</text>
+        <text x={55} y={65} textAnchor="middle" fontSize={9} fill="var(--text-muted)">Spent</text>
       </svg>
       <div style={{ fontSize: 12, color: 'var(--text)', textAlign: 'center', fontWeight: 600 }}>
-        {fmtS(spent)}원 <span style={{ color: 'var(--text3)', fontSize: 11, fontWeight: 500 }}>/ {fmtS(total)}원</span>
+        {fmtS(spent)}원 <span style={{ color: 'var(--text-faint)', fontSize: 11, fontWeight: 500 }}>/ {fmtS(total)}원</span>
       </div>
       
       <div style={{
-        marginTop: 6, padding: '8px 12px', background: isOver ? 'var(--redD)' : 'var(--bg3)', 
-        borderRadius: 8, textAlign: 'center', fontSize: 11, color: isOver ? 'var(--red)' : 'var(--text2)',
+        marginTop: 6, padding: '8px 12px', background: isOver ? 'var(--danger-bg1)' : 'var(--surface-alt)', 
+        borderRadius: 8, textAlign: 'center', fontSize: 11, color: isOver ? 'var(--danger)' : 'var(--text-muted)',
         width: '100%', boxSizing: 'border-box', lineHeight: 1.4
       }}>
         {isOver ? (
           <>
-            예산을 <strong style={{ color: 'var(--red)' }}>{fmtS(Math.abs(remainingBudget))}원</strong> 초과했어요!<br/>
+            예산을 <strong style={{ color: 'var(--danger)' }}>{fmtS(Math.abs(remainingBudget))}원</strong> 초과했어요!<br/>
             다음 달을 위해 지출을 줄여보세요.
           </>
         ) : (
