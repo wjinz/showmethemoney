@@ -1,13 +1,31 @@
 /**
- * @typedef {{ id: number, date: string, amount: number, cat: string, memo: string, who: string, payMethod: string, type?: string, cardId?: string, is_private?: boolean, kid_id?: string }} TxItem
- * @typedef {{ id: string|number, label: string, amount: number, cat?: string, day?: number, cardId?: string }} FixedItem
- * @typedef {{ id: string|number, label: string, totalAmount: number, months: number, monthly: number, cardId?: string, date?: string }} InstallItem
+ * @typedef {{ id: number, date: string, amount: number, cat: string, memo: string, who: string, payMethod: string, type?: string, cardId?: string, is_private?: boolean, kid_id?: string, source_id?: number, label?: string }} TxItem
+ * @typedef {{ id: string|number, label: string, amount: number, cat?: string, day?: number, cardId?: string, who?: 'husband'|'wife' }} FixedItem
+ * @typedef {{ id: string|number, label: string, totalAmount: number, months: number, monthly: number, cardId?: string, date?: string, who?: 'husband'|'wife' }} InstallItem
  * @typedef {{ id: string|number, label: string, type: string, color?: string, icon?: string, paymentDay?: number, billingStartDay?: number, billingEndDay?: number, billingEndNextMonth?: boolean }} CardItem
  * @typedef {{ id: number, household_id: string, requester: string, amount: number, reason: string, repay_plan: string, status: string, created_at: string, resolved_at?: string }} SosRequest
  * @typedef {{ label: string, target: number, saved: number }} GoalItem
  * @typedef {{ cardId: string, expectedAmount: number }} CardBill
- * @typedef {{ id: number, date: string, cardBills: CardBill[], fixedCash: number, currentCash: number, expectedShortage: number }} SettlementItem
+ * @typedef {{ id: number, date: string, cardBills: CardBill[], fixedCash: number, currentCash: number, expectedShortage: number, salary?: number }} SettlementItem
  * @typedef {{ salary: { husband: number, wife: number, savingsTarget: number }, utilizationTarget: number, events: object[], goals: GoalItem[], privateGoals: { husband: GoalItem[], wife: GoalItem[] }, personalAllowancePct: number, isSolo?: boolean, allowance?: { husband: number, wife: number } }} Plan
+ * @typedef {'diary'|'expense'} DiaryType
+ * @typedef {{ label: string, amount: number, cat?: string, payMethod?: string, cardId?: string }} ExpenseLine
+ * @typedef {Object} DiaryItem
+ * @property {number} id
+ * @property {DiaryType} type
+ * @property {string} date
+ * @property {'husband'|'wife'} who
+ * @property {string} emoji
+ * @property {string} content
+ * @property {number} totalSpent
+ * @property {boolean} shared
+ * @property {string} time
+ * @property {string[]} photos
+ * @property {ExpenseLine[]=} expenseItems
+ * @property {string=} cat
+ * @property {string=} payMethod
+ * @property {string=} cardId
+ * @property {boolean=} mask_details
  */
 
 export const CATS = [
@@ -63,6 +81,10 @@ export const EMPTY_PLAN    = {
   personalAllowancePct: 0.2,
 };
 
+/** @type {DiaryItem[]} */
+export const EMPTY_DIARIES = [];
+export const LS_KEY_DIARIES = 'smtm_diaries';
+
 export const getNow  = () => new Date();
 export const getYear = () => getNow().getFullYear();
 export const getMonth= () => getNow().getMonth() + 1;
@@ -71,11 +93,9 @@ export const getDay  = () => getNow().getDate();
 export const getDaysInMonth = (y, m) => new Date(y, m, 0).getDate();
 
 // @deprecated 모듈 로드 시점에 고정됩니다. 날짜 계산에는 getYear/getMonth/getDay/getDaysInMonth를 사용하세요.
-export const NOW   = new Date();
-export const DAYS  = new Date(NOW.getFullYear(),NOW.getMonth()+1,0).getDate();
-export const DAY   = NOW.getDate();
-export const MONTH = NOW.getMonth()+1;
-export const YEAR  = NOW.getFullYear();
+// P2-4: NOW/DAYS/DAY/MONTH/YEAR deprecated 제거.
+//        모듈 로드 시점 고정 → 자정 가로지르는 세션에서 어제 날짜 잔존.
+//        대체: getYear(), getMonth(), getDay(), getDaysInMonth() 함수 사용 (이미 정의됨).
 
 export const CARD_PRESETS_COLOR = ["#1c2340","#2d1a3a","#1a3020","#3a1a1a","#2a2a18","#1a2a3a","#3a2a10","#282828"];
 export const CARD_ICONS_LIST    = ["💳","🏦","💰","🪙","🎴","⭐","🔵","🔴"];

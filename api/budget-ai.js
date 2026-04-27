@@ -57,14 +57,15 @@ export default async function handler(req, res) {
   const apiKey = process.env.GOOGLE_API_KEY?.trim();
   if (!apiKey) return res.status(500).json({ error: 'API 키가 서버에 설정되지 않았습니다. Vercel 환경 변수 GOOGLE_API_KEY를 설정해 주세요.' });
 
-  const { totalSalary, fixedTotal, installTotal, savingsTarget, catHistory, utilizationTarget, txSummary } = req.body;
+  const { totalSalary, fixedTotal, installTotal, savingsTarget, allowanceTotal, catHistory, utilizationTarget, txSummary } = req.body;
 
   if (!totalSalary || totalSalary <= 0) {
     return res.status(400).json({ error: '급여 정보가 없습니다. 먼저 급여를 입력해주세요.' });
   }
 
   const utilPct = Math.min(Math.max(utilizationTarget || 100, 50), 100) / 100;
-  const rawAvailable = Math.max(totalSalary - (fixedTotal || 0) - (installTotal || 0) - (savingsTarget || 0), 0);
+  // P7-2: allowanceTotal 차감 (BudgetTab 가용 예산식과 일치)
+  const rawAvailable = Math.max(totalSalary - (fixedTotal || 0) - (installTotal || 0) - (savingsTarget || 0) - (Number(allowanceTotal) || 0), 0);
   const available = Math.round(rawAvailable * utilPct);
 
   // 캐시 키: txSummary 상위 2개 카테고리명만 포함 (키 폭발 방지)
@@ -74,7 +75,7 @@ export default async function handler(req, res) {
     .map(line => line.split(' ')[0])
     .join('-') || 'none';
   const month = new Date().toISOString().slice(0, 7);
-  const cacheKey = `budget:${totalSalary}:${fixedTotal || 0}:${top2cat}:${month}`;
+  const cacheKey = `budget:${totalSalary}:${fixedTotal || 0}:${Number(allowanceTotal) || 0}:${top2cat}:${month}`;
 
   // 1. 캐시 히트 (TTL 24h)
   try {
@@ -101,6 +102,7 @@ export default async function handler(req, res) {
 - 고정비 (임대료, 보험 등 자동 지출): ${(fixedTotal || 0).toLocaleString()}원
 - 할부금: ${(installTotal || 0).toLocaleString()}원
 - 월 저축 목표: ${(savingsTarget || 0).toLocaleString()}원
+- 부부 개별 용돈 합계: ${(Number(allowanceTotal) || 0).toLocaleString()}원
 - **이번달 변동비 배분 가능액: ${available.toLocaleString()}원**${historyCtx}
 
 ## 배분할 9개 카테고리

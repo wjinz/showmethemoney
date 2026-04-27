@@ -60,6 +60,15 @@ import { createContext, useContext } from "react";
  * @property {string} myRole
  * @property {boolean} kidsMode
  * @property {(v: boolean) => void} setKidsMode
+ * @property {import('../constants').DiaryItem[]} diaries
+ * @property {(v: import('../constants').DiaryItem[] | ((prev: import('../constants').DiaryItem[]) => import('../constants').DiaryItem[])) => void} setDiaries
+ * @property {(d: import('../constants').DiaryItem) => void} addDiary
+ * @property {(d: import('../constants').DiaryItem) => void} editDiary
+ * @property {(d: import('../constants').DiaryItem) => void} editDiaryWithTx
+ * @property {(id: number) => void} deleteDiary
+ * @property {(id: number) => void} deleteDiaryWithTx
+ * @property {'husband'|'wife'} currentUser
+ * @property {(v: 'husband'|'wife') => void} setCurrentUser
  */
 
 /** @type {import('react').Context<BudgetContextValue | null>} */

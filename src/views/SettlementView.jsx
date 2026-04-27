@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, Camera } from "lucide-react";
 import { useBudget } from "../context/BudgetContext.jsx";
 import { useToast } from "../components/Toast.jsx";
+import { getBillingPeriod, parseLocalDate, fmt } from "../utils/helpers.js";
 
 /**
  * @typedef {import('../constants/index.js').CardBill} CardBill
@@ -26,7 +27,7 @@ function thisMonth() {
 
 /** @param {{ onBack?: () => void }} props */
 export function SettlementView({ onBack }) {
-  const { settlements, setSettlements, cards, fixed } = useBudget();
+  const { settlements, setSettlements, cards, fixed, tx, install } = useBudget();
   const { addToast } = useToast();
 
   const [isScanning, setIsScanning] = useState(false);
@@ -49,7 +50,8 @@ export function SettlementView({ onBack }) {
 
   useEffect(() => {
     if (existingData) {
-      setCurrentCash(existingData.currentCash || 0);
+      // P5-1: salary 필드가 있으면 우선, 없으면 currentCash로 fallback (마이그레이션)
+      setCurrentCash(existingData.salary ?? existingData.currentCash ?? 0);
       setFixedCash(existingData.fixedCash ?? autoFixedCash);
       /** @type {Record<string, number>} */
       const bMap = {};
@@ -67,6 +69,38 @@ export function SettlementView({ onBack }) {
     [settlements, currentDate]
   );
 
+  // P7-1: 카드별 앱 기록값 (cycle 기간 tx + 해당 월 install + fixed.cardId 매칭)
+  const [yearStr, monthStr] = currentDate.split("-");
+  const refDate = useMemo(() => new Date(Number(yearStr), Number(monthStr) - 1, 15), [yearStr, monthStr]);
+  /** @type {Record<string, number>} */
+  const appCardTotals = useMemo(() => {
+    /** @type {Record<string, number>} */
+    const acc = {};
+    for (const card of cards) {
+      const { cycleStart, cycleEnd } = getBillingPeriod(card, refDate);
+      let sum = 0;
+      // tx
+      for (const t of tx) {
+        if (String(t.cardId) !== String(card.id)) continue;
+        if (typeof t.date !== 'string') continue;
+        const d = parseLocalDate(t.date);
+        if (d >= cycleStart && d <= cycleEnd) sum += t.amount || 0;
+      }
+      // install (해당 월 결제 예정)
+      for (const ins of install) {
+        if (String(ins.cardId) !== String(card.id)) continue;
+        sum += ins.monthly || 0;
+      }
+      // fixed (cardId 매칭)
+      for (const fx of fixed) {
+        if (String(fx.cardId) !== String(card.id)) continue;
+        sum += fx.amount || 0;
+      }
+      acc[String(card.id)] = sum;
+    }
+    return acc;
+  }, [cards, tx, install, fixed, refDate]);
+
   const totalCardBillsSum = Object.values(cardBills).reduce((s, v) => s + (v || 0), 0);
   const calcShortage = (currentCash || 0) - (fixedCash || 0) - totalCardBillsSum;
   const isSurplus = calcShortage >= 0;
@@ -80,12 +114,14 @@ export function SettlementView({ onBack }) {
     const billsArr = Object.entries(cardBills).map(([cardId, expectedAmount]) => ({
       cardId, expectedAmount: expectedAmount || 0
     }));
+    /** @type {import('../constants/index.js').SettlementItem} */
     const newItem = {
       id: existingData?.id || Date.now() * 1000 + ((Math.random() * 1000) | 0),
       date: currentDate,
       cardBills: billsArr,
       fixedCash: fixedCash || 0,
       currentCash: currentCash || 0,
+      salary: currentCash || 0, // P5-1: 신규 표준 필드
       expectedShortage: calcShortage
     };
     setSettlements(prev => {
@@ -155,6 +191,8 @@ export function SettlementView({ onBack }) {
       />
       <CardBillsSection
         cards={cards} cardBills={cardBills} onChange={handleCardBillChange}
+        appCardTotals={appCardTotals}
+        onAutoFillAll={() => setCardBills({ ...appCardTotals })}
         prevSettlement={prevSettlement}
         isScanning={isScanning} scanTargetRef={scanTargetRef}
       />
@@ -210,7 +248,7 @@ function SummaryCard({ isSurplus, shortage, currentCash, fixedCash, cardBills })
       <div style={{ fontSize: 13, color: "#6B7280", fontWeight: 600, marginBottom: 6 }}>{title}</div>
       <div style={{ fontSize: 34, fontWeight: 900, color: amountColor, letterSpacing: "-.02em" }}>{amount}</div>
       <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
-        <Row label="보유 현금" value={`+${currentCash.toLocaleString()}원`} />
+        <Row label="실수령 급여" value={`+${currentCash.toLocaleString()}원`} />
         <Row label="고정 지출" value={`-${fixedCash.toLocaleString()}원`} />
         <Row label="카드 청구액" value={`-${cardBills.toLocaleString()}원`} />
       </div>
@@ -231,7 +269,7 @@ function AssetInputs({ currentCash, setCurrentCash, fixedCash, setFixedCash, aut
   return (
     <div style={{ background: "white", padding: 20, borderRadius: 24, boxShadow: "0 1px 3px rgba(0,0,0,.07)", display: "flex", flexDirection: "column", gap: 14 }}>
       <h3 style={{ fontSize: 15, margin: 0, color: "#1C2B4A", fontWeight: 800 }}>자산 현황</h3>
-      <LabeledInput label="지금 가진 현금" value={currentCash} onChange={setCurrentCash} />
+      <LabeledInput label="이번 달 실수령 급여 (부부 합산)" value={currentCash} onChange={setCurrentCash} />
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>이번 달 고정 현금 지출</span>
@@ -275,7 +313,7 @@ function AmountInput({ value, onChange }) {
   );
 }
 
-function CardBillsSection({ cards, cardBills, onChange, prevSettlement, isScanning, scanTargetRef }) {
+function CardBillsSection({ cards, cardBills, onChange, appCardTotals, onAutoFillAll, prevSettlement, isScanning, scanTargetRef }) {
   if (cards.length === 0) {
     return (
       <div style={{ padding: 24, textAlign: "center", color: "#9CA3AF", background: "white", borderRadius: 24, border: "1px dashed #E5E7EB" }}>
@@ -285,11 +323,18 @@ function CardBillsSection({ cards, cardBills, onChange, prevSettlement, isScanni
   }
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <h3 style={{ fontSize: 15, margin: "0 0 4px", color: "#1C2B4A", fontWeight: 800 }}>카드 청구 예정액</h3>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h3 style={{ fontSize: 15, margin: "0 0 4px", color: "#1C2B4A", fontWeight: 800 }}>카드 청구 예정액</h3>
+        <button
+          onClick={onAutoFillAll}
+          style={{ fontSize: 11, padding: "6px 10px", borderRadius: 99, border: "1px solid #1C2B4A", background: "white", color: "#1C2B4A", fontWeight: 700, cursor: "pointer" }}
+        >앱 기록값으로 채우기</button>
+      </div>
       {cards.map(c => (
         <CardBillRow
           key={c.id} card={c}
           expected={cardBills[c.id] || 0}
+          appTotal={appCardTotals[String(c.id)] || 0}
           onChange={(v) => onChange(c.id, v)}
           prevSettlement={prevSettlement}
           isScanning={isScanning} scanTargetRef={scanTargetRef}
@@ -299,10 +344,14 @@ function CardBillsSection({ cards, cardBills, onChange, prevSettlement, isScanni
   );
 }
 
-function CardBillRow({ card, expected, onChange, prevSettlement, isScanning, scanTargetRef }) {
+function CardBillRow({ card, expected, appTotal, onChange, prevSettlement, isScanning, scanTargetRef }) {
   const prevBill = prevSettlement?.cardBills.find(b => String(b.cardId) === String(card.id));
   const diff = prevBill ? expected - prevBill.expectedAmount : null;
   const scanning = isScanning && scanTargetRef.current === String(card.id);
+  // P7-1: 사용자 입력 vs 앱 기록 차이
+  const appDiff = expected > 0 && appTotal > 0 ? expected - appTotal : 0;
+  const appDiffPct = appTotal > 0 && expected > 0 ? Math.abs(appDiff / appTotal) * 100 : 0;
+  const isLargeDiff = appDiffPct > 10;
   return (
     <div style={{ background: "white", padding: 16, borderRadius: 20, border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.04)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -318,6 +367,20 @@ function CardBillRow({ card, expected, onChange, prevSettlement, isScanning, sca
         <DiffBadge diff={diff} />
       </div>
       <BillingHint card={card} />
+      {appTotal > 0 && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: "#6B7280", marginBottom: 8 }}>
+          <span>앱 기록: <strong style={{ color: "#1C2B4A" }}>{fmt(appTotal)}</strong></span>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            {expected > 0 && isLargeDiff && (
+              <span style={{ color: "#E8715A", fontWeight: 700 }}>차이 {fmt(Math.abs(appDiff))} ({appDiffPct.toFixed(0)}%)</span>
+            )}
+            <button
+              onClick={() => onChange(String(appTotal))}
+              style={{ fontSize: 10, padding: "3px 8px", borderRadius: 99, border: "1px solid #1C2B4A", background: "white", color: "#1C2B4A", fontWeight: 700, cursor: "pointer" }}
+            >이 값으로</button>
+          </div>
+        </div>
+      )}
       <div style={{ display: "flex", gap: 8 }}>
         <ScanButton
           scanning={scanning}

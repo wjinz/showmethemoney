@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>부부 다이어리 — showmethemoney</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #FAF7F3; --cream2: #F4EFE8; --cream3: #EDE5D8;
+  --ink: #1C1714; --ink2: #5C4F44; --ink3: #9C8E84;
+  --h-color: oklch(42% 0.10 230); --h-light: oklch(92% 0.06 230); --h-mid: oklch(75% 0.10 230);
+  --w-color: oklch(52% 0.14 10);  --w-light: oklch(94% 0.06 10);  --w-mid: oklch(78% 0.12 10);
+  --accent: oklch(58% 0.14 50); --green: oklch(55% 0.14 150);
+  --nav-h: 72px; --status-h: 50px;
+}
+html, body { height: 100%; background: #1a1a1a; font-family: 'Noto Sans KR', sans-serif; }
+body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+/* ── Phone Shell ── */
+.phone {
+  width: 390px; height: 844px; background: var(--cream); border-radius: 50px;
+  box-shadow: 0 40px 80px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.15);
+  overflow: hidden; position: relative; display: flex; flex-direction: column;
+}
+.status-bar {
+  height: var(--status-h); background: var(--cream);
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 28px 8px; flex-shrink: 0; position: relative; z-index: 10;
+}
+.status-bar .time { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -.3px; }
+.status-bar .icons { display: flex; gap: 6px; align-items: center; }
+.notch {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 34px; background: #0d0d0d; border-radius: 20px;
+}
+.screen { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.nav-bar {
+  height: var(--nav-h); background: rgba(250,247,243,.92);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--cream3);
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 0 8px 8px; flex-shrink: 0; position: relative; z-index: 20;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; padding: 8px 12px; border-radius: 14px;
+  transition: all .2s ease; flex: 1; border: none; background: none; font-family: inherit;
+}
+.nav-item.active { background: var(--cream2); }
+.nav-item span { font-size: 10px; font-weight: 500; color: var(--ink3); }
+.nav-item.active span { color: var(--ink2); font-weight: 600; }
+.nav-fab {
+  width: 52px; height: 52px; border-radius: 50%; background: var(--ink); color: white;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; border: none; font-family: inherit;
+  box-shadow: 0 4px 16px rgba(28,23,20,.25); transition: transform .15s ease; flex-shrink: 0;
+}
+.nav-fab:active { transform: scale(.93); }
+
+/* ── View ── */
+.view { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+.view-header {
+  padding: 14px 20px 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.view-header h1 { font-size: 21px; font-weight: 700; color: var(--ink); letter-spacing: -.5px; }
+.view-header .sub { font-size: 12px; color: var(--ink3); margin-top: 2px; }
+.scroll-area { flex: 1; overflow-y: auto; padding: 0 16px 20px; -webkit-overflow-scrolling: touch; }
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* ── Month Banner ── */
+.month-banner {
+  margin: 0 16px 10px; border-radius: 18px;
+  background: var(--ink); color: white; padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.mb-left .mb-label { font-size: 11px; opacity: .5; letter-spacing: .5px; }
+.mb-left .mb-amount { font-size: 20px; font-weight: 700; letter-spacing: -1px; margin-top: 1px; }
+.mb-left .mb-sub { font-size: 11px; opacity: .6; margin-top: 2px; }
+
+/* ── Calendar ── */
+.cal-wrap {
+  margin: 0 16px 10px; border-radius: 18px; background: white;
+  border: 1px solid var(--cream3); overflow: hidden; flex-shrink: 0;
+  transition: all .3s ease;
+}
+.cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; cursor: pointer;
+}
+.cal-header .cal-month { font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: -.3px; }
+.cal-header .cal-toggle {
+  width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--cream2);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: transform .25s ease;
+}
+.cal-header .cal-toggle.open { transform: rotate(180deg); }
+.cal-body { padding: 0 12px 12px; }
+.cal-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  text-align: center; margin-bottom: 4px;
+}
+.cal-weekdays span { font-size: 10px; font-weight: 600; color: var(--ink3); padding: 4px 0; }
+.cal-weekdays span:first-child { color: var(--w-color); }
+.cal-weekdays span:last-child { color: var(--h-color); }
+.cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-day {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 5px 2px; border-radius: 10px; cursor: pointer;
+  transition: background .15s ease; min-height: 46px;
+}
+.cal-day:hover { background: var(--cream2); }
+.cal-day.selected { background: var(--ink); }
+.cal-day.today .cal-day-num {
+  background: var(--ink); color: white; width: 24px; height: 24px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.cal-day.selected .cal-day-num { background: white !important; color: var(--ink) !important; }
+.cal-day-num { font-size: 13px; font-weight: 500; color: var(--ink); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+.cal-day.empty .cal-day-num { color: transparent; }
+.cal-day.sunday .cal-day-num { color: var(--w-color); }
+.cal-day.saturday .cal-day-num { color: var(--h-color); }
+.cal-day.today .cal-day-num { color: white; }
+.cal-day.other-month .cal-day-num { color: var(--cream3); }
+.cal-dots { display: flex; gap: 2px; justify-content: center; min-height: 6px; }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; }
+.cal-dot.h { background: var(--h-mid); }
+.cal-dot.w { background: var(--w-mid); }
+.cal-dot.photo { background: var(--accent); }
+
+/* ── Diary Cards ── */
+.day-group { margin-bottom: 24px; }
+.day-label {
+  font-size: 11px; font-weight: 600; color: var(--ink3); letter-spacing: .8px;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+}
+.day-label::after { content: ''; flex: 1; height: 1px; background: var(--cream3); }
+.diary-card {
+  border-radius: 18px; padding: 15px; margin-bottom: 8px;
+  position: relative; overflow: hidden; background: white;
+  border: 1px solid var(--cream3); box-shadow: 0 2px 12px rgba(28,23,20,.05);
+}
+.diary-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px;
+}
+.diary-card.husband::before { background: var(--h-mid); }
+.diary-card.wife::before   { background: var(--w-mid); }
+.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+}
+.avatar.husband { background: var(--h-light); }
+.avatar.wife    { background: var(--w-light); }
+.card-meta { flex: 1; }
+.card-name { font-size: 13px; font-weight: 600; color: var(--ink2); }
+.card-time { font-size: 11px; color: var(--ink3); }
+.card-mood { font-size: 20px; }
+.card-content { font-size: 14px; color: var(--ink); line-height: 1.6; letter-spacing: -.2px; }
+
+/* ── Photo Strip in Card ── */
+.photo-strip {
+  display: flex; gap: 6px; margin-top: 12px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.photo-strip::-webkit-scrollbar { display: none; }
+.photo-thumb {
+  width: 80px; height: 80px; border-radius: 12px; flex-shrink: 0;
+  object-fit: cover; cursor: pointer; border: 1px solid var(--cream3);
+  transition: transform .12s ease;
+}
+.photo-thumb:active { transform: scale(.96); }
+.photo-placeholder {
+  width: 80px; height: 80px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; cursor: pointer; border: 1px solid var(--cream3);
+}
+
+.card-footer {
+  margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cream2);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.spend-badge { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink3); }
+.spend-badge strong { font-size: 13px; font-weight: 600; color: var(--ink2); }
+.shared-tag { font-size: 10px; font-weight: 600; letter-spacing: .3px; padding: 3px 8px; border-radius: 20px; }
+.shared-tag.shared  { background: oklch(94% 0.08 150); color: oklch(38% 0.12 150); }
+.shared-tag.private { background: var(--cream2); color: var(--ink3); }
+
+/* ── Today Prompt ── */
+.today-prompt {
+  border-radius: 18px; padding: 14px; border: 1.5px dashed var(--cream3);
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  transition: background .15s ease; margin-bottom: 8px;
+}
+.today-prompt:hover { background: var(--cream2); }
+.prompt-icon { width: 38px; height: 38px; border-radius: 50%; background: var(--cream2); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.prompt-text { font-size: 13px; color: var(--ink3); }
+.prompt-text strong { color: var(--ink2); font-weight: 600; display: block; }
+
+/* ── Input Sheet ── */
+.sheet-backdrop {
+  position: absolute; inset: 0; background: rgba(28,23,20,.35);
+  backdrop-filter: blur(6px); z-index: 100;
+  display: flex; align-items: flex-end; animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+@keyframes slideUp { from { transform:translateY(100%) } to { transform:translateY(0) } }
+.sheet {
+  width: 100%; background: var(--cream); border-radius: 24px 24px 0 0;
+  padding: 0 0 32px; animation: slideUp .3s cubic-bezier(.32,0,.15,1);
+  max-height: 92%; overflow-y: auto;
+}
+.sheet::-webkit-scrollbar { display: none; }
+.sheet-handle { width: 36px; height: 4px; border-radius: 4px; background: var(--cream3); margin: 12px auto 18px; }
+.sheet-title { font-size: 17px; font-weight: 700; color: var(--ink); padding: 0 20px; margin-bottom: 18px; letter-spacing: -.3px; }
+.who-selector { display: flex; gap: 8px; padding: 0 20px; margin-bottom: 16px; }
+.who-btn {
+  flex: 1; padding: 10px; border-radius: 14px; border: 1.5px solid var(--cream3);
+  background: white; cursor: pointer; text-align: center; font-family: inherit;
+  transition: all .15s ease; font-size: 13px; font-weight: 600; color: var(--ink3);
+}
+.who-btn.selected.h { border-color: var(--h-mid); background: var(--h-light); color: var(--h-color); }
+.who-btn.selected.w { border-color: var(--w-mid); background: var(--w-light); color: var(--w-color); }
+.emoji-row {
+  display: flex; gap: 6px; padding: 0 20px; margin-bottom: 16px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.emoji-row::-webkit-scrollbar { display: none; }
+.emoji-btn {
+  width: 42px; height: 42px; border-radius: 12px; border: 1.5px solid var(--cream3);
+  background: white; font-size: 19px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; transition: all .15s ease;
+}
+.emoji-btn.selected { border-color: var(--accent); background: oklch(97% 0.04 50); }
+.sheet-input {
+  margin: 0 20px 14px; padding: 13px 15px; border-radius: 14px;
+  border: 1.5px solid var(--cream3); background: white; font-family: inherit;
+  font-size: 14px; color: var(--ink); resize: none; width: calc(100% - 40px);
+  outline: none; line-height: 1.55; transition: border-color .15s ease;
+}
+.sheet-input:focus { border-color: var(--accent); }
+.sheet-input::placeholder { color: var(--ink3); }
+
+/* ── Photo Picker in Sheet ── */
+.photo-picker-area { padding: 0 20px; margin-bottom: 16px; }
+.photo-picker-label { font-size: 12px; font-weight: 600; color: var(--ink3); letter-spacing: .3px; margin-bottom: 8px; }
+.photo-picker-row { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.photo-picker-row::-webkit-scrollbar { display: none; }
+.photo-add-btn {
+  width: 72px; height: 72px; border-radius: 14px; border: 1.5px dashed var(--cream3);
+  background: var(--cream2); display: flex; flex-direction: column; align-items: center;
+  justify-content: center; cursor: pointer; flex-shrink: 0; gap: 4px; font-family: inherit;
+  transition: background .15s ease;
+}
+.photo-add-btn:hover { background: var(--cream3); }
+.photo-add-btn span { font-size: 10px; color: var(--ink3); }
+.photo-preview-thumb {
+  width: 72px; height: 72px; border-radius: 14px; object-fit: cover;
+  flex-shrink: 0; border: 1px solid var(--cream3); position: relative; cursor: pointer;
+}
+.photo-preview-wrap { position: relative; flex-shrink: 0; }
+.photo-preview-del {
+  position: absolute; top: -4px; right: -4px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--ink); color: white; border: none;
+  font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-family: inherit; line-height: 1;
+}
+
+.spend-row {
+  display: flex; align-items: center; gap: 10px; padding: 0 20px; margin-bottom: 16px;
+}
+.spend-row label { font-size: 13px; color: var(--ink3); flex-shrink: 0; }
+.spend-input {
+  flex: 1; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--cream3);
+  background: white; font-family: inherit; font-size: 15px; font-weight: 600; color: var(--ink);
+  outline: none; text-align: right; transition: border-color .15s ease;
+}
+.spend-input:focus { border-color: var(--accent); }
+.spend-suffix { font-size: 14px; color: var(--ink3); flex-shrink: 0; }
+.privacy-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; margin-bottom: 20px;
+}
+.toggle {
+  width: 44px; height: 26px; border-radius: 13px; background: var(--cream3);
+  border: none; cursor: pointer; position: relative; transition: background .2s ease;
+}
+.toggle.on { background: var(--green); }
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%; background: white;
+  box-shadow: 0 1px 4px rgba(0,0,0,.15); transition: transform .2s ease;
+}
+.toggle.on::after { transform: translateX(18px); }
+.sheet-submit {
+  margin: 0 20px; width: calc(100% - 40px); padding: 15px; border-radius: 16px;
+  background: var(--ink); color: white; font-family: inherit; font-size: 15px; font-weight: 600;
+  border: none; cursor: pointer; letter-spacing: -.2px; transition: transform .12s ease;
+}
+.sheet-submit:active { transform: scale(.97); }
+
+/* ── Mode Selector ── */
+.mode-tabs { display: flex; gap: 0; margin: 0 20px 20px; border-radius: 16px; background: var(--cream2); padding: 4px; }
+.mode-tab {
+  flex: 1; padding: 10px; border-radius: 12px; border: none; background: none;
+  font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink3);
+  cursor: pointer; transition: all .18s ease; display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.mode-tab.active { background: white; color: var(--ink); box-shadow: 0 1px 6px rgba(28,23,20,.10); }
+
+/* ── Expense Items ── */
+.expense-total-display {
+  margin: 0 20px 18px; padding: 16px 18px; border-radius: 18px;
+  background: var(--ink); color: white; text-align: center;
+}
+.expense-total-display .etd-label { font-size: 11px; opacity: .5; letter-spacing: .5px; margin-bottom: 4px; }
+.expense-total-display .etd-amount { font-size: 28px; font-weight: 700; letter-spacing: -1.5px; }
+.expense-total-display .etd-count { font-size: 11px; opacity: .5; margin-top: 3px; }
+
+.expense-items-list { padding: 0 20px; margin-bottom: 14px; }
+.expense-items-label { font-size: 12px; font-weight: 600; color: var(--ink3); letter-spacing: .3px; margin-bottom: 8px; }
+.expense-item-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  background: white; border: 1px solid var(--cream3); border-radius: 14px; padding: 10px 12px;
+}
+.expense-item-label-input {
+  flex: 1; border: none; background: none; font-family: inherit;
+  font-size: 14px; color: var(--ink); outline: none; min-width: 0;
+}
+.expense-item-label-input::placeholder { color: var(--ink3); }
+.expense-item-divider { width: 1px; height: 16px; background: var(--cream3); flex-shrink: 0; }
+.expense-item-amount-input {
+  width: 90px; border: none; background: none; font-family: inherit;
+  font-size: 14px; font-weight: 600; color: var(--ink); outline: none;
+  text-align: right; flex-shrink: 0;
+}
+.expense-item-amount-input::placeholder { color: var(--ink3); font-weight: 400; }
+.expense-item-del {
+  width: 22px; height: 22px; border-radius: 50%; border: none;
+  background: var(--cream2); color: var(--ink3); font-size: 14px; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-family: inherit; transition: background .12s ease;
+}
+.expense-item-del:hover { background: var(--cream3); }
+.add-item-btn {
+  width: 100%; padding: 11px; border-radius: 14px; border: 1.5px dashed var(--cream3);
+  background: none; font-family: inherit; font-size: 13px; font-weight: 600;
+  color: var(--ink3); cursor: pointer; transition: background .15s ease;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.add-item-btn:hover { background: var(--cream2); }
+
+/* ── Expense Card items list ── */
+.expense-items-in-card {
+  margin-top: 10px; border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--cream2);
+}
+.expense-item-in-card {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; font-size: 13px; border-bottom: 1px solid var(--cream2);
+}
+.expense-item-in-card:last-child { border-bottom: none; }
+.expense-item-in-card .ei-label { color: var(--ink2); }
+.expense-item-in-card .ei-amount { font-weight: 600; color: var(--ink); }
+
+/* ── Detail Sheet ── */
+.detail-sheet {
+  width: 100%; background: var(--cream); border-radius: 24px 24px 0 0;
+  animation: slideUp .3s cubic-bezier(.32,0,.15,1);
+  max-height: 95%; display: flex; flex-direction: column;
+}
+.detail-sheet-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 20px 14px; flex-shrink: 0;
+}
+.detail-sheet-header .dsh-title { font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: -.4px; }
+.detail-sheet-header .dsh-del {
+  font-size: 12px; font-weight: 600; color: var(--w-color);
+  border: none; background: none; cursor: pointer; font-family: inherit;
+  padding: 6px 10px; border-radius: 10px; background: var(--w-light);
+}
+.detail-sheet-body { flex: 1; overflow-y: auto; padding: 0 20px 8px; }
+.detail-sheet-body::-webkit-scrollbar { display: none; }
+.detail-sheet-footer { padding: 12px 20px 28px; flex-shrink: 0; display: flex; gap: 10px; }
+.detail-sheet-footer .btn-cancel {
+  flex: 1; padding: 14px; border-radius: 16px; border: 1.5px solid var(--cream3);
+  background: white; font-family: inherit; font-size: 14px; font-weight: 600;
+  color: var(--ink2); cursor: pointer;
+}
+.detail-sheet-footer .btn-save {
+  flex: 2; padding: 14px; border-radius: 16px; border: none;
+  background: var(--ink); font-family: inherit; font-size: 14px; font-weight: 600;
+  color: white; cursor: pointer; transition: transform .12s ease;
+}
+.detail-sheet-footer .btn-save:active { transform: scale(.97); }
+
+.field-label { font-size: 11px; font-weight: 600; color: var(--ink3); letter-spacing: .4px; margin-bottom: 8px; }
+.field-block { margin-bottom: 18px; }
+.who-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+}
+.who-chip.h { background: var(--h-light); color: var(--h-color); }
+.who-chip.w { background: var(--w-light); color: var(--w-color); }
+.detail-divider { height: 1px; background: var(--cream3); margin: 18px 0; }
+
+/* ── Lightbox ── */
+.lightbox {
+  position: absolute; inset: 0; background: rgba(0,0,0,.9);
+  display: flex; align-items: center; justify-content: center; z-index: 200;
+  animation: fadeIn .15s ease; cursor: pointer;
+}
+.lightbox img { max-width: 92%; max-height: 80%; border-radius: 16px; object-fit: contain; }
+
+/* ── Dashboard ── */
+.widget { border-radius: 20px; padding: 18px; margin-bottom: 12px; background: white; border: 1px solid var(--cream3); box-shadow: 0 2px 12px rgba(28,23,20,.05); }
+.widget-title { font-size: 11px; font-weight: 600; color: var(--ink3); letter-spacing: .6px; text-transform: uppercase; margin-bottom: 14px; }
+.budget-ring-wrap { display: flex; align-items: center; gap: 20px; }
+.budget-ring-meta { flex: 1; }
+.budget-amount { font-size: 24px; font-weight: 700; color: var(--ink); letter-spacing: -1px; }
+.budget-label { font-size: 12px; color: var(--ink3); margin-top: 2px; }
+.budget-remaining { margin-top: 10px; }
+.budget-remaining .label { font-size: 12px; color: var(--ink3); }
+.budget-remaining .amount { font-size: 17px; font-weight: 600; color: var(--green); letter-spacing: -.5px; }
+.couple-split { display: flex; gap: 10px; margin-top: 12px; }
+.split-item { flex: 1; padding: 12px; border-radius: 14px; text-align: center; }
+.split-item.h-split { background: var(--h-light); }
+.split-item.w-split { background: var(--w-light); }
+.split-item .split-name { font-size: 11px; font-weight: 600; color: var(--ink3); margin-bottom: 3px; }
+.split-item .split-amt { font-size: 15px; font-weight: 700; letter-spacing: -.5px; }
+.split-item.h-split .split-amt { color: var(--h-color); }
+.split-item.w-split .split-amt { color: var(--w-color); }
+.split-item .split-pct { font-size: 11px; color: var(--ink3); margin-top: 1px; }
+.nudge-card { border-radius: 20px; padding: 15px; margin-bottom: 12px; background: oklch(97% 0.04 50); border: 1px solid oklch(90% 0.06 50); }
+.nudge-card .nudge-label { font-size: 11px; font-weight: 600; color: var(--accent); margin-bottom: 5px; letter-spacing: .5px; }
+.nudge-card .nudge-text { font-size: 13px; color: var(--ink2); line-height: 1.55; }
+.pace-bar { height: 8px; border-radius: 8px; background: var(--cream2); overflow: hidden; margin: 7px 0; }
+.pace-bar-fill { height: 100%; border-radius: 8px; transition: width .6s ease; }
+.pace-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink3); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useCallback } = React;
+
+/* ─── Constants ─── */
+const BUDGET = 1800000;
+const SPENT  = 1203500;
+const TODAY  = '2026-04-24';
+
+/* ─── Sample photo placeholders (SVG data URLs colored by category) ─── */
+function makePlaceholderPhoto(bg, label) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <rect width="200" height="200" fill="${bg}"/>
+    <text x="100" y="115" text-anchor="middle" font-size="52" font-family="sans-serif">${label}</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+const PHOTO_A = makePlaceholderPhoto('#EDE5D8','🥐');
+const PHOTO_B = makePlaceholderPhoto('#E8EDF4','🏃');
+const PHOTO_C = makePlaceholderPhoto('#F4E8E8','🌸');
+const PHOTO_D = makePlaceholderPhoto('#E8F4EC','🛒');
+
+/* ─── Sample Data ─── */
+const SAMPLE_DIARIES = [
+  // ── 다이어리 (type:'diary') ──
+  { id:1,  type:'diary', date:'2026-04-24', who:'husband', emoji:'🥐', content:'재택근무 하루. 점심은 직접 파스타 해먹었다. 저녁엔 마트 들러서 맥주 한 캔. 이런 날이 좋다.', totalSpent:0, shared:true, time:'21:12', photos:[] },
+  { id:2,  type:'diary', date:'2026-04-24', who:'wife',    emoji:'🌸', content:'봄이라 그런지 괜히 기분 좋은 하루. 점심에 친구들이랑 브런치하고 카페에서 한참 수다 떨었다 😊', totalSpent:0, shared:true, time:'22:05', photos:[PHOTO_C] },
+  { id:3,  type:'diary', date:'2026-04-23', who:'wife',    emoji:'🛒', content:'마트 대장정 완료. 냉장고 텅텅 비어있었는데 이제 좀 살 것 같다. 주말 치킨 재료도 미리 사뒀어!', totalSpent:0, shared:true, time:'15:30', photos:[PHOTO_D] },
+  { id:4,  type:'diary', date:'2026-04-23', who:'husband', emoji:'😅', content:'야근... 치킨 시켜먹었다. 팀 회식 아닌 야근 야식이 이게 맞나 싶다. 어쨌든 배는 불렀음.', totalSpent:0, shared:true, time:'22:40', photos:[] },
+  { id:5,  type:'diary', date:'2026-04-22', who:'husband', emoji:'🏃', content:'오랜만에 한강 러닝. 5km 완주! 다리가 좀 무거웠지만 기분은 최고. 운동 다시 시작해야겠다.', totalSpent:0, shared:true, time:'09:20', photos:[PHOTO_B] },
+  { id:6,  type:'diary', date:'2026-04-22', who:'wife',    emoji:'☕', content:'집에서 느긋하게 커피 마시면서 유튜브 봤다. 저녁에 밥은 오빠가 만들어줬는데 맛있었어 🫶', totalSpent:0, shared:false, time:'20:15', photos:[] },
+  { id:7,  type:'diary', date:'2026-04-20', who:'wife',    emoji:'😤', content:'오늘 회사에서 좀 힘들었다. 빨리 집 가고 싶었어. 저녁에 오빠랑 드라마 보니까 나아졌다.', totalSpent:0, shared:true, time:'23:10', photos:[] },
+  { id:8,  type:'diary', date:'2026-04-20', who:'husband', emoji:'🍳', content:'오늘 저녁 내가 만들었다. 제육볶음이랑 계란국. 지연이가 힘들어 보여서 맛있는 거 해주고 싶었음.', totalSpent:0, shared:true, time:'19:55', photos:[PHOTO_A] },
+  { id:9,  type:'diary', date:'2026-04-18', who:'husband', emoji:'🎮', content:'오늘은 그냥 쉬는 날. 오전에 게임 실컷 하고 오후에 잠깐 낮잠 잤다. 가끔은 이런 날도 필요해.', totalSpent:0, shared:true, time:'21:00', photos:[] },
+  { id:10, type:'diary', date:'2026-04-18', who:'wife',    emoji:'💅', content:'오랜만에 네일 받으러 갔다. 봄 색으로 바꿨더니 기분이 새로워졌어.', totalSpent:0, shared:true, time:'16:40', photos:[] },
+  { id:11, type:'diary', date:'2026-04-15', who:'wife',    emoji:'🍣', content:'오늘 생일이라고 오빠가 스시 레스토랑 예약해줬다! 완전 놀랐고 너무 행복했다. 최고의 하루 🥹', totalSpent:0, shared:true, time:'20:30', photos:[PHOTO_C] },
+  { id:12, type:'diary', date:'2026-04-15', who:'husband', emoji:'🎂', content:'지연이 생일. 미리 예약해둔 스시집 갔다. 기뻐하는 모습 보니 나도 기분 좋았다.', totalSpent:0, shared:true, time:'23:00', photos:[] },
+  // ── 지출 입력 (type:'expense') ──
+  { id:101, type:'expense', date:'2026-04-24', who:'husband', emoji:'💳', content:'오늘 장보고 편의점', totalSpent:43200, shared:true, time:'20:45', photos:[],
+    expenseItems:[{label:'점심 파스타 재료',amount:32000},{label:'편의점 맥주·과자',amount:6700},{label:'커피',amount:4500}] },
+  { id:102, type:'expense', date:'2026-04-24', who:'wife',    emoji:'💳', content:'브런치·카페', totalSpent:68400, shared:true, time:'14:20', photos:[],
+    expenseItems:[{label:'브런치 카페',amount:42000},{label:'카페라떼 2잔',amount:15000},{label:'케이크 조각',amount:11400}] },
+  { id:103, type:'expense', date:'2026-04-23', who:'husband', emoji:'💳', content:'야근 야식', totalSpent:47800, shared:true, time:'22:05', photos:[],
+    expenseItems:[{label:'치킨 배달',amount:32000},{label:'배달팁',amount:2000},{label:'맥주 6캔',amount:13800}] },
+  { id:104, type:'expense', date:'2026-04-23', who:'wife',    emoji:'💳', content:'주간 장보기', totalSpent:156400, shared:true, time:'15:10', photos:[],
+    expenseItems:[{label:'야채·과일',amount:38400},{label:'육류',amount:52600},{label:'생활용품',amount:41800},{label:'간식·음료',amount:23600}] },
+  { id:105, type:'expense', date:'2026-04-22', who:'husband', emoji:'💳', content:'러닝 후 편의점', totalSpent:8500, shared:true, time:'11:30', photos:[],
+    expenseItems:[{label:'이온음료·바나나',amount:4800},{label:'스포츠 양말',amount:3700}] },
+  { id:106, type:'expense', date:'2026-04-20', who:'husband', emoji:'💳', content:'저녁 장보기', totalSpent:28600, shared:true, time:'18:20', photos:[],
+    expenseItems:[{label:'제육 재료',amount:18200},{label:'계란',amount:4800},{label:'두부·야채',amount:5600}] },
+  { id:107, type:'expense', date:'2026-04-20', who:'wife',    emoji:'💳', content:'점심·카페', totalSpent:24500, shared:true, time:'13:40', photos:[],
+    expenseItems:[{label:'점심 백반',amount:9000},{label:'아이스 아메리카노',amount:4500},{label:'편의점',amount:11000}] },
+  { id:108, type:'expense', date:'2026-04-18', who:'wife',    emoji:'💳', content:'네일 아트', totalSpent:55000, shared:true, time:'15:00', photos:[],
+    expenseItems:[{label:'젤 네일 (봄 컬러)',amount:55000}] },
+  { id:109, type:'expense', date:'2026-04-18', who:'husband', emoji:'💳', content:'주말 편의점·카페', totalSpent:18200, shared:true, time:'12:10', photos:[],
+    expenseItems:[{label:'카페 아메리카노',amount:4500},{label:'편의점 점심',amount:7800},{label:'아이스크림',amount:5900}] },
+  { id:110, type:'expense', date:'2026-04-15', who:'wife',    emoji:'💳', content:'생일 스시', totalSpent:132000, shared:true, time:'19:00', photos:[],
+    expenseItems:[{label:'스시 오마카세 2인',amount:120000},{label:'사케',amount:12000}] },
+  { id:111, type:'expense', date:'2026-04-15', who:'husband', emoji:'💳', content:'생일 선물·꽃', totalSpent:67500, shared:true, time:'17:30', photos:[],
+    expenseItems:[{label:'꽃다발',amount:35000},{label:'케이크',amount:32500}] },
+];
+
+/* ─── Helpers ─── */
+function fmtMoney(n) { return n ? '₩' + n.toLocaleString('ko-KR') : '₩0'; }
+function groupByDate(items) {
+  const map = {};
+  items.forEach(item => { if(!map[item.date]) map[item.date]=[]; map[item.date].push(item); });
+  return Object.entries(map).sort((a,b) => b[0] > a[0] ? 1 : -1);
+}
+function dateLabel(dateStr) {
+  const d = new Date(dateStr+'T00:00:00');
+  const today = new Date(TODAY+'T00:00:00');
+  const diff = Math.round((today-d)/86400000);
+  const wd = ['일','월','화','수','목','금','토'][d.getDay()];
+  const mm = d.getMonth()+1, dd = d.getDate();
+  if(diff===0) return `오늘 · ${mm}월 ${dd}일 ${wd}요일`;
+  if(diff===1) return `어제 · ${mm}월 ${dd}일 ${wd}요일`;
+  return `${mm}월 ${dd}일 ${wd}요일`;
+}
+
+/* ─── Icons ─── */
+const ChevronDown = ({size=14,color='var(--ink3)'}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9"/>
+  </svg>
+);
+const CameraIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+    <circle cx="12" cy="13" r="4"/>
+  </svg>
+);
+const WalletIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/>
+    <path d="M16 14h.01"/>
+  </svg>
+);
+const PlusIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+const SignalIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--ink)">
+    <rect x="2" y="16" width="3" height="5" rx="1"/><rect x="7" y="12" width="3" height="9" rx="1"/>
+    <rect x="12" y="8" width="3" height="13" rx="1"/><rect x="17" y="4" width="3" height="17" rx="1"/>
+  </svg>
+);
+const BatteryIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="1.5" strokeLinecap="round">
+    <rect x="2" y="7" width="18" height="10" rx="2"/>
+    <path d="M22 11v2" strokeWidth="2"/>
+    <rect x="4" y="9" width="12" height="6" rx="1" fill="var(--ink)" stroke="none"/>
+  </svg>
+);
+
+/* ─── Budget Ring ─── */
+function BudgetRing({ spent, budget, size=90 }) {
+  const pct = Math.min(spent/budget, 1);
+  const r=36, circ=2*Math.PI*r;
+  const color = pct>.85 ? 'oklch(55% 0.18 25)' : pct>.65 ? 'var(--accent)' : 'var(--green)';
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r={r} fill="none" stroke="var(--cream2)" strokeWidth="10"/>
+      <circle cx="50" cy="50" r={r} fill="none" stroke={color} strokeWidth="10"
+        strokeDasharray={circ} strokeDashoffset={circ*(1-pct)}
+        strokeLinecap="round" transform="rotate(-90 50 50)"
+        style={{transition:'stroke-dashoffset .8s ease'}}/>
+      <text x="50" y="53" textAnchor="middle" fontSize="18" fontWeight="700"
+        fill="var(--ink)" fontFamily="Noto Sans KR">{Math.round(pct*100)}%</text>
+    </svg>
+  );
+}
+
+/* ─── Mini Calendar ─── */
+function MiniCalendar({ diaries, selectedDate, onSelectDate }) {
+  const [open, setOpen] = useState(true);
+
+  // Build April 2026 grid
+  const year=2026, month=3; // 0-indexed April
+  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+
+  // Map date → who has entries
+  const entryMap = {};
+  diaries.forEach(d => {
+    if(d.date.startsWith('2026-04')) {
+      const dd = parseInt(d.date.slice(8));
+      if(!entryMap[dd]) entryMap[dd] = {h:false, w:false, photo:false};
+      if(d.who==='husband') entryMap[dd].h = true;
+      if(d.who==='wife') entryMap[dd].w = true;
+      if(d.photos && d.photos.length>0) entryMap[dd].photo = true;
+    }
+  });
+
+  const cells = [];
+  for(let i=0;i<firstDay;i++) cells.push(null);
+  for(let d=1;d<=daysInMonth;d++) cells.push(d);
+  while(cells.length%7!==0) cells.push(null);
+
+  const todayDay = parseInt(TODAY.slice(8));
+  const selectedDay = selectedDate ? parseInt(selectedDate.slice(8)) : null;
+
+  function handleDay(d) {
+    if(!d) return;
+    const dateStr = `2026-04-${String(d).padStart(2,'0')}`;
+    if(selectedDate === dateStr) onSelectDate(null);
+    else onSelectDate(dateStr);
+  }
+
+  return (
+    <div className="cal-wrap">
+      <div className="cal-header" onClick={()=>setOpen(v=>!v)}>
+        <span className="cal-month">2026년 4월</span>
+        <div className={`cal-toggle${open?' open':''}`}><ChevronDown/></div>
+      </div>
+      {open && (
+        <div className="cal-body">
+          <div className="cal-weekdays">
+            {['일','월','화','수','목','금','토'].map(w=><span key={w}>{w}</span>)}
+          </div>
+          <div className="cal-days">
+            {cells.map((d, i) => {
+              const isToday = d===todayDay;
+              const isSel = d !== null && d === selectedDay;
+              const isWeekend = i%7===0 ? 'sunday' : i%7===6 ? 'saturday' : '';
+              const e = d ? entryMap[d] : null;
+              return (
+                <div
+                  key={i}
+                  className={`cal-day${!d?' empty':''}${isToday?' today':''}${isSel?' selected':''}${isWeekend?' '+isWeekend:''}`}
+                  onClick={()=>handleDay(d)}
+                >
+                  <div className="cal-day-num">{d || ''}</div>
+                  {e && (
+                    <div className="cal-dots">
+                      {e.h && <div className="cal-dot h"></div>}
+                      {e.w && <div className="cal-dot w"></div>}
+                      {e.photo && <div className="cal-dot photo"></div>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Diary Card ─── */
+function DiaryCard({ item, onPhotoClick, onCardClick, currentUser }) {
+  const isH = item.who==='husband';
+  const isMine = item.who === currentUser;
+  const isExpense = item.type === 'expense';
+
+  return (
+    <div className={`diary-card ${isH?'husband':'wife'}`}
+      onClick={isMine ? onCardClick : undefined}
+      style={{cursor: isMine ? 'pointer' : 'default'}}>
+      <div className="card-header">
+        <div className={`avatar ${isH?'husband':'wife'}`}>{isH?'👨':'👩'}</div>
+        <div className="card-meta">
+          <div className="card-name">{isH?'우진':'지연'}{!isMine && <span style={{fontSize:10,color:'var(--ink3)',marginLeft:4,fontWeight:400}}>파트너</span>}</div>
+          <div className="card-time">{item.time}</div>
+        </div>
+        <div className="card-mood">{item.emoji}</div>
+      </div>
+
+      {/* 내용: 다이어리는 항상 표시, 지출은 본인만 메모 표시 */}
+      {(!isExpense || isMine) && (
+        <div className="card-content">{item.content}</div>
+      )}
+
+      {/* 지출 항목: 본인만 */}
+      {isExpense && isMine && item.expenseItems && item.expenseItems.length > 0 && (
+        <div className="expense-items-in-card" style={{marginTop:10}}>
+          {item.expenseItems.map((ei,idx)=>(
+            <div className="expense-item-in-card" key={idx}>
+              <span className="ei-label">{ei.label}</span>
+              <span className="ei-amount">{fmtMoney(ei.amount)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 사진: 본인만 */}
+      {isMine && item.photos && item.photos.length > 0 && (
+        <div className="photo-strip">
+          {item.photos.map((src,idx)=>(
+            <img key={idx} className="photo-thumb" src={src} alt=""
+              onClick={e=>{e.stopPropagation(); onPhotoClick(src);}}/>
+          ))}
+        </div>
+      )}
+
+      <div className="card-footer">
+        <div className="spend-badge">
+          <WalletIcon/>
+          {item.totalSpent > 0
+            ? <><span>지출 </span><strong>{fmtMoney(item.totalSpent)}</strong></>
+            : <span style={{color:'var(--ink3)'}}>지출 없음</span>
+          }
+          {/* 파트너 지출엔 '비공개' 힌트 */}
+          {isExpense && !isMine && (
+            <span style={{fontSize:10,color:'var(--ink3)',marginLeft:4}}>· 세부 비공개</span>
+          )}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:6}}>
+          {isMine && (
+            <span style={{fontSize:10,fontWeight:600,color:'var(--accent)',padding:'3px 8px',borderRadius:20,background:'oklch(97% 0.04 50)'}}>수정</span>
+          )}
+          <span className={`shared-tag ${item.shared?'shared':'private'}`}>
+            {item.shared?'공유 중':'비공개'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Shared constants ─── */
+const EMOJIS = ['😊','🌸','☕','🥐','🍳','🏃','🛒','😅','😤','💪','🌙','❤️','🎉','😴','✨','🎮','💅','🍣'];
+let _eid = 0;
+
+/* ─── Input Sheet ─── */
+function newItem() { return { id: ++_eid, label: '', amount: '' }; }
+
+function InputSheet({ onClose, onSave, defaultWho }) {
+  const [mode, setMode] = useState('diary'); // 'diary' | 'expense'
+  const [who, setWho] = useState(defaultWho || 'husband');
+
+  /* diary state */
+  const [emoji, setEmoji] = useState('😊');
+  const [content, setContent] = useState('');
+  const [shared, setShared] = useState(true);
+  const [photos, setPhotos] = useState([]);
+  const fileRef = useRef();
+
+  /* expense state */
+  const [items, setItems] = useState([newItem()]);
+  const [memo, setMemo] = useState('');
+  const [expShared, setExpShared] = useState(true);
+
+  const expTotal = items.reduce((s,i) => s + (parseInt(String(i.amount).replace(/[^0-9]/g,''))||0), 0);
+
+  function handleFiles(e) {
+    Array.from(e.target.files).forEach(file => {
+      const r = new FileReader();
+      r.onload = ev => setPhotos(p => [...p, ev.target.result]);
+      r.readAsDataURL(file);
+    });
+    e.target.value = '';
+  }
+  function removePhoto(idx) { setPhotos(p => p.filter((_,i)=>i!==idx)); }
+
+  function updateItem(id, field, val) {
+    setItems(prev => prev.map(it => it.id===id ? {...it,[field]:val} : it));
+  }
+  function removeItem(id) { setItems(prev => prev.length>1 ? prev.filter(it=>it.id!==id) : prev); }
+  function addItem() { setItems(prev => [...prev, newItem()]); }
+
+  function handleSave() {
+    if(mode==='diary') {
+      if(!content.trim()) return;
+      onSave({ id:Date.now(), date:TODAY, who, emoji, content:content.trim(),
+        totalSpent:0, shared, photos, type:'diary',
+        time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})
+      });
+    } else {
+      const validItems = items.filter(it => it.label.trim() || parseInt(String(it.amount).replace(/[^0-9]/g,'')) > 0)
+        .map(it => ({ label: it.label.trim()||'항목', amount: parseInt(String(it.amount).replace(/[^0-9]/g,''))||0 }));
+      if(!validItems.length) return;
+      onSave({ id:Date.now(), date:TODAY, who, emoji:'💳', content:memo.trim()||'지출 기록',
+        totalSpent:expTotal, shared:expShared, photos:[], type:'expense',
+        expenseItems: validItems,
+        time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})
+      });
+    }
+    onClose();
+  }
+
+  return (
+    <div className="sheet-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="sheet">
+        <div className="sheet-handle"></div>
+
+        {/* Mode Tabs */}
+        <div className="mode-tabs">
+          <button className={`mode-tab${mode==='diary'?' active':''}`} onClick={()=>setMode('diary')}>
+            <span>✏️</span> 다이어리
+          </button>
+          <button className={`mode-tab${mode==='expense'?' active':''}`} onClick={()=>setMode('expense')}>
+            <span>💳</span> 지출 입력
+          </button>
+        </div>
+
+        {/* Who */}
+        <div className="who-selector">
+          <button className={`who-btn${who==='husband'?' selected h':''}`} onClick={()=>setWho('husband')}>👨 우진</button>
+          <button className={`who-btn${who==='wife'?' selected w':''}`} onClick={()=>setWho('wife')}>👩 지연</button>
+        </div>
+
+        {/* ── DIARY MODE ── */}
+        {mode==='diary' && (<>
+          <div className="emoji-row">
+            {EMOJIS.map(e=>(
+              <button key={e} className={`emoji-btn${emoji===e?' selected':''}`} onClick={()=>setEmoji(e)}>{e}</button>
+            ))}
+          </div>
+          <textarea className="sheet-input" rows={3}
+            placeholder="오늘 하루는 어땠나요? 🥺"
+            value={content} onChange={e=>setContent(e.target.value)}/>
+          <div className="photo-picker-area">
+            <div className="photo-picker-label">사진 첨부</div>
+            <div className="photo-picker-row">
+              <button className="photo-add-btn" onClick={()=>fileRef.current.click()}>
+                <CameraIcon/><span>추가</span>
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" multiple style={{display:'none'}} onChange={handleFiles}/>
+              {photos.map((src,idx)=>(
+                <div className="photo-preview-wrap" key={idx}>
+                  <img className="photo-preview-thumb" src={src} alt=""/>
+                  <button className="photo-preview-del" onClick={()=>removePhoto(idx)}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="privacy-row">
+            <div>
+              <div style={{fontSize:13,color:'var(--ink2)',fontWeight:500}}>파트너와 공유</div>
+              <div style={{fontSize:11,color:'var(--ink3)'}}>다이어리 내용 공유</div>
+            </div>
+            <button className={`toggle${shared?' on':''}`} onClick={()=>setShared(v=>!v)}></button>
+          </div>
+        </>)}
+
+        {/* ── EXPENSE MODE ── */}
+        {mode==='expense' && (<>
+          {/* Running Total */}
+          <div className="expense-total-display">
+            <div className="etd-label">합계 금액</div>
+            <div className="etd-amount">{fmtMoney(expTotal)}</div>
+            <div className="etd-count">{items.filter(it=>parseInt(String(it.amount).replace(/[^0-9]/g,''))>0).length}개 항목</div>
+          </div>
+
+          {/* Items List */}
+          <div className="expense-items-list">
+            <div className="expense-items-label">지출 항목</div>
+            {items.map(it=>(
+              <div className="expense-item-row" key={it.id}>
+                <input className="expense-item-label-input" type="text"
+                  placeholder="항목명 (예: 점심, 카페)"
+                  value={it.label} onChange={e=>updateItem(it.id,'label',e.target.value)}/>
+                <div className="expense-item-divider"></div>
+                <input className="expense-item-amount-input" type="text" inputMode="numeric"
+                  placeholder="금액"
+                  value={it.amount} onChange={e=>updateItem(it.id,'amount',e.target.value)}/>
+                <button className="expense-item-del" onClick={()=>removeItem(it.id)}>×</button>
+              </div>
+            ))}
+            <button className="add-item-btn" onClick={addItem}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              항목 추가
+            </button>
+          </div>
+
+          {/* Optional memo */}
+          <textarea className="sheet-input" rows={2}
+            placeholder="메모 (선택사항) — 오늘 어디서 썼나요?"
+            value={memo} onChange={e=>setMemo(e.target.value)}/>
+
+          <div className="privacy-row">
+            <div>
+              <div style={{fontSize:13,color:'var(--ink2)',fontWeight:500}}>파트너와 총액 공유</div>
+              <div style={{fontSize:11,color:'var(--ink3)'}}>개별 항목은 비공개 · 합계만 공유</div>
+            </div>
+            <button className={`toggle${expShared?' on':''}`} onClick={()=>setExpShared(v=>!v)}></button>
+          </div>
+        </>)}
+
+        <button className="sheet-submit"
+          onClick={handleSave}
+          style={{opacity: mode==='diary'&&!content.trim() ? .45 : mode==='expense'&&expTotal===0 ? .45 : 1}}>
+          저장하기
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Detail Sheet ─── */
+function DetailSheet({ item, onClose, onSave, onDelete }) {
+  const isH = item.who === 'husband';
+  const [emoji, setEmoji] = useState(item.emoji);
+  const [content, setContent] = useState(item.content);
+  const [shared, setShared] = useState(item.shared);
+  const [photos, setPhotos] = useState(item.photos || []);
+  const [items, setItems] = useState(
+    item.expenseItems ? item.expenseItems.map((it,i)=>({...it, id:i+1})) : []
+  );
+  const fileRef = useRef();
+
+  const expTotal = items.reduce((s,it)=>s+(parseInt(String(it.amount).replace(/[^0-9]/g,''))||0),0);
+  const isExpense = item.type === 'expense';
+
+  function updateItem(id, field, val) { setItems(prev=>prev.map(it=>it.id===id?{...it,[field]:val}:it)); }
+  function removeItem(id) { setItems(prev=>prev.length>1?prev.filter(it=>it.id!==id):prev); }
+  function addItem() { setItems(prev=>[...prev,{id:Date.now(),label:'',amount:''}]); }
+
+  function handleFiles(e) {
+    Array.from(e.target.files).forEach(file=>{
+      const r=new FileReader();
+      r.onload=ev=>setPhotos(p=>[...p,ev.target.result]);
+      r.readAsDataURL(file);
+    });
+    e.target.value='';
+  }
+
+  function handleSave() {
+    const validItems = items
+      .filter(it=>it.label.trim()||(parseInt(String(it.amount).replace(/[^0-9]/g,''))||0)>0)
+      .map(it=>({label:it.label.trim()||'항목',amount:parseInt(String(it.amount).replace(/[^0-9]/g,''))||0}));
+    onSave({
+      ...item, emoji, content, shared, photos,
+      expenseItems: isExpense ? validItems : undefined,
+      totalSpent: isExpense ? expTotal : item.totalSpent,
+    });
+    onClose();
+  }
+
+  function handleDelete() {
+    if(window.confirm('이 기록을 삭제할까요?')) { onDelete(item.id); onClose(); }
+  }
+
+  return (
+    <div className="sheet-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="detail-sheet">
+        {/* Header */}
+        <div className="detail-sheet-header">
+          <div className="dsh-title">기록 수정</div>
+          <button className="dsh-del" onClick={handleDelete}>삭제</button>
+        </div>
+
+        <div className="detail-sheet-body">
+          {/* Who + type badge */}
+          <div className="field-block" style={{display:'flex',alignItems:'center',gap:10}}>
+            <div className={`who-chip ${isH?'h':'w'}`}>{isH?'👨 우진':'👩 지연'}</div>
+            <div style={{fontSize:12,fontWeight:600,color:'var(--ink3)',padding:'5px 10px',borderRadius:20,background:'var(--cream2)'}}>
+              {isExpense?'💳 지출':'✏️ 다이어리'} · {item.time}
+            </div>
+          </div>
+
+          <div className="detail-divider"></div>
+
+          {/* Emoji */}
+          {!isExpense && (
+            <div className="field-block">
+              <div className="field-label">기분</div>
+              <div className="emoji-row" style={{padding:0,marginBottom:0}}>
+                {EMOJIS.map(e=>(
+                  <button key={e} className={`emoji-btn${emoji===e?' selected':''}`} onClick={()=>setEmoji(e)}>{e}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Content */}
+          <div className="field-block">
+            <div className="field-label">{isExpense?'메모':'일기 내용'}</div>
+            <textarea className="sheet-input" style={{margin:0,width:'100%'}} rows={3}
+              placeholder={isExpense?'메모 (선택사항)':'오늘 하루는 어땠나요?'}
+              value={content} onChange={e=>setContent(e.target.value)}/>
+          </div>
+
+          {/* Expense items */}
+          {isExpense && (
+            <div className="field-block">
+              <div className="field-label">지출 항목</div>
+              <div style={{marginBottom:8,padding:'12px 14px',borderRadius:14,background:'var(--ink)',color:'white',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <span style={{fontSize:12,opacity:.6}}>합계</span>
+                <span style={{fontSize:18,fontWeight:700,letterSpacing:'-1px'}}>{fmtMoney(expTotal)}</span>
+              </div>
+              {items.map(it=>(
+                <div className="expense-item-row" key={it.id}>
+                  <input className="expense-item-label-input" type="text" placeholder="항목명"
+                    value={it.label} onChange={e=>updateItem(it.id,'label',e.target.value)}/>
+                  <div className="expense-item-divider"></div>
+                  <input className="expense-item-amount-input" type="text" inputMode="numeric" placeholder="금액"
+                    value={it.amount} onChange={e=>updateItem(it.id,'amount',e.target.value)}/>
+                  <button className="expense-item-del" onClick={()=>removeItem(it.id)}>×</button>
+                </div>
+              ))}
+              <button className="add-item-btn" onClick={addItem}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                항목 추가
+              </button>
+            </div>
+          )}
+
+          {/* Photos */}
+          <div className="field-block">
+            <div className="field-label">사진</div>
+            <div className="photo-picker-row">
+              <button className="photo-add-btn" onClick={()=>fileRef.current.click()}>
+                <CameraIcon/><span>추가</span>
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" multiple style={{display:'none'}} onChange={handleFiles}/>
+              {photos.map((src,idx)=>(
+                <div className="photo-preview-wrap" key={idx}>
+                  <img className="photo-preview-thumb" src={src} alt=""/>
+                  <button className="photo-preview-del" onClick={()=>setPhotos(p=>p.filter((_,i)=>i!==idx))}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="detail-divider"></div>
+
+          {/* Shared toggle */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+            <div>
+              <div style={{fontSize:13,color:'var(--ink2)',fontWeight:500}}>파트너와 공유</div>
+              <div style={{fontSize:11,color:'var(--ink3)'}}>{isExpense?'총액만 공유':'다이어리 내용 공유'}</div>
+            </div>
+            <button className={`toggle${shared?' on':''}`} onClick={()=>setShared(v=>!v)}></button>
+          </div>
+        </div>
+
+        <div className="detail-sheet-footer">
+          <button className="btn-cancel" onClick={onClose}>취소</button>
+          <button className="btn-save" onClick={handleSave}>저장하기</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Diary View ─── */
+function DiaryView({ diaries, onOpenSheet, onEditItem, onDeleteItem, currentUser }) {
+  const [lightboxSrc, setLightboxSrc] = useState(null);
+  const [detailItem, setDetailItem] = useState(null);
+
+  // 다이어리 + 지출 모두 표시 (날짜순)
+  const groups = groupByDate(diaries);
+  const todayDiaries = diaries.filter(d => d.date === TODAY && d.type === 'diary');
+  const hasH = todayDiaries.some(e => e.who === 'husband');
+  const hasW = todayDiaries.some(e => e.who === 'wife');
+
+  // 오늘 지출 합계
+  const todayExpenses = diaries.filter(d => d.date === TODAY && d.type === 'expense');
+  const todayTotal = todayExpenses.reduce((s,d) => s + (d.totalSpent||0), 0);
+
+  return (
+    <div className="view">
+      <div className="view-header">
+        <div>
+          <h1>우리 다이어리 📖</h1>
+          <div className="sub">4월 24일 목요일</div>
+        </div>
+        <div style={{fontSize:12,color:'var(--ink3)',fontWeight:500}}>2026.04</div>
+      </div>
+
+      {/* Month Banner */}
+      <div className="month-banner">
+        <div className="mb-left">
+          <div className="mb-label">이번 달 지출</div>
+          <div className="mb-amount">{fmtMoney(SPENT)}</div>
+          <div className="mb-sub">예산의 {Math.round(SPENT/BUDGET*100)}% · {fmtMoney(BUDGET-SPENT)} 남음</div>
+        </div>
+        <svg width="58" height="58" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="10"/>
+          <circle cx="50" cy="50" r="36" fill="none" stroke="white" strokeWidth="10"
+            strokeDasharray="226.2" strokeDashoffset={226.2*(1-SPENT/BUDGET)}
+            strokeLinecap="round" transform="rotate(-90 50 50)"/>
+          <text x="50" y="54" textAnchor="middle" fontSize="22" fontWeight="700"
+            fill="white" fontFamily="Noto Sans KR">{Math.round(SPENT/BUDGET*100)}%</text>
+        </svg>
+      </div>
+
+      <div className="scroll-area">
+        {/* Today prompts */}
+        {!hasH && <div className="today-prompt" onClick={()=>onOpenSheet('husband')}>
+          <div className="prompt-icon">👨</div>
+          <div className="prompt-text"><strong>우진, 오늘 하루는요?</strong>일기를 남겨보세요</div>
+        </div>}
+        {!hasW && <div className="today-prompt" onClick={()=>onOpenSheet('wife')}>
+          <div className="prompt-icon">👩</div>
+          <div className="prompt-text"><strong>지연, 오늘 어땠어요?</strong>일기를 남겨보세요</div>
+        </div>}
+
+        {groups.map(([date, items])=>(
+          <div key={date} className="day-group">
+            <div className="day-label" style={{display:'flex',alignItems:'center',gap:8}}>
+              <span>{dateLabel(date)}</span>
+              {/* 해당일 지출 합계 */}
+              {(() => {
+                const dayTotal = items.filter(i=>i.type==='expense').reduce((s,i)=>s+(i.totalSpent||0),0);
+                return dayTotal > 0 ? (
+                  <span style={{fontSize:11,fontWeight:600,color:'var(--accent)',marginLeft:'auto',paddingRight:0}}>
+                    {fmtMoney(dayTotal)}
+                  </span>
+                ) : null;
+              })()}
+            </div>
+            {items.map(item=>(
+              <DiaryCard key={item.id} item={item} onPhotoClick={setLightboxSrc}
+                currentUser={currentUser}
+                onCardClick={item.who===currentUser ? ()=>setDetailItem(item) : undefined}/>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {lightboxSrc && (
+        <div className="lightbox" onClick={()=>setLightboxSrc(null)}>
+          <img src={lightboxSrc} alt=""/>
+        </div>
+      )}
+      {detailItem && (
+        <DetailSheet
+          item={detailItem}
+          onClose={()=>setDetailItem(null)}
+          onSave={updated=>{onEditItem(updated); setDetailItem(null);}}
+          onDelete={id=>{onDeleteItem(id); setDetailItem(null);}}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ─── Dashboard View ─── */
+function DashboardView({ diaries, currentUser, onSetUser, onEditItem, onDeleteItem }) {
+  const hSpent=583200, wSpent=620300, total=hSpent+wSpent;
+  const remaining=BUDGET-SPENT, today=24, daysInMonth=30;
+  const projected=Math.round(SPENT/today*daysInMonth);
+  const pacePct=Math.min(today/daysInMonth,1), budgetPct=SPENT/BUDGET;
+  const isH = currentUser==='husband';
+
+  const [detailItem, setDetailItem] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
+
+  // 내 지출: currentUser의 expense 타입만 — 날짜 최신순
+  const myRecords = diaries
+    .filter(d => d.who === currentUser && d.type === 'expense')
+    .sort((a,b) => b.date > a.date ? 1 : b.date < a.date ? -1 : b.id - a.id);
+
+  const myTotal = myRecords.reduce((s,d) => s + (d.totalSpent||0), 0);
+
+  return (
+    <div className="view">
+      <div className="view-header">
+        <div><h1>대시보드</h1><div className="sub">4월 가계 현황</div></div>
+        {/* User switcher */}
+        <div style={{display:'flex',gap:4,background:'var(--cream2)',borderRadius:20,padding:'3px'}}>
+          <button onClick={()=>onSetUser('husband')} style={{
+            padding:'5px 12px',borderRadius:16,border:'none',cursor:'pointer',fontFamily:'inherit',
+            fontSize:12,fontWeight:600,transition:'all .15s',
+            background:!isH?'none':'white', color:!isH?'var(--ink3)':'var(--h-color)',
+            boxShadow:!isH?'none':'0 1px 4px rgba(28,23,20,.1)'
+          }}>👨 우진</button>
+          <button onClick={()=>onSetUser('wife')} style={{
+            padding:'5px 12px',borderRadius:16,border:'none',cursor:'pointer',fontFamily:'inherit',
+            fontSize:12,fontWeight:600,transition:'all .15s',
+            background:isH?'none':'white', color:isH?'var(--ink3)':'var(--w-color)',
+            boxShadow:isH?'none':'0 1px 4px rgba(28,23,20,.1)'
+          }}>👩 지연</button>
+        </div>
+      </div>
+
+      <div className="scroll-area">
+        {/* AI Nudge */}
+        <div className="nudge-card">
+          <div className="nudge-label">✦ AI 분석</div>
+          <div className="nudge-text">이번 달 이 페이스면 <strong>₩{projected.toLocaleString('ko-KR')} 예상</strong>. 예산 내로 마무리할 수 있을 것 같아요 👍</div>
+        </div>
+
+        {/* Budget Ring */}
+        <div className="widget">
+          <div className="widget-title">예산 현황</div>
+          <div className="budget-ring-wrap">
+            <BudgetRing spent={SPENT} budget={BUDGET} size={100}/>
+            <div className="budget-ring-meta">
+              <div className="budget-amount">{fmtMoney(SPENT)}</div>
+              <div className="budget-label">이번 달 총 지출</div>
+              <div className="budget-remaining">
+                <div className="label">남은 예산</div>
+                <div className="amount">{fmtMoney(remaining)}</div>
+              </div>
+            </div>
+          </div>
+          <div className="couple-split">
+            <div className="split-item h-split">
+              <div className="split-name">우진</div>
+              <div className="split-amt">{fmtMoney(hSpent)}</div>
+              <div className="split-pct">{Math.round(hSpent/total*100)}%</div>
+            </div>
+            <div className="split-item w-split">
+              <div className="split-name">지연</div>
+              <div className="split-amt">{fmtMoney(wSpent)}</div>
+              <div className="split-pct">{Math.round(wSpent/total*100)}%</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pace */}
+        <div className="widget">
+          <div className="widget-title">소비 페이스</div>
+          {[
+            {label:'예산 소진율',pct:budgetPct,color:'var(--accent)'},
+            {label:'월 진행률',pct:pacePct,color:'var(--h-mid)'},
+          ].map(row=>(
+            <div key={row.label} style={{marginBottom:14}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}>
+                <span style={{fontSize:12,color:'var(--ink2)'}}>{row.label}</span>
+                <span style={{fontSize:13,fontWeight:700,color:'var(--ink)'}}>{Math.round(row.pct*100)}%</span>
+              </div>
+              <div className="pace-bar">
+                <div className="pace-bar-fill" style={{width:`${row.pct*100}%`,background:row.color}}></div>
+              </div>
+            </div>
+          ))}
+          <div style={{padding:12,borderRadius:14,background:'var(--cream2)'}}>
+            <div style={{fontSize:11,color:'var(--ink3)',marginBottom:3}}>이번 달 예상 지출</div>
+            <div style={{fontSize:19,fontWeight:700,color:'var(--ink)',letterSpacing:'-1px'}}>{fmtMoney(projected)}</div>
+            <div style={{fontSize:11,color:'var(--ink3)',marginTop:2}}>
+              {projected>BUDGET
+                ? <span style={{color:'var(--w-color)'}}>▲ {fmtMoney(projected-BUDGET)} 초과 예상</span>
+                : <span style={{color:'var(--green)'}}>▼ {fmtMoney(BUDGET-projected)} 절약 예상</span>}
+            </div>
+          </div>
+        </div>
+
+        {/* ── 내 지출 내역 ── */}
+        <div className="widget" style={{padding:0,overflow:'hidden'}}>
+          {/* Header */}
+          <div style={{padding:'16px 18px 14px',borderBottom:'1px solid var(--cream2)'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div className="widget-title" style={{marginBottom:0}}>
+                {isH?'👨':'👩'} 내 지출 내역
+              </div>
+              <div style={{
+                fontSize:13,fontWeight:700,letterSpacing:'-.5px',
+                color: isH?'var(--h-color)':'var(--w-color)'
+              }}>{fmtMoney(myTotal)}</div>
+            </div>
+            <div style={{fontSize:11,color:'var(--ink3)',marginTop:4}}>
+              {isH?'우진':'지연'}의 지출 {myRecords.length}건 · 항목 합계 · 파트너에게 비공개
+            </div>
+          </div>
+
+          {/* List */}
+          {myRecords.length === 0 && (
+            <div style={{padding:'28px 18px',textAlign:'center',color:'var(--ink3)',fontSize:13}}>
+              아직 지출 기록이 없어요
+            </div>
+          )}
+          {(() => {
+            // 날짜별 그룹핑
+            const grouped = {};
+            myRecords.forEach(d => { if(!grouped[d.date]) grouped[d.date]=[]; grouped[d.date].push(d); });
+            const dates = Object.keys(grouped).sort((a,b)=>b>a?1:-1);
+            return dates.map(date => {
+              const dayItems = grouped[date];
+              const dayTotal = dayItems.reduce((s,d)=>s+(d.totalSpent||0),0);
+              const dd = new Date(date+'T00:00:00');
+              const wd = ['일','월','화','수','목','금','토'][dd.getDay()];
+              const dayLabel = `${dd.getMonth()+1}/${dd.getDate()} (${wd})`;
+              return (
+                <div key={date}>
+                  {/* Date header */}
+                  <div style={{
+                    display:'flex',justifyContent:'space-between',alignItems:'center',
+                    padding:'8px 18px',background:'var(--cream2)',
+                  }}>
+                    <span style={{fontSize:11,fontWeight:700,color:'var(--ink3)',letterSpacing:'.3px'}}>{dayLabel}</span>
+                    <span style={{fontSize:12,fontWeight:700,color:'var(--ink2)'}}>{fmtMoney(dayTotal)}</span>
+                  </div>
+                  {/* Items */}
+                  {dayItems.map((d, idx) => {
+                    const isExpanded = expandedId === d.id;
+                    const hasItems = d.expenseItems && d.expenseItems.length > 0;
+                    const isLast = idx === dayItems.length-1;
+                    return (
+                      <div key={d.id} style={{borderBottom: !isLast?'1px solid var(--cream2)':'none'}}>
+                        <div
+                          style={{display:'flex',alignItems:'center',gap:12,padding:'11px 18px',cursor:'pointer'}}
+                          onClick={()=>setExpandedId(isExpanded?null:d.id)}
+                        >
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>
+                              {d.content || '지출 기록'}
+                            </div>
+                            <div style={{fontSize:11,color:'var(--ink3)',marginTop:2}}>
+                              {d.time} · {hasItems ? d.expenseItems.length+'개 항목' : '항목 없음'}
+                            </div>
+                          </div>
+                          <div style={{textAlign:'right',flexShrink:0,display:'flex',alignItems:'center',gap:6}}>
+                            <span style={{fontSize:14,fontWeight:700,color:'var(--ink)',letterSpacing:'-.5px'}}>{fmtMoney(d.totalSpent)}</span>
+                            {hasItems && <span style={{fontSize:11,color:'var(--ink3)'}}>{isExpanded?'▲':'▼'}</span>}
+                          </div>
+                        </div>
+                        {isExpanded && (
+                          <div style={{margin:'0 18px 10px',borderRadius:12,overflow:'hidden',border:'1px solid var(--cream2)'}}>
+                            {hasItems && d.expenseItems.map((ei,i)=>(
+                              <div key={i} style={{
+                                display:'flex',justifyContent:'space-between',alignItems:'center',
+                                padding:'9px 14px',borderBottom:i<d.expenseItems.length-1?'1px solid var(--cream2)':'none',
+                                fontSize:13
+                              }}>
+                                <span style={{color:'var(--ink2)'}}>{ei.label}</span>
+                                <span style={{fontWeight:600,color:'var(--ink)'}}>{fmtMoney(ei.amount)}</span>
+                              </div>
+                            ))}
+                            <div style={{padding:'8px 14px',background:'var(--cream2)',display:'flex',justifyContent:'flex-end'}}>
+                              <button onClick={()=>setDetailItem(d)} style={{
+                                fontSize:12,fontWeight:600,color:'var(--accent)',border:'none',
+                                background:'none',cursor:'pointer',fontFamily:'inherit'
+                              }}>✏️ 수정하기</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            });
+          })()}
+        </div>
+
+        {/* Category breakdown */}
+        <div className="widget">
+          <div className="widget-title">카테고리별 지출</div>
+          {[
+            {label:'식비',amt:423000,color:'var(--w-mid)'},
+            {label:'마트/생활',amt:312000,color:'var(--h-mid)'},
+            {label:'교통',amt:156000,color:'var(--accent)'},
+            {label:'카페/외식',amt:198000,color:'var(--green)'},
+            {label:'기타',amt:114500,color:'var(--cream3)'},
+          ].map(c=>(
+            <div key={c.label} style={{marginBottom:11}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                <span style={{fontSize:13,color:'var(--ink2)'}}>{c.label}</span>
+                <span style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>{fmtMoney(c.amt)}</span>
+              </div>
+              <div className="pace-bar" style={{height:6}}>
+                <div style={{height:'100%',borderRadius:6,background:c.color,width:`${c.amt/SPENT*100}%`,transition:'width .6s ease'}}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Detail Sheet */}
+      {detailItem && (
+        <DetailSheet
+          item={detailItem}
+          onClose={()=>setDetailItem(null)}
+          onSave={updated=>{onEditItem(updated); setDetailItem(null);}}
+          onDelete={id=>{onDeleteItem(id); setDetailItem(null);}}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ─── History View ─── */
+function HistoryView({ diaries, currentUser, onEditItem, onDeleteItem }) {
+  const [innerTab, setInnerTab] = useState('calendar');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [detailItem, setDetailItem] = useState(null);
+
+  // 캘린더 탭: 선택한 날의 전체 기록 (다이어리+지출)
+  const dayEntries = selectedDate ? diaries.filter(d=>d.date===selectedDate) : [];
+  const dayExpenses = dayEntries.filter(d=>d.type==='expense');
+  const dayDiaries  = dayEntries.filter(d=>d.type==='diary');
+  const dayTotal    = dayExpenses.reduce((s,d)=>s+(d.totalSpent||0),0);
+
+  // 월간 리포트 계산
+  const expenses = diaries.filter(d=>d.type==='expense');
+  const totalSpent = expenses.reduce((s,d)=>s+(d.totalSpent||0),0);
+  const hTotal = expenses.filter(d=>d.who==='husband').reduce((s,d)=>s+(d.totalSpent||0),0);
+  const wTotal = expenses.filter(d=>d.who==='wife').reduce((s,d)=>s+(d.totalSpent||0),0);
+
+  // 주별 집계 (4/1~7, 4/8~14, 4/15~21, 4/22~30)
+  const weeks = [
+    {label:'1주',s:'2026-04-01',e:'2026-04-07'},
+    {label:'2주',s:'2026-04-08',e:'2026-04-14'},
+    {label:'3주',s:'2026-04-15',e:'2026-04-21'},
+    {label:'4주',s:'2026-04-22',e:'2026-04-30'},
+  ].map(w=>({
+    ...w,
+    total: expenses.filter(d=>d.date>=w.s&&d.date<=w.e).reduce((s,d)=>s+(d.totalSpent||0),0)
+  }));
+  const maxWeek = Math.max(...weeks.map(w=>w.total), 1);
+
+  // 일별 지출 (상위 3일)
+  const byDate = {};
+  expenses.forEach(d=>{ byDate[d.date]=(byDate[d.date]||0)+(d.totalSpent||0); });
+  const top3Days = Object.entries(byDate).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  // 다이어리 이모지 분포
+  const emojiMap = {};
+  diaries.filter(d=>d.type==='diary').forEach(d=>{ if(d.emoji) emojiMap[d.emoji]=(emojiMap[d.emoji]||0)+1; });
+  const topEmojis = Object.entries(emojiMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  return (
+    <div className="view">
+      <div className="view-header">
+        <div><h1>내역</h1></div>
+      </div>
+
+      {/* Inner tabs */}
+      <div style={{display:'flex',gap:0,margin:'0 16px 12px',borderRadius:16,background:'var(--cream2)',padding:'3px',flexShrink:0}}>
+        <button onClick={()=>setInnerTab('calendar')} style={{
+          flex:1,padding:'9px',borderRadius:13,border:'none',cursor:'pointer',fontFamily:'inherit',
+          fontSize:13,fontWeight:600,transition:'all .15s',
+          background:innerTab==='calendar'?'white':'none',
+          color:innerTab==='calendar'?'var(--ink)':'var(--ink3)',
+          boxShadow:innerTab==='calendar'?'0 1px 6px rgba(28,23,20,.08)':'none'
+        }}>📅 캘린더</button>
+        <button onClick={()=>setInnerTab('report')} style={{
+          flex:1,padding:'9px',borderRadius:13,border:'none',cursor:'pointer',fontFamily:'inherit',
+          fontSize:13,fontWeight:600,transition:'all .15s',
+          background:innerTab==='report'?'white':'none',
+          color:innerTab==='report'?'var(--ink)':'var(--ink3)',
+          boxShadow:innerTab==='report'?'0 1px 6px rgba(28,23,20,.08)':'none'
+        }}>📊 월간 리포트</button>
+      </div>
+
+      {/* ── 캘린더 탭 ── */}
+      {innerTab==='calendar' && (<>
+        <MiniCalendar diaries={diaries} selectedDate={selectedDate} onSelectDate={setSelectedDate}/>
+        <div className="scroll-area">
+          {!selectedDate && (
+            <div style={{textAlign:'center',padding:'32px 0',color:'var(--ink3)',fontSize:13}}>
+              <div style={{fontSize:36,marginBottom:8}}>📅</div>
+              날짜를 선택하면 그날의 기록을 볼 수 있어요
+            </div>
+          )}
+          {selectedDate && (<>
+            {/* Day header */}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+              <div style={{fontSize:14,fontWeight:700,color:'var(--ink)'}}>{dateLabel(selectedDate)}</div>
+              {dayTotal>0 && <div style={{fontSize:13,fontWeight:700,color:'var(--accent)'}}>{fmtMoney(dayTotal)}</div>}
+            </div>
+
+            {dayEntries.length===0 && (
+              <div style={{textAlign:'center',padding:'28px 0',color:'var(--ink3)',fontSize:13}}>
+                <div style={{fontSize:32,marginBottom:8}}>📭</div>이 날엔 기록이 없어요
+              </div>
+            )}
+
+            {/* Expense entries */}
+            {dayExpenses.length>0 && (<>
+              <div style={{fontSize:11,fontWeight:700,color:'var(--ink3)',letterSpacing:'.5px',marginBottom:8}}>지출 내역</div>
+              {dayExpenses.map(d=>{
+                const isMine = d.who === currentUser;
+                return (
+                  <div key={d.id} style={{background:'white',borderRadius:14,border:'1px solid var(--cream3)',marginBottom:8,overflow:'hidden'}}>
+                    <div style={{padding:'12px 14px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--ink2)'}}>
+                          {d.who==='husband'?'👨 우진':'👩 지연'}
+                          {!isMine && <span style={{fontSize:10,color:'var(--ink3)',marginLeft:4}}>파트너</span>}
+                          {' · '}{d.time}
+                        </div>
+                        {isMine && <div style={{fontSize:12,color:'var(--ink3)',marginTop:2}}>{d.content}</div>}
+                        {!isMine && <div style={{fontSize:12,color:'var(--ink3)',marginTop:2}}>세부 내역 비공개</div>}
+                      </div>
+                      <div style={{textAlign:'right'}}>
+                        <div style={{fontSize:15,fontWeight:700,color:'var(--ink)',letterSpacing:'-.5px'}}>{fmtMoney(d.totalSpent)}</div>
+                        {!isMine && <div style={{fontSize:10,color:'var(--ink3)',marginTop:2}}>총액만 공개</div>}
+                      </div>
+                    </div>
+                    {/* 본인만 항목 목록 표시 */}
+                    {isMine && d.expenseItems && d.expenseItems.map((ei,i)=>(
+                      <div key={i} style={{
+                        display:'flex',justifyContent:'space-between',padding:'7px 14px',
+                        borderTop:'1px solid var(--cream2)',fontSize:12,
+                        background: i%2===0?'var(--cream)':'white'
+                      }}>
+                        <span style={{color:'var(--ink2)'}}>{ei.label}</span>
+                        <span style={{fontWeight:600,color:'var(--ink)'}}>{fmtMoney(ei.amount)}</span>
+                      </div>
+                    ))}
+                    {/* 본인만 수정 버튼 */}
+                    {isMine && (
+                      <div style={{padding:'8px 14px',background:'var(--cream2)',display:'flex',justifyContent:'flex-end',borderTop:'1px solid var(--cream2)'}}>
+                        <button onClick={()=>setDetailItem(d)} style={{fontSize:12,fontWeight:600,color:'var(--accent)',border:'none',background:'none',cursor:'pointer',fontFamily:'inherit'}}>✏️ 수정하기</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </>)}
+
+            {/* Diary entries */}
+            {dayDiaries.length>0 && (<>
+              <div style={{fontSize:11,fontWeight:700,color:'var(--ink3)',letterSpacing:'.5px',marginTop:4,marginBottom:8}}>다이어리</div>
+              {dayDiaries.map(d=>(
+                <div key={d.id} style={{
+                  background:'white',borderRadius:14,border:'1px solid var(--cream3)',
+                  padding:'12px 14px',marginBottom:8,
+                  borderLeft:`4px solid ${d.who==='husband'?'var(--h-mid)':'var(--w-mid)'}`
+                }}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+                    <span style={{fontSize:18}}>{d.emoji}</span>
+                    <span style={{fontSize:13,fontWeight:600,color:'var(--ink2)'}}>{d.who==='husband'?'우진':'지연'}</span>
+                    <span style={{fontSize:11,color:'var(--ink3)',marginLeft:'auto'}}>{d.time}</span>
+                  </div>
+                  <div style={{fontSize:13,color:'var(--ink)',lineHeight:1.6}}>{d.content}</div>
+                </div>
+              ))}
+            </>)}
+          </>)}
+        </div>
+      </>)}
+
+      {/* ── 월간 리포트 탭 ── */}
+      {innerTab==='report' && (
+        <div className="scroll-area">
+
+          {/* 월 요약 */}
+          <div style={{borderRadius:20,background:'var(--ink)',color:'white',padding:'18px 20px',marginBottom:12}}>
+            <div style={{fontSize:11,opacity:.5,letterSpacing:'.5px',marginBottom:6}}>2026년 4월 지출 요약</div>
+            <div style={{fontSize:28,fontWeight:700,letterSpacing:'-1.5px'}}>{fmtMoney(totalSpent)}</div>
+            <div style={{display:'flex',gap:16,marginTop:12}}>
+              <div>
+                <div style={{fontSize:10,opacity:.5}}>예산</div>
+                <div style={{fontSize:14,fontWeight:600}}>{fmtMoney(BUDGET)}</div>
+              </div>
+              <div>
+                <div style={{fontSize:10,opacity:.5}}>잔여</div>
+                <div style={{fontSize:14,fontWeight:600,color:BUDGET-totalSpent>0?'oklch(80% 0.15 150)':'oklch(80% 0.15 10)'}}>
+                  {fmtMoney(BUDGET-totalSpent)}
+                </div>
+              </div>
+              <div>
+                <div style={{fontSize:10,opacity:.5}}>달성률</div>
+                <div style={{fontSize:14,fontWeight:600}}>{Math.round(totalSpent/BUDGET*100)}%</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 주별 지출 바 차트 */}
+          <div className="widget">
+            <div className="widget-title">주별 지출</div>
+            <div style={{display:'flex',gap:8,alignItems:'flex-end',height:80}}>
+              {weeks.map(w=>(
+                <div key={w.label} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+                  <div style={{fontSize:10,color:'var(--ink3)',fontWeight:600}}>{fmtMoney(w.total).replace('₩','')}</div>
+                  <div style={{
+                    width:'100%',borderRadius:'6px 6px 0 0',
+                    height: w.total>0 ? `${Math.max(w.total/maxWeek*56,6)}px` : '4px',
+                    background: w.label==='4주'?'var(--accent)':'var(--cream3)',
+                    transition:'height .5s ease'
+                  }}></div>
+                  <div style={{fontSize:11,color:'var(--ink3)'}}>{w.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 부부별 지출 */}
+          <div className="widget">
+            <div className="widget-title">부부별 지출</div>
+            <div className="couple-split">
+              <div className="split-item h-split">
+                <div className="split-name">👨 우진</div>
+                <div className="split-amt">{fmtMoney(hTotal)}</div>
+                <div className="split-pct">{totalSpent>0?Math.round(hTotal/totalSpent*100):0}%</div>
+              </div>
+              <div className="split-item w-split">
+                <div className="split-name">👩 지연</div>
+                <div className="split-amt">{fmtMoney(wTotal)}</div>
+                <div className="split-pct">{totalSpent>0?Math.round(wTotal/totalSpent*100):0}%</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 지출 많은 날 TOP 3 */}
+          <div className="widget">
+            <div className="widget-title">지출 많은 날 TOP 3</div>
+            {top3Days.map(([date,amt],i)=>{
+              const d=new Date(date+'T00:00:00');
+              const wd=['일','월','화','수','목','금','토'][d.getDay()];
+              return (
+                <div key={date} style={{display:'flex',alignItems:'center',gap:10,marginBottom:i<2?10:0}}>
+                  <div style={{
+                    width:24,height:24,borderRadius:50,
+                    background:i===0?'var(--ink)':i===1?'var(--ink2)':'var(--cream3)',
+                    color:i<2?'white':'var(--ink3)',
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                    fontSize:12,fontWeight:700,flexShrink:0
+                  }}>{i+1}</div>
+                  <div style={{flex:1,fontSize:13,color:'var(--ink2)'}}>
+                    {d.getMonth()+1}월 {d.getDate()}일 ({wd})
+                  </div>
+                  <div style={{fontSize:14,fontWeight:700,color:'var(--ink)',letterSpacing:'-.5px'}}>{fmtMoney(amt)}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 다이어리 무드 */}
+          {topEmojis.length>0 && (
+            <div className="widget">
+              <div className="widget-title">이번 달 우리의 기분</div>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                {topEmojis.map(([emoji,cnt])=>(
+                  <div key={emoji} style={{
+                    display:'flex',alignItems:'center',gap:5,
+                    padding:'6px 12px',borderRadius:20,background:'var(--cream2)',
+                    fontSize:13
+                  }}>
+                    <span style={{fontSize:18}}>{emoji}</span>
+                    <span style={{fontWeight:600,color:'var(--ink2)'}}>{cnt}회</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
+      {detailItem && (
+        <DetailSheet
+          item={detailItem}
+          onClose={()=>setDetailItem(null)}
+          onSave={updated=>{onEditItem(updated); setDetailItem(null);}}
+          onDelete={id=>{onDeleteItem(id); setDetailItem(null);}}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ─── Settlement Sheet ─── */
+function SettlementSheet({ diaries, onClose }) {
+  const expenses = diaries.filter(d=>d.type==='expense');
+  const hTotal = expenses.filter(d=>d.who==='husband').reduce((s,d)=>s+(d.totalSpent||0),0);
+  const wTotal = expenses.filter(d=>d.who==='wife').reduce((s,d)=>s+(d.totalSpent||0),0);
+  const totalSpent = hTotal + wTotal;
+  const fair = Math.round(totalSpent / 2);
+  const diff = hTotal - wTotal;
+  const payer   = diff > 0 ? '우진' : '지연';
+  const receiver = diff > 0 ? '지연' : '우진';
+  const amount   = Math.abs(Math.round(diff / 2));
+  const [settled, setSettled] = useState(false);
+
+  return (
+    <div className="sheet-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="sheet">
+        <div className="sheet-handle"></div>
+        <div className="sheet-title">4월 정산하기 💰</div>
+
+        {/* 각자 지출 */}
+        <div style={{padding:'0 20px',marginBottom:16}}>
+          <div className="couple-split">
+            <div className="split-item h-split">
+              <div className="split-name">👨 우진</div>
+              <div className="split-amt">{fmtMoney(hTotal)}</div>
+              <div className="split-pct">{totalSpent>0?Math.round(hTotal/totalSpent*100):0}%</div>
+            </div>
+            <div className="split-item w-split">
+              <div className="split-name">👩 지연</div>
+              <div className="split-amt">{fmtMoney(wTotal)}</div>
+              <div className="split-pct">{totalSpent>0?Math.round(wTotal/totalSpent*100):0}%</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 합계 */}
+        <div style={{margin:'0 20px 16px',padding:'14px 16px',borderRadius:16,background:'var(--cream2)'}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
+            <span style={{fontSize:13,color:'var(--ink3)'}}>이번 달 총 지출</span>
+            <span style={{fontSize:14,fontWeight:700,color:'var(--ink)'}}>{fmtMoney(totalSpent)}</span>
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between'}}>
+            <span style={{fontSize:13,color:'var(--ink3)'}}>1인당 공평 분담</span>
+            <span style={{fontSize:14,fontWeight:700,color:'var(--ink)'}}>{fmtMoney(fair)}</span>
+          </div>
+        </div>
+
+        {/* 정산 결과 */}
+        {amount > 0 && !settled && (
+          <div style={{
+            margin:'0 20px 20px',padding:'18px',borderRadius:18,
+            background: diff>0?'var(--h-light)':'var(--w-light)',
+            border:`1.5px solid ${diff>0?'var(--h-mid)':'var(--w-mid)'}`
+          }}>
+            <div style={{fontSize:12,fontWeight:600,color:'var(--ink3)',marginBottom:8}}>정산 결과</div>
+            <div style={{fontSize:15,color:'var(--ink2)',lineHeight:1.6}}>
+              <strong style={{color:'var(--ink)'}}>{payer}</strong>이(가) {' '}
+              <strong style={{color:'var(--ink)'}}>{receiver}</strong>에게 {' '}
+              <strong style={{
+                fontSize:20,color:diff>0?'var(--h-color)':'var(--w-color)',letterSpacing:'-.5px'
+              }}>{fmtMoney(amount)}</strong>{' '}
+              을 이체하면 돼요
+            </div>
+          </div>
+        )}
+        {settled && (
+          <div style={{
+            margin:'0 20px 20px',padding:'18px',borderRadius:18,
+            background:'oklch(94% 0.08 150)',border:'1.5px solid oklch(80% 0.10 150)',
+            textAlign:'center'
+          }}>
+            <div style={{fontSize:24,marginBottom:6}}>✅</div>
+            <div style={{fontSize:14,fontWeight:600,color:'oklch(38% 0.12 150)'}}>정산 완료!</div>
+            <div style={{fontSize:12,color:'oklch(50% 0.10 150)',marginTop:3}}>4월 정산이 완료되었어요</div>
+          </div>
+        )}
+
+        {!settled && (
+          <button className="sheet-submit" onClick={()=>setSettled(true)}>
+            정산 완료 표시
+          </button>
+        )}
+        {settled && (
+          <button className="sheet-submit" style={{background:'var(--ink3)'}} onClick={onClose}>
+            닫기
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Settings View ─── */
+function SettingsView({ diaries }) {
+  const [showSettlement, setShowSettlement] = useState(false);
+  const items = [
+    {label:'월간 정산',sub:'이번 달 부부 지출 정산하기',icon:'💰',action:()=>setShowSettlement(true)},
+    {label:'예산 관리',sub:'월 예산 ₩1,800,000',icon:'🎯'},
+    {label:'고정 지출',sub:'월세, 보험, 구독 등',icon:'📌'},
+    {label:'카드 관리',sub:'2개 등록됨',icon:'💳'},
+    {label:'보안 설정',sub:'PIN 변경',icon:'🔒'},
+    {label:'파트너 초대',sub:'초대 코드 공유',icon:'👫'},
+    {label:'데이터 초기화',sub:'전체 또는 선택 삭제',icon:'🗑️',danger:true},
+  ];
+  return (
+    <div className="view">
+      <div className="view-header"><h1>설정</h1></div>
+      <div className="scroll-area">
+        {/* 정산 하이라이트 카드 */}
+        <div style={{
+          borderRadius:20,background:'var(--ink)',color:'white',
+          padding:'16px 18px',marginBottom:16,cursor:'pointer',
+          display:'flex',alignItems:'center',justifyContent:'space-between'
+        }} onClick={()=>setShowSettlement(true)}>
+          <div>
+            <div style={{fontSize:11,opacity:.5,letterSpacing:'.4px',marginBottom:4}}>이번 달</div>
+            <div style={{fontSize:16,fontWeight:700}}>💰 월간 정산하기</div>
+            <div style={{fontSize:12,opacity:.6,marginTop:3}}>부부 지출 차액 계산 및 정산</div>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+        {items.slice(1).map(item=>(
+          <div key={item.label} onClick={item.action} style={{
+            padding:'15px 18px',background:'white',borderRadius:16,marginBottom:8,
+            border:'1px solid var(--cream3)',display:'flex',justifyContent:'space-between',
+            alignItems:'center',cursor:'pointer'
+          }}>
+            <div style={{display:'flex',alignItems:'center',gap:12}}>
+              <span style={{fontSize:18}}>{item.icon}</span>
+              <div>
+                <div style={{fontSize:15,fontWeight:600,color:item.danger?'var(--w-color)':'var(--ink)'}}>{item.label}</div>
+                <div style={{fontSize:12,color:'var(--ink3)',marginTop:2}}>{item.sub}</div>
+              </div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        ))}
+      </div>
+      {showSettlement && <SettlementSheet diaries={diaries} onClose={()=>setShowSettlement(false)}/>}
+    </div>
+  );
+}
+
+/* ─── Nav Bar ─── */
+function NavBar({ tab, setTab, onFab }) {
+  const ic = active => active?'var(--ink)':'var(--ink3)';
+  return (
+    <nav className="nav-bar">
+      <button className={`nav-item${tab==='diary'?' active':''}`} onClick={()=>setTab('diary')}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={ic(tab==='diary')} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+          <path d="M8 7h8M8 11h5"/>
+        </svg>
+        <span>다이어리</span>
+      </button>
+      <button className={`nav-item${tab==='history'?' active':''}`} onClick={()=>setTab('history')}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={ic(tab==='history')} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          <circle cx="8" cy="15" r="1" fill={ic(tab==='history')} stroke="none"/>
+          <circle cx="12" cy="15" r="1" fill={ic(tab==='history')} stroke="none"/>
+          <circle cx="16" cy="15" r="1" fill={ic(tab==='history')} stroke="none"/>
+        </svg>
+        <span>내역</span>
+      </button>
+      <button className="nav-fab" onClick={onFab}><PlusIcon/></button>
+      <button className={`nav-item${tab==='dashboard'?' active':''}`} onClick={()=>setTab('dashboard')}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={ic(tab==='dashboard')} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span>대시보드</span>
+      </button>
+      <button className={`nav-item${tab==='settings'?' active':''}`} onClick={()=>setTab('settings')}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={ic(tab==='settings')} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+        <span>설정</span>
+      </button>
+    </nav>
+  );
+}
+
+/* ─── App ─── */
+function App() {
+  const [tab, setTab] = useState('diary');
+  const [sheet, setSheet] = useState(null);
+  const [diaries, setDiaries] = useState(SAMPLE_DIARIES);
+  const [currentUser, setCurrentUser] = useState('husband');
+
+  function openSheet(who) { setSheet(who || 'husband'); }
+  function handleSave(entry) { setDiaries(prev=>[entry,...prev]); }
+  function handleEdit(updated) { setDiaries(prev=>prev.map(d=>d.id===updated.id?updated:d)); }
+  function handleDelete(id) { setDiaries(prev=>prev.filter(d=>d.id!==id)); }
+
+  return (
+    <div className="phone">
+      <div className="status-bar">
+        <div className="notch"></div>
+        <div className="time">9:41</div>
+        <div className="icons"><SignalIcon/><BatteryIcon/></div>
+      </div>
+      <div className="screen">
+        {tab==='diary'     && <DiaryView diaries={diaries} onOpenSheet={openSheet} onEditItem={handleEdit} onDeleteItem={handleDelete} currentUser={currentUser}/>}
+        {tab==='history'   && <HistoryView diaries={diaries} currentUser={currentUser} onEditItem={handleEdit} onDeleteItem={handleDelete}/>}
+        {tab==='dashboard' && <DashboardView diaries={diaries} currentUser={currentUser} onSetUser={setCurrentUser} onEditItem={handleEdit} onDeleteItem={handleDelete}/>}
+        {tab==='settings'  && <SettingsView diaries={diaries}/>}
+        {sheet && <InputSheet defaultWho={sheet} onClose={()=>setSheet(null)} onSave={handleSave}/>}
+      </div>
+      <NavBar tab={tab} setTab={setTab} onFab={()=>openSheet('husband')}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+    <rect width="120" height="80" fill="#FAF7F3"/>
+    <rect x="40" y="8" width="40" height="64" rx="8" fill="#1C1714"/>
+    <rect x="44" y="14" width="32" height="52" rx="6" fill="#FAF7F3"/>
+    <rect x="47" y="18" width="26" height="3" rx="1.5" fill="#EDE5D8"/>
+    <rect x="47" y="23" width="20" height="2" rx="1" fill="#EDE5D8"/>
+    <rect x="47" y="28" width="26" height="10" rx="3" fill="white"/>
+    <rect x="47" y="40" width="26" height="10" rx="3" fill="white"/>
+    <rect x="47" y="28" width="3" height="10" rx="1.5" fill="oklch(75% 0.10 230)"/>
+    <rect x="47" y="40" width="3" height="10" rx="1.5" fill="oklch(78% 0.12 10)"/>
+  </svg>
+</template>
+</body>
+</html>

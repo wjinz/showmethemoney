@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, Bar } from "../components/UI";
 import { CAT, CATS, getYear, getMonth, getDay, MONTH_NAMES } from "../constants";
 import { fmtS, fmtC } from "../utils/helpers";
@@ -7,14 +7,14 @@ import { CardView } from "./CardView";
 import { SimulatorView } from "./SimulatorView";
 
 const TABS = [
-  { id: "income",    icon: "💰", label: "수입/저축"    },
-  { id: "fixed",     icon: "📌", label: "고정비/할부"  },
-  { id: "cards",     icon: "💳", label: "카드 관리"    },
-  { id: "budget",    icon: "📋", label: "카테고리 예산" },
-  { id: "events",    icon: "🗓️", label: "연간 이벤트" },
-  { id: "baseline",  icon: "📊", label: "분석 데이터"  },
-  { id: "simulator", icon: "📈", label: "시뮬레이터"   },
-  { id: "summary",   icon: "🔍", label: "플랜 요약"   },
+  { id: "income", icon: "💰", label: "수입/저축" },
+  { id: "fixed", icon: "📌", label: "고정비/할부" },
+  { id: "cards", icon: "💳", label: "카드 관리" },
+  { id: "budget", icon: "📋", label: "카테고리 예산" },
+  { id: "events", icon: "🗓️", label: "연간 이벤트" },
+  { id: "baseline", icon: "📊", label: "분석 데이터" },
+  { id: "simulator", icon: "📈", label: "시뮬레이터" },
+  { id: "summary", icon: "🔍", label: "플랜 요약" },
 ];
 
 const iStyle = {
@@ -23,17 +23,29 @@ const iStyle = {
 };
 
 // ── 로컬 AI 예산 배분 알고리즘 (Heuristic Fallback) ──
-const runLocalAI = (totalSalary, fixedTotal, installTotal, savingsTarget, catHistory, utilizationTarget = 100) => {
-  const rawAvail = Math.max(0, totalSalary - fixedTotal - installTotal - savingsTarget);
+/**
+ * P7-2: allowanceTotal 누락 버그 수정. BudgetTab과 동일한 가용 예산 식 사용.
+ * @param {number} totalSalary
+ * @param {number} fixedTotal
+ * @param {number} installTotal
+ * @param {number} savingsTarget
+ * @param {Record<string, number>} catHistory
+ * @param {number} [utilizationTarget]
+ * @param {number} [allowanceTotal]
+ */
+const runLocalAI = (totalSalary, fixedTotal, installTotal, savingsTarget, catHistory, utilizationTarget = 100, allowanceTotal = 0) => {
+  const rawAvail = Math.max(0, totalSalary - fixedTotal - installTotal - savingsTarget - allowanceTotal);
   const monthlyAvail = Math.round(rawAvail * Math.min(Math.max(utilizationTarget, 50), 100) / 100);
   if (monthlyAvail <= 0) return { budgets: {}, tip: "현재 고정비와 저축 목표가 수입을 초과하여 배분 가능한 예산이 없습니다." };
 
+  /** @type {Record<string, number>} */
   const suggested = {};
+  /** @type {Record<string, string>} */
   const reasons = {};
-  
+
   // 1. 과거 데이터 기반 비중 계산
   const historyTotal = Object.values(catHistory).reduce((s, v) => s + v, 0);
-  
+
   // 2. 표준 권장 비중 (지출 우선순위)
   const defaultWeights = {
     food: 0.35, housing: 0.15, transport: 0.1, medical: 0.08, education: 0.07,
@@ -48,22 +60,31 @@ const runLocalAI = (totalSalary, fixedTotal, installTotal, savingsTarget, catHis
       weight = (weight * 0.4) + (histWeight * 0.6);
     }
     suggested[cat.id] = Math.round((monthlyAvail * weight) / 1000) * 1000; // 1,000원 단위 절사
-    
+
     const REASON_TEMPLATES = {
-      food:      "식비는 생활비에서 가장 큰 비중을 차지합니다.",
-      housing:   "주거/관리비는 고정적으로 발생하는 필수 지출입니다.",
+      food: "식비는 생활비에서 가장 큰 비중을 차지합니다.",
+      housing: "주거/관리비는 고정적으로 발생하는 필수 지출입니다.",
       transport: "교통비는 출퇴근 패턴을 기반으로 추정했습니다.",
-      medical:   "의료비는 예비비 성격으로 여유있게 배분했습니다.",
+      medical: "의료비는 예비비 성격으로 여유있게 배분했습니다.",
       education: "교육비는 현재 지출 패턴을 우선 반영했습니다.",
-      culture:   "문화/여가는 삶의 질을 위한 적정 비중입니다.",
-      clothing:  "의류는 계절 지출을 고려한 평균치입니다.",
-      sub:       "구독서비스는 현재 이용 중인 서비스를 기준으로 했습니다.",
-      etc:       "기타는 예측 불가 지출을 위한 버퍼입니다.",
+      culture: "문화/여가는 삶의 질을 위한 적정 비중입니다.",
+      clothing: "의류는 계절 지출을 고려한 평균치입니다.",
+      sub: "구독서비스는 현재 이용 중인 서비스를 기준으로 했습니다.",
+      etc: "기타는 예측 불가 지출을 위한 버퍼입니다.",
     };
     reasons[cat.id] = catHistory[cat.id] > 0
       ? `최근 3개월 평균 ${fmtS(catHistory[cat.id])}원을 기반으로 조정했습니다.`
       : (REASON_TEMPLATES[cat.id] || "표준 재무 가이드 기준입니다.");
   });
+
+  // P7-2 [claude]: 1000원 절사 후 합계가 monthlyAvail을 초과하면 정규화
+  const suggestedTotal = Object.values(suggested).reduce((s, v) => s + v, 0);
+  if (suggestedTotal > monthlyAvail && suggestedTotal > 0) {
+    const scale = monthlyAvail / suggestedTotal;
+    Object.keys(suggested).forEach(k => {
+      suggested[k] = Math.round((suggested[k] * scale) / 1000) * 1000;
+    });
+  }
 
   return {
     budgets: suggested,
@@ -72,24 +93,37 @@ const runLocalAI = (totalSalary, fixedTotal, installTotal, savingsTarget, catHis
   };
 };
 
+/**
+ * P6-2: 할부 종료일 계산
+ * @param {{ date?: string, months: number }} item
+ * @returns {string | null}
+ */
+function getInstallEndDate(item) {
+  if (!item.date || !item.months) return null;
+  const [y, m] = item.date.split('-').map(Number);
+  if (!y || !m) return null;
+  const endDate = new Date(y, m - 1 + Number(item.months), 1);
+  return `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+}
+
 function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
   const [showAdd, setShowAdd] = useState(false);
   const [editFId, setEditFId] = useState(null);
   const [editIId, setEditIId] = useState(null);
   // B3 fix: name → label (스키마 통일), type 필드 초기값 추가 (UI 탭 전환용)
-  const [newF, setNewF] = useState({ label: "", amount: 0, cat: "housing", day: "", type: "f" });
-  const [newI, setNewI] = useState({ label: "", total: 0, months: "", cardId: cards[0]?.id || "", date: "" });
+  const [newF, setNewF] = useState(/** @type {{ label: string, amount: number, cat: string, day: string, type: string, who: 'husband'|'wife' }} */ ({ label: "", amount: 0, cat: "housing", day: "", type: "f", who: "husband" }));
+  const [newI, setNewI] = useState(/** @type {{ label: string, total: number, months: string, cardId: string, date: string, who: 'husband'|'wife' }} */ ({ label: "", total: 0, months: "", cardId: cards[0]?.id || "", date: "", who: "husband" }));
 
   const addF = () => {
     if (!newF.label || !newF.amount || !newF.day) return;
     const amount = Number(newF.amount);
     const day = Number(newF.day);
     if (editFId) {
-      setFixed(p => p.map(f => f.id === editFId ? { ...f, label: newF.label, amount, day, cat: newF.cat } : f));
+      setFixed(p => p.map(f => f.id === editFId ? { ...f, label: newF.label, amount, day, cat: newF.cat, who: newF.who } : f));
     } else {
-      setFixed(p => [...p, { label: newF.label, cat: newF.cat, id: Date.now(), amount, day }]);
+      setFixed(p => [...p, { label: newF.label, cat: newF.cat, id: Date.now(), amount, day, who: newF.who }]);
     }
-    setShowAdd(false); setEditFId(null); setNewF({ label: "", amount: 0, cat: "housing", day: "", type: "f" });
+    setShowAdd(false); setEditFId(null); setNewF({ label: "", amount: 0, cat: "housing", day: "", type: "f", who: "husband" });
   };
   const delF = id => setFixed(p => p.filter(f => f.id !== id));
 
@@ -99,11 +133,11 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
     if (!newI.label || !totalNum || !monthsNum || !newI.date) return;
     const monthly = Math.round(totalNum / monthsNum);
     if (editIId) {
-      setInstall(p => p.map(i => i.id === editIId ? { ...i, label: newI.label, totalAmount: totalNum, months: monthsNum, monthly, cardId: newI.cardId, date: newI.date } : i));
+      setInstall(p => p.map(i => i.id === editIId ? { ...i, label: newI.label, totalAmount: totalNum, months: monthsNum, monthly, cardId: newI.cardId, date: newI.date, who: newI.who } : i));
     } else {
-      setInstall(p => [...p, { label: newI.label, id: Date.now(), totalAmount: totalNum, months: monthsNum, monthly, cardId: newI.cardId, date: newI.date }]);
+      setInstall(p => [...p, { label: newI.label, id: Date.now(), totalAmount: totalNum, months: monthsNum, monthly, cardId: newI.cardId, date: newI.date, who: newI.who }]);
     }
-    setShowAdd(false); setEditIId(null); setNewI({ label: "", total: 0, months: "", cardId: cards[0]?.id || "", date: "" });
+    setShowAdd(false); setEditIId(null); setNewI({ label: "", total: 0, months: "", cardId: cards[0]?.id || "", date: "", who: "husband" });
   };
   const delI = id => setInstall(p => p.filter(i => i.id !== id));
 
@@ -113,7 +147,7 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 700 }}>고정비 합계: <span style={{color:"#3B82F6"}}>{fmtS(fTotal + iTotal)}원</span></div>
+        <div style={{ fontSize: 13, fontWeight: 700 }}>고정비 합계: <span style={{ color: "#3B82F6" }}>{fmtS(fTotal + iTotal)}원</span></div>
         <button onClick={() => {
           if (showAdd) { setEditFId(null); setEditIId(null); }
           setShowAdd(!showAdd);
@@ -137,6 +171,17 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
                 <div><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>월 금액</div><NumericInput value={newF.amount} onChange={v => setNewF({ ...newF, amount: v })} placeholder="0" style={{ ...iStyle, textAlign: "right" }} /></div>
                 <div><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>출금일</div><input type="number" value={newF.day} onChange={e => setNewF({ ...newF, day: e.target.value })} placeholder="일(1-31)" style={{ ...iStyle, textAlign: "right" }} /></div>
               </div>
+              {/* P6-1: 입력자 선택 */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>지출자</div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {(/** @type {const} */ (['husband','wife'])).map(r => (
+                    <button key={r} onClick={() => setNewF({ ...newF, who: r })} style={{ flex: 1, padding: "8px", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", border: newF.who === r ? "2px solid #3B82F6" : "1px solid var(--border)", background: newF.who === r ? "#EFF6FF" : "var(--surface-alt)", color: newF.who === r ? "#3B82F6" : "var(--text-muted)" }}>
+                      {r === 'husband' ? names.husband : names.wife}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <button onClick={addF} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "#3B82F6", color: "#fff", fontWeight: 700, fontSize: 13 }}>{editFId ? "수정 완료" : "고정비 등록"}</button>
             </div>
           ) : (
@@ -155,6 +200,17 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
                 <div style={{ flex: 1, minWidth: "45%" }}><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>결제 카드</div><select value={newI.cardId} onChange={e => setNewI({ ...newI, cardId: e.target.value })} style={iStyle}>{cards.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
                 <div style={{ flex: 1, minWidth: "45%" }}><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>최초 결제일</div><input type="date" value={newI.date} onChange={e => setNewI({ ...newI, date: e.target.value })} style={iStyle} /></div>
               </div>
+              {/* P6-1: 입력자 선택 */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>지출자</div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {(/** @type {const} */ (['husband','wife'])).map(r => (
+                    <button key={r} onClick={() => setNewI({ ...newI, who: r })} style={{ flex: 1, padding: "8px", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", border: newI.who === r ? "2px solid #3B82F6" : "1px solid var(--border)", background: newI.who === r ? "#EFF6FF" : "var(--surface-alt)", color: newI.who === r ? "#3B82F6" : "var(--text-muted)" }}>
+                      {r === 'husband' ? names.husband : names.wife}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <button onClick={addI} style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "#3B82F6", color: "#fff", fontWeight: 700, fontSize: 13 }}>{editIId ? "수정 완료" : "할부 등록"}</button>
             </div>
           )}
@@ -166,43 +222,145 @@ function FixedTab({ fixed, setFixed, install, setInstall, cards, tx, names }) {
 
       {/* 리스트 출력 */}
       <Card style={{ padding: "12px 14px", marginBottom: 8 }}>
-        <div style={{fontSize:10, color:"var(--text-faint)", marginBottom:8}}>정기 지출</div>
+        <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 8 }}>정기 지출</div>
         {fixed && fixed.length > 0 ? fixed.map(f => (
           <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: "1px solid var(--border)", background: editFId === f.id ? "rgba(92,141,232,0.05)" : "none" }}>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>{f.name} <span style={{fontSize:10, color:"var(--text-muted)", fontWeight:400}}>(매달 {f.day}일)</span></div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{f.label} <span style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 400 }}>(매달 {f.day}일{f.who ? ` · ${f.who === 'husband' ? names.husband : names.wife}` : ''})</span></div>
             <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700 }}>
               {fmtS(f.amount)}원
               <button onClick={() => {
                 setEditFId(f.id); setShowAdd(true);
-                setNewF({ ...f, amount: Number(f.amount), type: "f" });
+                setNewF({ label: f.label, amount: Number(f.amount), cat: f.cat || "housing", day: String(f.day || ""), type: "f", who: f.who || "husband" });
               }} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-alt)", border: "none", color: "#3B82F6", fontSize: 10, marginLeft: 8 }}>✏️</button>
               <button onClick={() => delF(f.id)} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-alt)", border: "none", color: "var(--danger)", fontSize: 10, marginLeft: 4 }}>✕</button>
             </div>
           </div>
-        )) : <div style={{fontSize:11, color:"var(--text-faint)", padding:"10px 0"}}>등록된 고정비가 없습니다.</div>}
+        )) : <div style={{ fontSize: 11, color: "var(--text-faint)", padding: "10px 0" }}>등록된 고정비가 없습니다.</div>}
       </Card>
       <Card style={{ padding: "12px 14px" }}>
-        <div style={{fontSize:10, color:"var(--text-faint)", marginBottom:8}}>카드 할부</div>
-        {install && install.length > 0 ? install.map(i => (
-          <div key={i.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: "1px solid var(--border)", background: editIId === i.id ? "rgba(92,141,232,0.05)" : "none" }}>
-            <div><div style={{ fontSize: 13, fontWeight: 600 }}>{i.name}</div><div style={{fontSize:10, color:"var(--text-muted)"}}>{i.months}개월 · {i.date}</div></div>
-            <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: "var(--pink)" }}>
-              {fmtS(i.monthly)}원
-              <button onClick={() => {
-                setEditIId(i.id); setShowAdd(true);
-                setNewF({ ...newF, type: "i" });
-                setNewI({ ...i, total: Number(i.total) });
-              }} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-alt)", border: "none", color: "#3B82F6", fontSize: 10, marginLeft: 8 }}>✏️</button>
-              <button onClick={() => delI(i.id)} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-alt)", border: "none", color: "var(--danger)", fontSize: 10, marginLeft: 4 }}>✕</button>
+        <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 8 }}>카드 할부</div>
+        {install && install.length > 0 ? install.map(i => {
+          const endLabel = getInstallEndDate(i); // P6-2
+          return (
+            <div key={i.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: "1px solid var(--border)", background: editIId === i.id ? "rgba(92,141,232,0.05)" : "none" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{i.label}</div>
+                <div style={{ fontSize: 10, color: "var(--text-muted)" }}>
+                  {i.months}개월 · {i.date}{endLabel ? ` ~ ${endLabel} 종료` : ''}{i.who ? ` · ${i.who === 'husband' ? names.husband : names.wife}` : ''}
+                </div>
+              </div>
+              <div style={{ textAlign: "right", fontSize: 13, fontWeight: 700, color: "var(--pink)" }}>
+                {fmtS(i.monthly)}원
+                <button onClick={() => {
+                  setEditIId(i.id); setShowAdd(true);
+                  setNewF({ ...newF, type: "i" });
+                  setNewI({ label: i.label, total: Number(i.totalAmount), months: String(i.months || ""), cardId: i.cardId || "", date: i.date || "", who: i.who || "husband" });
+                }} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-alt)", border: "none", color: "#3B82F6", fontSize: 10, marginLeft: 8 }}>✏️</button>
+                <button onClick={() => delI(i.id)} style={{ padding: "2px 6px", borderRadius: 4, background: "var(--surface-alt)", border: "none", color: "var(--danger)", fontSize: 10, marginLeft: 4 }}>✕</button>
+              </div>
             </div>
-          </div>
-        )) : <div style={{fontSize:11, color:"var(--text-faint)", padding:"10px 0"}}>등록된 할부 내역이 없습니다.</div>}
+          );
+        }) : <div style={{ fontSize: 11, color: "var(--text-faint)", padding: "10px 0" }}>등록된 할부 내역이 없습니다.</div>}
       </Card>
+
+      {/* P6-3: 할부 간트 차트 (월별 막대 + 현재월 강조 + 합계 행) */}
+      {install && install.length > 0 && (
+        <Card style={{ padding: "12px 14px", marginTop: 8, overflowX: "auto" }}>
+          <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 8 }}>할부 일정 (월별)</div>
+          <InstallGantt install={install} names={names} />
+        </Card>
+      )}
     </div>
   );
 }
 
-function BaselineTab({ plan, onGoToImport=undefined }) {
+/**
+ * P6-3: 할부 간트 차트
+ * @param {{ install: import('../constants/index.js').InstallItem[], names: { husband: string, wife: string } }} props
+ */
+function InstallGantt({ install, names }) {
+  const now = new Date();
+  /** @type {string[]} */
+  const months = [];
+  for (let i = -2; i < 10; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  /** @param {import('../constants/index.js').InstallItem} item */
+  const getRange = (item) => {
+    if (!item.date || !item.months) return { start: null, end: null };
+    const start = item.date.slice(0, 7);
+    const [y, m] = start.split('-').map(Number);
+    if (!y || !m) return { start: null, end: null };
+    const endDate = new Date(y, m - 1 + Number(item.months), 1);
+    const end = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+    return { start, end };
+  };
+
+  /** @type {Record<string, number>} */
+  const monthlyTotals = {};
+  for (const m of months) {
+    let sum = 0;
+    for (const ins of install) {
+      const { start, end } = getRange(ins);
+      if (start && end && m >= start && m < end) sum += ins.monthly || 0;
+    }
+    monthlyTotals[m] = sum;
+  }
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `120px repeat(${months.length}, 36px)`, gap: 2, minWidth: 120 + months.length * 38 }}>
+      <div />
+      {months.map(m => (
+        <div key={m} style={{
+          fontSize: 9, textAlign: 'center',
+          color: m === currentYM ? '#3B82F6' : 'var(--text-faint)',
+          fontWeight: m === currentYM ? 800 : 400,
+        }}>{m.slice(5)}월</div>
+      ))}
+      {install.map(ins => {
+        const { start, end } = getRange(ins);
+        const whoColor = ins.who === 'wife' ? '#E8715A' : '#3B82F6';
+        const isEndingSoon = end && end <= currentYM;
+        return (
+          <React.Fragment key={ins.id}>
+            <div style={{
+              fontSize: 11, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              color: 'var(--text)',
+              padding: '2px 4px',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              {ins.label}
+              {isEndingSoon && <span style={{ fontSize: 9, color: '#10B981' }}>●</span>}
+            </div>
+            {months.map(m => {
+              const active = start && end && m >= start && m < end;
+              return (
+                <div key={m} style={{
+                  height: 18, borderRadius: 4,
+                  background: active ? whoColor : 'var(--surface-alt)',
+                  opacity: active ? 0.85 : 0.3,
+                  borderBottom: m === currentYM ? '2px solid #3B82F6' : 'none',
+                }} />
+              );
+            })}
+          </React.Fragment>
+        );
+      })}
+      {/* 합계 행 */}
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', padding: '4px 4px 0', borderTop: '1px solid var(--border)' }}>월 합계</div>
+      {months.map(m => (
+        <div key={m} style={{ fontSize: 9, textAlign: 'center', color: 'var(--text-muted)', padding: '4px 0 0', borderTop: '1px solid var(--border)' }}>
+          {monthlyTotals[m] > 0 ? Math.round(monthlyTotals[m] / 10000) + '만' : '-'}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BaselineTab({ plan, onGoToImport = undefined }) {
   const imp = plan.importedAnalysis;
   if (!imp) return (
     <div style={{ padding: "24px 0" }}>
@@ -210,7 +368,7 @@ function BaselineTab({ plan, onGoToImport=undefined }) {
         <div style={{ fontSize: 36, marginBottom: 12 }}>📂</div>
         <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 15 }}>분석된 카드 데이터가 없어요</div>
         <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20, lineHeight: 1.7 }}>
-          데이터 메뉴에서 카드사 Excel 파일을 업로드하면<br/>
+          데이터 메뉴에서 카드사 Excel 파일을 업로드하면<br />
           지출 패턴을 분석해서 예산 초안을 자동으로 잡아드려요.
         </div>
       </Card>
@@ -260,12 +418,12 @@ function IncomeTab({ plan, setPlan, fixed, install }) {
   const update = (key, val) => setPlan(p => ({ ...p, [key]: val }));
   const salary = plan.salary || { husband: 0, wife: 0, savingsTarget: 0 };
   const allowance = plan.allowance || { husband: 0, wife: 0 };
-  
+
   const monthlyIncome = (salary.husband || 0) + (salary.wife || 0);
   const monthlySavingTarget = salary.savingsTarget || 0;
   const allowanceTotal = (allowance.husband || 0) + (allowance.wife || 0);
   const monthlyFixed = (fixed || []).reduce((s, f) => s + (f.amount || 0), 0) + (install || []).reduce((s, i) => s + (i.monthly || 0), 0);
-  
+
   const monthlyAvail = Math.max(0, monthlyIncome - monthlyFixed - monthlySavingTarget - allowanceTotal);
 
   return (
@@ -275,25 +433,25 @@ function IncomeTab({ plan, setPlan, fixed, install }) {
         {plan?.isSolo ? (
           <NumericInput value={salary.husband} onChange={v => {
             update("salary", { ...salary, husband: v, wife: 0 });
-          }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
+          }} style={{ ...iStyle, textAlign: "right" }} placeholder="0" />
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>남편</div><NumericInput value={salary.husband} onChange={v => {
               update("salary", { ...salary, husband: v });
-            }} style={{...iStyle, textAlign: "right"}} placeholder="0" /></div>
+            }} style={{ ...iStyle, textAlign: "right" }} placeholder="0" /></div>
             <div><div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>아내</div><NumericInput value={salary.wife} onChange={v => {
               update("salary", { ...salary, wife: v });
-            }} style={{...iStyle, textAlign: "right"}} placeholder="0" /></div>
+            }} style={{ ...iStyle, textAlign: "right" }} placeholder="0" /></div>
           </div>
         )}
         <div style={{ marginTop: 12, fontSize: 14, fontWeight: 800 }}>합계: <span style={{ color: "var(--success)" }}>{fmtS(monthlyIncome)}원</span></div>
       </Card>
-      
+
       <Card style={{ padding: "18px", marginBottom: 10 }}>
         <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14 }}>■ 월 저축 목표</div>
         <NumericInput value={salary.savingsTarget} onChange={v => {
           update("salary", { ...salary, savingsTarget: v });
-        }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
+        }} style={{ ...iStyle, textAlign: "right" }} placeholder="0" />
         {monthlyIncome > 0 && <div style={{ marginTop: 8, fontSize: 11, color: "var(--text-faint)" }}>저축률: {Math.round(monthlySavingTarget / monthlyIncome * 100)}%</div>}
       </Card>
 
@@ -304,13 +462,13 @@ function IncomeTab({ plan, setPlan, fixed, install }) {
             <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>남편 용돈</div>
             <NumericInput value={allowance.husband} onChange={v => {
               update("allowance", { ...allowance, husband: v });
-            }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
+            }} style={{ ...iStyle, textAlign: "right" }} placeholder="0" />
           </div>
           <div>
             <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>아내 용돈</div>
             <NumericInput value={allowance.wife} onChange={v => {
               update("allowance", { ...allowance, wife: v });
-            }} style={{...iStyle, textAlign: "right"}} placeholder="0" />
+            }} style={{ ...iStyle, textAlign: "right" }} placeholder="0" />
           </div>
         </div>
         <div style={{ marginTop: 12, fontSize: 14, fontWeight: 800 }}>용돈 합계: <span style={{ color: "var(--primary)" }}>{fmtS(allowanceTotal)}원</span></div>
@@ -340,7 +498,7 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
   const fixedTotal = (fixed || []).reduce((s, f) => s + (f.amount || 0), 0);
   const installTotal = (install || []).reduce((s, i) => s + (i.monthly || 0), 0);
   const allowanceTotal = (allowance.husband || 0) + (allowance.wife || 0);
-  
+
   const monthlyAvailRaw = Math.max(0, totalSalary - fixedTotal - installTotal - (salary.savingsTarget || 0) - allowanceTotal);
 
   const utilTarget = plan.utilizationTarget ?? 100;
@@ -358,6 +516,7 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
   };
 
   const buildCatHistory = () => {
+    /** @type {Record<string, number>} */
     const catHistory = {};
     CATS.forEach(c => { catHistory[c.id] = 0; });
     const now = new Date();
@@ -377,13 +536,24 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
     try {
       const resp = await fetch("/api/budget-ai", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ totalSalary, fixedTotal, installTotal, savingsTarget: salary.savingsTarget, catHistory, utilizationTarget: utilTarget })
+        body: JSON.stringify({ totalSalary, fixedTotal, installTotal, savingsTarget: salary.savingsTarget, allowanceTotal, catHistory, utilizationTarget: utilTarget })
       });
       if (resp.ok) {
-        setAiResult(await resp.json());
+        const data = await resp.json();
+        // P7-2 [claude]: 응답 한도 초과 정규화 안전망
+        if (data && data.budgets) {
+          const sum = Object.values(data.budgets).reduce((s, v) => s + (typeof v === 'number' ? v : 0), 0);
+          if (sum > monthlyAvail && sum > 0) {
+            const scale = monthlyAvail / sum;
+            Object.keys(data.budgets).forEach(k => {
+              data.budgets[k] = Math.round((data.budgets[k] * scale) / 1000) * 1000;
+            });
+          }
+        }
+        setAiResult(data);
       } else { throw new Error("API Fail"); }
     } catch {
-      setAiResult(runLocalAI(totalSalary, fixedTotal, installTotal, salary.savingsTarget, catHistory, utilTarget));
+      setAiResult(runLocalAI(totalSalary, fixedTotal, installTotal, salary.savingsTarget, catHistory, utilTarget, allowanceTotal));
 
     } finally { setAiLoading(false); }
   };
@@ -449,10 +619,10 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
           )}
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
-           <div>
+          <div>
             <div style={{ fontSize: 13, fontWeight: 700 }}>총 집행 예정 예산</div>
-            <div style={{ fontSize: 11, color: "var(--primary)", fontWeight: 800, marginTop: 4 }}>{fmtS(totalBudget)}원 <span style={{fontSize:9, color:"var(--text-faint)", fontWeight:400}}>/ {fmtS(monthlyAvail)}원</span></div>
-           </div>
+            <div style={{ fontSize: 11, color: "var(--primary)", fontWeight: 800, marginTop: 4 }}>{fmtS(totalBudget)}원 <span style={{ fontSize: 9, color: "var(--text-faint)", fontWeight: 400 }}>/ {fmtS(monthlyAvail)}원</span></div>
+          </div>
           <button onClick={() => setEditMode(!editMode)} style={{ background: editMode ? "var(--primary)" : "var(--surface-alt)", border: "1px solid var(--border)", borderRadius: 8, padding: "5px 12px", fontSize: 11, cursor: "pointer", color: editMode ? "#fff" : "var(--text-muted)", fontWeight: 700 }}>{editMode ? "저장" : "예산 편집"}</button>
         </div>
 
@@ -575,23 +745,23 @@ function BudgetTab({ budgets, setBudgets, tx, plan, setPlan, fixed, install }) {
  * }} props
  */
 function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
-  const salary     = plan.salary || {};
-  const allowance  = plan.allowance || { husband: 0, wife: 0 };
-  const income     = (salary.husband || 0) + (salary.wife || 0);
-  const savings    = salary.savingsTarget || 0;
+  const salary = plan.salary || {};
+  const allowance = plan.allowance || { husband: 0, wife: 0 };
+  const income = (salary.husband || 0) + (salary.wife || 0);
+  const savings = salary.savingsTarget || 0;
   const fixedTotal = (fixed || []).reduce((s, f) => s + (f.amount || 0), 0)
-                   + (install || []).reduce((s, i) => s + (i.monthly || 0), 0);
+    + (install || []).reduce((s, i) => s + (i.monthly || 0), 0);
   const allowanceTotal = (allowance.husband || 0) + (allowance.wife || 0);
   const utilTarget = plan.utilizationTarget ?? 100;
-  const rawAvail   = Math.max(0, income - savings - fixedTotal - allowanceTotal);
-  const avail      = Math.round(rawAvail * utilTarget / 100);
-  const buffer     = rawAvail - avail;
+  const rawAvail = Math.max(0, income - savings - fixedTotal - allowanceTotal);
+  const avail = Math.round(rawAvail * utilTarget / 100);
+  const buffer = rawAvail - avail;
 
-  const nowYm      = `${getYear()}-${String(getMonth()).padStart(2, "0")}`;
+  const nowYm = `${getYear()}-${String(getMonth()).padStart(2, "0")}`;
   const thisMonthTx = tx.filter(t => t.date.startsWith(nowYm));
   const totalBudget = Object.values(budgets).reduce((s, v) => s + (v || 0), 0);
-  const totalSpent  = thisMonthTx.reduce((s, t) => s + t.amount, 0);
-  const totalPct    = totalBudget > 0 ? Math.min(Math.round(totalSpent / totalBudget * 100), 100) : 0;
+  const totalSpent = thisMonthTx.reduce((s, t) => s + t.amount, 0);
+  const totalPct = totalBudget > 0 ? Math.min(Math.round(totalSpent / totalBudget * 100), 100) : 0;
 
   const topFixed = [...(fixed || []), ...(install || []).map(i => ({ name: i.name, amount: i.monthly }))]
     .sort((a, b) => b.amount - a.amount)
@@ -660,7 +830,7 @@ function SummaryTab({ plan, budgets, tx, fixed, install, onTabChange }) {
               const budget = budgets[c.id] || 0;
               if (budget === 0) return null;
               const spent = thisMonthTx.filter(t => t.cat === c.id).reduce((s, t) => s + t.amount, 0);
-              const pct   = Math.min(Math.round(spent / budget * 100), 100);
+              const pct = Math.min(Math.round(spent / budget * 100), 100);
               const isOver = spent > budget;
               return (
                 <div key={c.id} style={{ marginBottom: 8 }}>
@@ -780,14 +950,14 @@ export function BudgetView({ plan, setPlan, budgets, setBudgets, tx, fixed, setF
             <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: ".08em", marginBottom: 2 }}>{getYear()}년 재무 마스터 플랜</div>
             <div className="serif" style={{ fontSize: 20 }}>{TABS.find(t => t.id === tab)?.label}</div>
           </div>
-          {tab === "income"    && <IncomeTab plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}
-          {tab === "fixed"     && <FixedTab fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} tx={tx} names={names} />}
-          {tab === "cards"     && <CardView cards={cards} setCards={setCards} />}
-          {tab === "budget"    && <BudgetTab budgets={budgets} setBudgets={setBudgets} tx={tx} plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}
-          {tab === "events"    && <EventsTab plan={plan} setPlan={setPlan} />}
-          {tab === "baseline"  && <BaselineTab plan={plan} />}
+          {tab === "income" && <IncomeTab plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}
+          {tab === "fixed" && <FixedTab fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} tx={tx} names={names} />}
+          {tab === "cards" && <CardView cards={cards} setCards={setCards} />}
+          {tab === "budget" && <BudgetTab budgets={budgets} setBudgets={setBudgets} tx={tx} plan={plan} setPlan={setPlan} fixed={fixed} install={install} />}
+          {tab === "events" && <EventsTab plan={plan} setPlan={setPlan} />}
+          {tab === "baseline" && <BaselineTab plan={plan} />}
           {tab === "simulator" && <SimulatorView sliderCfg={sliderCfg ?? {}} onUpdateSimCfg={setSliderCfg} />}
-          {tab === "summary"   && <SummaryTab plan={plan} budgets={budgets} tx={tx} fixed={fixed} install={install} onTabChange={goTab} />}
+          {tab === "summary" && <SummaryTab plan={plan} budgets={budgets} tx={tx} fixed={fixed} install={install} onTabChange={goTab} />}
         </div>
       </div>
     </div>

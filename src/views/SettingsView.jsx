@@ -1,194 +1,210 @@
-import { useState } from "react";
-import { Card, SectionHeader } from "../components/UI";
-import { SliderRow } from "../components/SliderRow";
-import { fmtS } from "../utils/helpers";
-import { exportTransactions } from "../utils/export";
+import React, { useState } from "react";
 import { useBudget } from "../context/BudgetContext.jsx";
-import { useKidsStore } from "../stores/kidsStore.js";
+import { SettlementSheet } from "../components/SettlementSheet.jsx";
+import { exportTransactions } from "../utils/export";
+
+const fmtMoney = v => new Intl.NumberFormat('ko-KR',{style:'currency',currency:'KRW'}).format(v||0);
 
 export function SettingsView({
-  names, setNames, budgets, setBudgets, sliderCfg, setSliderCfg,
-  resetAll, resetTx, resetFixed, resetBudgets, resetSetup, householdId, myRole,
-  leaveHousehold, tx, plan, onBugReport, onAdminTrigger, isAdmin, onClose=undefined, onNavigate
+  names, setNames, budgets, sliderCfg, setSliderCfg,
+  resetAll, resetTx, resetFixed, resetBudgets, resetSetup, resetDiaries,
+  householdId, myRole,
+  leaveHousehold, tx, onBugReport, onAdminTrigger, isAdmin, onNavigate
 }) {
   const [clickCount, setClickCount] = useState(0);
-  const updateName = (role, v) => setNames(prev => ({ ...prev, [role]: v }));
-  const { kidsMode, setKidsMode } = useBudget();
-  const { kidsProfiles } = useKidsStore();
+  const { diaries, kidsMode, setKidsMode } = useBudget();
+  const [showSettlement, setShowSettlement] = useState(false);
+  const [editNames, setEditNames] = useState(false);
+  const [draftH, setDraftH] = useState(names.husband);
+  const [draftW, setDraftW] = useState(names.wife);
+  const [showReset, setShowReset] = useState(false);
+
+  const totalBudget = Object.values(budgets).reduce((s,v)=>s+(typeof v === 'number' ? v : 0), 0);
+
+  const openNameEdit = () => {
+    setDraftH(names.husband);
+    setDraftW(names.wife);
+    setEditNames(true);
+  };
+
+  const saveNames = () => {
+    setNames({ husband: draftH || '남편', wife: draftW || '와이프' });
+    setEditNames(false);
+  };
+
+  const resetItems = [
+    { label: '지출 내역만 삭제',     fn: resetTx      },
+    { label: '고정비/할부 초기화',   fn: resetFixed   },
+    { label: '예산 설정 초기화',     fn: resetBudgets },
+    { label: '다이어리 초기화',      fn: resetDiaries },
+    { label: '사용자 설정 초기화',   fn: resetSetup   },
+    { label: '전체 초기화',          fn: resetAll, isAll: true },
+  ];
+
+  const items = [
+    {label:'예산 관리', sub:`월 예산 ${fmtMoney(totalBudget)}`, icon:'🎯', action:()=>onNavigate("budget")},
+    {label:'카드 관리', sub:'결제 수단 연동', icon:'💳', action:()=>onNavigate("budget")},
+    {label:'자산/부채', sub:'전체 자산 현황', icon:'💰', action:()=>onNavigate("asset")},
+    {label:'과거 리포트', sub:'지난 지출 통계', icon:'📊', action:()=>onNavigate("report")},
+    {label:'세금 최적화', sub:'연말정산 등', icon:'📝', action:()=>onNavigate("tax")},
+    {label:'데이터 가져오기', sub:'CSV 임포트', icon:'📥', action:()=>onNavigate("dataImport")},
+    {label:'캘린더', sub:'달력형 요약', icon:'📅', action:()=>onNavigate("calendar")},
+    {label:'기본 정보', sub:`${names.husband} / ${names.wife}`, icon:'👤', action: openNameEdit},
+    {label:'데이터 초기화', sub:'항목별 선택 삭제', icon:'🗑️', danger:true, action: () => setShowReset(v => !v)},
+  ];
 
   return (
-    <div style={{ padding: "0 16px 96px", overflowY: "auto", height: "100%", background: "var(--bg)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 0 12px" }}>
-        <SectionHeader sub="Control Center" title="메뉴 / 환경 설정" />
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
-        <button onClick={() => onNavigate && onNavigate("budget")} style={{
-          padding: "16px 8px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer"
-        }}>
-          <span style={{ fontSize: 24 }}>⚖️</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text)" }}>예산/목표</span>
-        </button>
-        <button onClick={() => onNavigate && onNavigate("report")} style={{
-          padding: "16px 8px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer"
-        }}>
-          <span style={{ fontSize: 24 }}>◈</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text)" }}>과거 리포트</span>
-        </button>
-        <button onClick={() => onNavigate && onNavigate("settlement")} style={{
-          padding: "16px 8px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer"
-        }}>
-          <span style={{ fontSize: 24 }}>💳</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text)" }}>카드 정산</span>
-        </button>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
-        {[
-          { key: "asset", label: "자산", icon: "💰" },
-          { key: "tax",   label: "세금 최적화", icon: "📊" },
-          { key: "dataImport", label: "데이터 가져오기", icon: "📥" },
-          { key: "calendar", label: "캘린더", icon: "📅" },
-        ].map(m => (
-          <button key={m.key} onClick={() => onNavigate && onNavigate(m.key)} style={{
-            padding: "12px 6px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)",
-            boxShadow: "0 1px 3px rgba(0,0,0,.05)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer"
-          }}>
-            <span style={{ fontSize: 20 }}>{m.icon}</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text)", textAlign: "center", lineHeight: 1.2 }}>{m.label}</span>
-          </button>
-        ))}
-      </div>
-
-      <Card className="u1" style={{ padding: "18px", marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: ".06em", marginBottom: 16 }}>■ 기본 정보 설정</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-          <div>
-            <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>남편 이름</div>
-            <input value={names.husband} onChange={e => updateName("husband", e.target.value)}
-              style={{ width: "100%", background: "var(--surface-alt)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", color: "var(--text)", fontSize: 13, outline: "none" }} />
-          </div>
-          <div>
-            <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 4 }}>아내 이름</div>
-            <input value={names.wife} onChange={e => updateName("wife", e.target.value)}
-              style={{ width: "100%", background: "var(--surface-alt)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", color: "var(--text)", fontSize: 13, outline: "none" }} />
-          </div>
+    <div className="view" style={{background:'var(--bg)'}}>
+      <div className="view-header">
+        <div>
+          <h1>설정</h1>
+          <div className="sub">Control Center</div>
         </div>
-      </Card>
-
-      <Card className="u2" style={{ padding: "18px", marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: ".06em", marginBottom: 16 }}>■ 예산 슬라이더</div>
-        <SliderRow
-          label="예산 슬라이더 최대치"
-          value={sliderCfg.budgetSliderMax}
-          min={500000} max={10000000} step={100000}
-          onChange={v => setSliderCfg(p => ({ ...p, budgetSliderMax: v }))}
-          formatVal={v => fmtS(v) + "원"}
-          showReset onReset={() => setSliderCfg(p => ({ ...p, budgetSliderMax: 2000000 }))}
-        />
-      </Card>
-
-      {/* Kids Mode 토글 */}
-      <Card style={{ padding: "18px", marginBottom: 12 }}>
-        <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: ".06em", marginBottom: 16 }}>■ 아이 모드</div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: kidsMode ? 12 : 0 }}>
+      </div>
+      <div className="scroll-area">
+        <div style={{
+          borderRadius:20,background:'var(--ink)',color:'white',
+          padding:'16px 18px',marginBottom:16,cursor:'pointer',
+          display:'flex',alignItems:'center',justifyContent:'space-between'
+        }} onClick={()=>setShowSettlement(true)}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>Kids Mode</div>
-            <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 2 }}>
-              활성화 시 아이 전용 UI로 전환됩니다
-            </div>
+            <div style={{fontSize:11,opacity:.5,letterSpacing:'.4px',marginBottom:4}}>이번 달</div>
+            <div style={{fontSize:16,fontWeight:700}}>💰 월간 정산하기</div>
+            <div style={{fontSize:12,opacity:.6,marginTop:3}}>부부 지출 차액 계산 및 정산</div>
           </div>
-          <button
-            onClick={() => setKidsMode(!kidsMode)}
-            style={{
-              width: 50, height: 28, borderRadius: 99, border: "none", cursor: "pointer",
-              background: kidsMode ? "var(--primary)" : "#F3F4F6",
-              position: "relative", transition: "background 0.2s", flexShrink: 0,
-            }}
-          >
-            <div style={{
-              position: "absolute", top: 3, left: kidsMode ? 24 : 4,
-              width: 22, height: 22, borderRadius: "50%", background: "#fff",
-              transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-            }} />
-          </button>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
-        <div style={{ marginTop: 16 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-            {kidsProfiles.length === 0 ? (
-              <div style={{ fontSize: 11, color: "var(--text-faint)" }}>등록된 아이가 없습니다.</div>
-            ) : (
-              kidsProfiles.map(kid => (
-                <div key={kid.id} style={{ background: "var(--surface-alt)", borderRadius: 10, padding: "6px 12px", fontSize: 12, color: "var(--text-muted)" }}>
-                  {kid.avatar} {kid.name}
+
+        {items.map(item => (
+          <React.Fragment key={item.label}>
+            <div onClick={item.action} style={{
+              padding:'15px 18px',background:'white',borderRadius:16,marginBottom:8,
+              border:'1px solid var(--cream3)',display:'flex',justifyContent:'space-between',
+              alignItems:'center',cursor:'pointer'
+            }}>
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <span style={{fontSize:18}}>{item.icon}</span>
+                <div>
+                  <div style={{fontSize:15,fontWeight:600,color:item.danger?'var(--danger)':'var(--ink)'}}>{item.label}</div>
+                  <div style={{fontSize:12,color:'var(--ink3)',marginTop:2}}>{item.sub}</div>
                 </div>
-              ))
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+
+            {item.label === '기본 정보' && editNames && (
+              <div style={{background:'white', borderRadius:16, padding:'16px 18px',
+                border:'1px solid var(--cream3)', marginBottom:8}}>
+                <div style={{fontSize:13, fontWeight:600, marginBottom:10, color:'var(--ink2)'}}>이름 수정</div>
+                <input value={draftH} onChange={e=>setDraftH(e.target.value)}
+                  placeholder="남편 이름"
+                  style={{width:'100%', padding:'10px 12px', borderRadius:10,
+                    border:'1px solid var(--cream3)', marginBottom:8, fontFamily:'inherit', fontSize:14, outline:'none'}} />
+                <input value={draftW} onChange={e=>setDraftW(e.target.value)}
+                  placeholder="와이프 이름"
+                  style={{width:'100%', padding:'10px 12px', borderRadius:10,
+                    border:'1px solid var(--cream3)', marginBottom:12, fontFamily:'inherit', fontSize:14, outline:'none'}} />
+                <div style={{display:'flex', gap:8}}>
+                  <button onClick={()=>setEditNames(false)}
+                    style={{flex:1, padding:'10px', borderRadius:10, border:'1px solid var(--cream3)',
+                      background:'white', color:'var(--ink3)', fontSize:13, cursor:'pointer'}}>
+                    취소
+                  </button>
+                  <button onClick={saveNames}
+                    style={{flex:2, padding:'10px', borderRadius:10, border:'none',
+                      background:'var(--ink)', color:'white', fontSize:13, fontWeight:700, cursor:'pointer'}}>
+                    저장
+                  </button>
+                </div>
+              </div>
             )}
-          </div>
-          <button
-            onClick={() => onNavigate && onNavigate("kids-mgmt")}
-            style={{
-              width: "100%", padding: "12px", borderRadius: 10,
-              background: "var(--surface-alt)", border: "1px solid var(--border)",
-              color: "var(--text)", fontSize: 12, fontWeight: 700, cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6
-            }}
-          >
-            🧒 아이 프로필 및 미션 관리하기
+
+            {item.label === '데이터 초기화' && showReset && (
+              <div style={{background:'var(--danger-bg1, #FFF5F3)', border:'1px solid var(--danger-border, #FCA5A5)',
+                borderRadius:16, padding:'16px 18px', marginBottom:8}}>
+                <div style={{fontSize:13, fontWeight:700, color:'var(--danger)', marginBottom:12}}>
+                  초기화할 항목을 선택하세요
+                </div>
+                {resetItems.map(({ label, fn, isAll }) => (
+                  <button key={label}
+                    onClick={() => {
+                      if (typeof fn !== 'function') return;
+                      if (window.confirm(`"${label}" 하시겠습니까?`)) {
+                        Promise.resolve(fn()).finally(() => setShowReset(false));
+                      }
+                    }}
+                    style={{
+                      width:'100%', padding:'11px 14px', borderRadius:10, border:'none',
+                      background: isAll ? 'var(--danger)' : 'white',
+                      color: isAll ? 'white' : 'var(--danger)',
+                      fontSize:13, fontWeight:600, cursor:'pointer',
+                      marginBottom:6, textAlign:'left',
+                      fontFamily:'inherit',
+                    }}>
+                    {label}
+                  </button>
+                ))}
+                <button onClick={()=>setShowReset(false)}
+                  style={{width:'100%', padding:'11px', borderRadius:10, border:'1px solid var(--cream3)',
+                    background:'white', fontSize:13, cursor:'pointer', marginTop:4, fontFamily:'inherit', color:'var(--ink2)'}}>
+                  취소
+                </button>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+
+        <div style={{marginTop: 20}}>
+          <button onClick={() => onNavigate && onNavigate("kids-mgmt")}
+            style={{ width: "100%", padding: "15px", borderRadius: 16, border: "1px solid var(--cream3)", background: "white", color: "var(--primary)", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 8 }}>
+            🧒 아이 프로필 및 미션 관리
           </button>
+
+          <button onClick={() => exportTransactions(tx)}
+            style={{ width: "100%", padding: "15px", borderRadius: 16, border: "1px solid var(--primary)", background: "rgba(28,43,74,.05)", color: "var(--primary)", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 8 }}>
+            📥 전체 지출 내역 CSV 내보내기
+          </button>
+
+          <button onClick={() => navigator.clipboard.writeText(householdId).then(() => alert("복사되었습니다."))}
+            style={{ width: "100%", padding: "15px", borderRadius: 16, border: "1px solid var(--cream3)", background: "white", color: "var(--ink2)", fontSize: 13, fontWeight: 600, cursor: "pointer", marginBottom: 8 }}>
+            가계부 HID 복사 (연결용)
+          </button>
+
+          <button onClick={() => { if (window.confirm("정말로 이 가계부에서 나갈까요?")) leaveHousehold(); }}
+            style={{ width: "100%", padding: "15px", borderRadius: 16, border: "1px dashed var(--danger)", background: "white", color: "var(--danger)", fontSize: 13, fontWeight: 600, cursor: "pointer", marginBottom: 8 }}>
+            가계부 연결 해제
+          </button>
+
+          <button onClick={onBugReport}
+            style={{ width: "100%", padding: "15px", borderRadius: 16, border: "1px solid #3B82F6", background: "#EFF6FF", color: "#3B82F6", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 8 }}>
+            🐞 오류 제보하기 (시스템 개선)
+          </button>
+
+          {isAdmin && (
+            <button onClick={onAdminTrigger}
+              style={{ width: "100%", padding: "15px", borderRadius: 16, border: "none", background: "var(--ink)", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 8 }}>
+              👨‍💻 관리자 페이지
+            </button>
+          )}
         </div>
-      </Card>
 
-      <Card className="u3" style={{ padding: "18px", marginBottom: 14 }}>
-        <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: ".06em", marginBottom: 16 }}>■ 데이터 및 연결</div>
-        <div style={{ background: "var(--surface-alt)", borderRadius: 12, padding: "14px", marginBottom: 12, fontSize: 12 }}>
-          <div style={{ color: "var(--text-faint)", marginBottom: 4 }}>가계부 고유 ID (HID)</div>
-          <div style={{ fontWeight: 800, letterSpacing: ".05em", color: "var(--primary)" }}>{householdId || "—"}</div>
+        <div
+          onClick={() => {
+            const newCount = clickCount + 1;
+            if (newCount >= 5) {
+              onAdminTrigger();
+              setClickCount(0);
+            } else {
+              setClickCount(newCount);
+            }
+          }}
+          style={{ textAlign: "center", padding: "20px 10px", opacity: 0.4, fontSize: 11, cursor: "pointer", color:'var(--ink3)' }}
+        >
+          Family Budget v4.0.0 {clickCount > 0 && `(${clickCount})`}
         </div>
-
-        <button onClick={() => navigator.clipboard.writeText(householdId).then(() => alert("복사되었습니다."))}
-          style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface-alt)", color: "var(--text-muted)", fontSize: 12, cursor: "pointer", marginBottom: 8 }}>복제용 HID 복사하기</button>
-        <button onClick={() => { if (confirm("정말로 이 가계부에서 나갈까요?")) leaveHousehold(); }}
-          style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface-alt)", color: "var(--danger)", fontSize: 12, cursor: "pointer", marginBottom: 8 }}>가계부 연결 해제</button>
-
-        <div style={{ height: 1, background: "var(--border)", margin: "12px 0" }} />
-
-        <button onClick={() => exportTransactions(tx)}
-          style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid var(--primary)", background: "rgba(28,43,74,.08)", color: "var(--primary)", fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 8 }}>📥 전체 지출 내역 CSV 내보내기</button>
-        <button onClick={onBugReport}
-          style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid #3B82F6", background: "#EFF6FF", color: "#3B82F6", fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 8 }}>🐞 오류 제보하기 (시스템 개선)</button>
-
-        {isAdmin && (
-          <button onClick={onAdminTrigger}
-            style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid var(--primary)", background: "var(--primary)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", marginBottom: 8 }}>👨‍💻 관리자 페이지 바로가기</button>
-        )}
-
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)", opacity: 0.9 }}>
-          <div style={{ fontSize: 11, color: "var(--danger)", fontWeight: 700, marginBottom: 12 }}>⚠️ 위험 구역 (데이터 관리)</div>
-          <button onClick={() => { if (confirm("모든 지출 내역을 삭제할까요?")) resetTx(); }}
-            style={{ width: "100%", padding: "10px", borderRadius: 10, border: "1px solid var(--border)", background: "none", color: "var(--text-faint)", fontSize: 11, cursor: "pointer", marginBottom: 8 }}>지출 내역 초기화</button>
-          <button onClick={() => { if (confirm("정말로 모든 데이터를 초기화할까요?\n지출 내역, 고정비, 예산 등 모든 정보가 삭제됩니다.")) resetAll(); }}
-            style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid var(--danger)", background: "var(--danger)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>전체 데이터 초기화</button>
-        </div>
-      </Card>
-
-      <div
-        onClick={() => {
-          const newCount = clickCount + 1;
-          if (newCount >= 5) {
-            onAdminTrigger();
-            setClickCount(0);
-          } else {
-            setClickCount(newCount);
-          }
-        }}
-        style={{ textAlign: "center", padding: "10px", opacity: 0.3, fontSize: 10, cursor: "pointer" }}
-      >
-        Family Budget v4.0.0 {clickCount > 0 && `(${clickCount})`}
       </div>
+
+      {showSettlement && <SettlementSheet diaries={diaries} onClose={()=>setShowSettlement(false)}/>}
     </div>
   );
 }

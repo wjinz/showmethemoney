@@ -112,6 +112,11 @@ self.addEventListener('sync', (event) => {
             body: JSON.stringify(item.rows),
           });
           if (resp.ok) succeeded.push(item.idbId);
+        } else if (item.type === 'diary') {
+          // P0-3: SW에서는 diary를 큐에 그대로 유지.
+          // 사진 base64 머지는 read-modify-write race condition 위험이 있으므로
+          // App 활성화 시 flushIdbDiaries가 처리하도록 위임.
+          console.log('[SW] diary 항목은 App에 위임 (큐 유지)');
         }
       } catch (e) {
         // 실패 항목은 큐에 유지 — 다음 sync 이벤트에서 재시도

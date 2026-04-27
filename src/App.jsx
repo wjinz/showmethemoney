@@ -12,34 +12,37 @@ import { G } from "./styles/globalStyles.js";
 import "./styles/theme.css";
 import { validate } from "./utils/validate.js";
 import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued, flushTxQueue, hasTxQueued } from "./utils/offlineQueue.js";
-import { idbEnqueue } from "./utils/offlineIDB.js";
+import { idbEnqueue, idbDequeueDiaries, idbRemove } from "./utils/offlineIDB.js";
 import { LS_KEYS, lsGet, lsSet, lsRemove, lsMigrateLegacy } from "./utils/ls.js";
 import { useKidsStore } from "./stores/kidsStore.js";
 import {
   CATS, INIT_BUDGETS, DEFAULT_SLIDER_CFG, DEFAULT_TAX_CONFIG,
-  EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS, EMPTY_PLAN, EMPTY_SETTLEMENTS,
+  EMPTY_TX, EMPTY_FIXED, EMPTY_INSTALL, EMPTY_CARDS, EMPTY_ASSETS, EMPTY_PLAN, EMPTY_SETTLEMENTS, EMPTY_DIARIES,
   DEFAULT_WIDGET_LAYOUT, DEFAULT_HOME_LAYOUT,
   getYear,
 } from "./constants/index.js";
 import { SyncSetup } from "./views/SyncSetup.jsx";
-const HomeView           = lazy(() => import("./views/HomeView.jsx").then(m => ({ default: m.HomeView })));
-const EntryView          = lazy(() => import("./views/EntryView.jsx").then(m => ({ default: m.EntryView })));
-const ReportView         = lazy(() => import("./views/ReportView.jsx").then(m => ({ default: m.ReportView })));
-const SettingsView       = lazy(() => import("./views/SettingsView.jsx").then(m => ({ default: m.SettingsView })));
-const WidgetView         = lazy(() => import("./views/WidgetView.jsx").then(m => ({ default: m.WidgetView })));
-const DashboardView      = lazy(() => import("./views/DashboardView.jsx").then(m => ({ default: m.DashboardView })));
-const PrivateWalletView  = lazy(() => import("./views/PrivateWalletView.jsx").then(m => ({ default: m.PrivateWalletView })));
-const BudgetView         = lazy(() => import("./views/BudgetView.jsx").then(m => ({ default: m.BudgetView })));
-const AdminView          = lazy(() => import("./views/AdminView.jsx").then(m => ({ default: m.AdminView })));
-const SettlementView     = lazy(() => import("./views/SettlementView.jsx").then(m => ({ default: m.SettlementView })));
-const KidsView           = lazy(() => import("./views/KidsView.jsx").then(m => ({ default: m.KidsView })));
-const AssetView          = lazy(() => import("./views/AssetView.jsx").then(m => ({ default: m.AssetView })));
-const TaxOptimizerView   = lazy(() => import("./views/TaxOptimizerView.jsx").then(m => ({ default: m.TaxOptimizerView })));
-const DataImportView     = lazy(() => import("./views/DataImportView.jsx").then(m => ({ default: m.DataImportView })));
-const CalendarView       = lazy(() => import("./views/CalendarView.jsx").then(m => ({ default: m.CalendarView })));
+const HomeView = lazy(() => import("./views/HomeView.jsx").then(m => ({ default: m.HomeView })));
+const DiaryView = lazy(() => import("./views/DiaryView.jsx").then(m => ({ default: m.DiaryView })));
+const HistoryView = lazy(() => import("./views/HistoryView.jsx").then(m => ({ default: m.HistoryView })));
+const EntryView = lazy(() => import("./views/EntryView.jsx").then(m => ({ default: m.EntryView })));
+const ReportView = lazy(() => import("./views/ReportView.jsx").then(m => ({ default: m.ReportView })));
+const SettingsView = lazy(() => import("./views/SettingsView.jsx").then(m => ({ default: m.SettingsView })));
+const WidgetView = lazy(() => import("./views/WidgetView.jsx").then(m => ({ default: m.WidgetView })));
+const DashboardView = lazy(() => import("./views/DashboardView.jsx").then(m => ({ default: m.DashboardView })));
+const PrivateWalletView = lazy(() => import("./views/PrivateWalletView.jsx").then(m => ({ default: m.PrivateWalletView })));
+const BudgetView = lazy(() => import("./views/BudgetView.jsx").then(m => ({ default: m.BudgetView })));
+const AdminView = lazy(() => import("./views/AdminView.jsx").then(m => ({ default: m.AdminView })));
+const SettlementView = lazy(() => import("./views/SettlementView.jsx").then(m => ({ default: m.SettlementView })));
+const KidsView = lazy(() => import("./views/KidsView.jsx").then(m => ({ default: m.KidsView })));
+const AssetView = lazy(() => import("./views/AssetView.jsx").then(m => ({ default: m.AssetView })));
+const TaxOptimizerView = lazy(() => import("./views/TaxOptimizerView.jsx").then(m => ({ default: m.TaxOptimizerView })));
+const DataImportView = lazy(() => import("./views/DataImportView.jsx").then(m => ({ default: m.DataImportView })));
+const CalendarView = lazy(() => import("./views/CalendarView.jsx").then(m => ({ default: m.CalendarView })));
 import { ParentKidsMgmtView } from "./views/ParentKidsMgmtView.jsx";
 import { Nav } from "./components/Nav.jsx";
 import { InputModal } from "./components/InputModal.jsx";
+import { InputSheet } from "./components/InputSheet.jsx";
 import { BugReportModal } from "./components/BugReportModal.jsx";
 import { AdminLoginModal } from "./components/AdminLoginModal.jsx";
 import { QuickEntrySheet } from "./components/QuickEntrySheet.jsx";
@@ -55,24 +58,24 @@ export default function App() {
   const [setupDone, setSetupDone] = useState(false);
   const [householdId, setHouseholdId] = useState("");
   const [myRole, setMyRole] = useState("husband");
-  const [view, setView] = useState("home");
+  const [view, setView] = useState("diary");
   const [syncStatus, setSyncStatus] = useState("ok");
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [showBugReport, setShowBugReport] = useState(false);
-  const [lastSync, setLastSync] = useState(/** @type {Date|null} */ (null));
+  const [lastSync, setLastSync] = useState(/** @type {Date|null} */(null));
 
   // 위젯 레이아웃 상태
   const [widgetLayout, setWidgetLayoutRaw] = useState(DEFAULT_WIDGET_LAYOUT);
   const [homeLayout, setHomeLayoutRaw] = useState(DEFAULT_HOME_LAYOUT);
 
   // SOS 상태 통합 관리 (내가 보낸 요청 & 받은 요청 모두)
-  const [sosRequests, setSosRequests] = useState(/** @type {SosRequest[]} */ ([]));
+  const [sosRequests, setSosRequests] = useState(/** @type {SosRequest[]} */([]));
   const [showSosRequest, setShowSosRequest] = useState(false);
   const [showSosPending, setShowSosPending] = useState(false);
 
   // 펜딩된 요청들 (상대방이 보낸 것)
-  const sosPending = useMemo(() => 
+  const sosPending = useMemo(() =>
     sosRequests.filter(r => r.requester !== myRole && r.status === 'pending'),
     [sosRequests, myRole]
   );
@@ -96,21 +99,35 @@ export default function App() {
   const [budgets, setBudgetsRaw] = useState(INIT_BUDGETS);
   const [names, setNamesRaw] = useState({ husband: "남편", wife: "와이프" });
   const [taxConfig, setTaxConfigRaw] = useState(DEFAULT_TAX_CONFIG);
+  const [diaries, setDiariesRaw] = useState(EMPTY_DIARIES);
+  const [currentUser, setCurrentUser] = useState(/** @type {'husband'|'wife'} */('husband'));
 
   // -- 입력 지연(Debounce) 타이머 관리 (Task 15-1) --
+  /** @type {React.MutableRefObject<Record<string, ReturnType<typeof setTimeout>>>} */
   const saveTimers = useRef({});
+
+  // P2-5: 언마운트 시 모든 디바운스 타이머 정리
+  useEffect(() => {
+    const timers = saveTimers.current;
+    return () => {
+      for (const key of Object.keys(timers)) {
+        clearTimeout(timers[key]);
+      }
+    };
+  }, []);
 
   // 개인 설정 필드들
   const [sliderCfg, setSliderCfgRaw] = useState({ ...DEFAULT_SLIDER_CFG });
   const [theme, setThemeRaw] = useState("dark");
   const [modal, setModal] = useState(null);
+  const [diarySheet, setDiarySheet] = useState(null);
   const [showWidget, setShowWidget] = useState(false);
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [showCardScan, setShowCardScan] = useState(false);
   const { toasts, addToast } = useToast();
 
   // kidsMode 토글 — localStorage + DB에 동기화
-  const setKidsMode = useCallback(/** @param {boolean} v */ (v) => {
+  const setKidsMode = useCallback(/** @param {boolean} v */(v) => {
     setKidsModeRaw(v);
     lsSet(LS_KEYS.KIDS_MODE, v);
     if (householdId) db.save(householdId, 'kidsMode', v).catch(console.error);
@@ -123,11 +140,11 @@ export default function App() {
   }, []);
 
   // 로드된 연도 추적 (tx Lazy Loading용)
-  const loadedTxYears = useRef(/** @type {Set<number>} */ (new Set()));
+  const loadedTxYears = useRef(/** @type {Set<number>} */(new Set()));
   // tx가 로컬에서 변경됐는지 추적 (서버 로드 시 false, 로컬 변경 시 true)
   const txDirty = useRef(false);
   // 디바운스 저장 타이머
-  const txSaveTimerRef = useRef(/** @type {ReturnType<typeof setTimeout>|null} */ (null));
+  const txSaveTimerRef = useRef(/** @type {ReturnType<typeof setTimeout>|null} */(null));
 
   // 공유 데이터 상태 업데이트 핸들러 (실시간 반영용)
   const updateSharedState = useCallback((key, value) => {
@@ -147,7 +164,7 @@ export default function App() {
       setLastSync(new Date());
       return;
     }
-    switch(key) {
+    switch (key) {
       case 'tx': setTxRaw(value); break; // 레거시 키 호환
       case 'fixed': setFixedRaw(value); break;
       case 'install': setInstallRaw(value); break;
@@ -161,6 +178,7 @@ export default function App() {
       case 'widgetLayout': setWidgetLayoutRaw(value); break;
       case 'homeLayout': setHomeLayoutRaw(value || DEFAULT_HOME_LAYOUT); break;
       case 'kidsMode': setKidsModeRaw(value); break;
+      case 'diaries': setDiariesRaw(Array.isArray(value) ? value : []); break;
       default: break;
     }
     setLastSync(new Date());
@@ -170,6 +188,8 @@ export default function App() {
   const loadShared = useCallback(async (hid) => {
     setSyncStatus("syncing");
     try {
+      // P2-3: RLS 활성화 시 세션 컨텍스트 설정 (RPC 미배포 환경에서는 무시됨)
+      await db.setHouseholdContext(hid);
       const allData = await db.loadAll(hid);
 
       // Task 4-2: tx 연도별 분리 로드
@@ -207,7 +227,7 @@ export default function App() {
         const normalizedCards = allData.cards.map(c => c.label ? c : { ...c, label: c.name || "미지정" });
         setCardsRaw(normalizedCards);
         if (allData.cards.some(c => !Object.hasOwn(c, 'label'))) {
-           await db.save(hid, "cards", normalizedCards);
+          await db.save(hid, "cards", normalizedCards);
         }
       }
       if (allData.settlements) setSettlementsRaw(allData.settlements);
@@ -221,8 +241,8 @@ export default function App() {
           const migratedPlan = {
             ...loadedPlan,
             salary: {
-              husband:       loadedPlan.monthlyIncome || 0,
-              wife:          0,
+              husband: loadedPlan.monthlyIncome || 0,
+              wife: 0,
               savingsTarget: loadedPlan.yearSavingGoal || 0,
             },
           };
@@ -244,8 +264,8 @@ export default function App() {
           return l;
         }).filter((l, idx, self) => self.findIndex(t => t.i === l.i) === idx); // 중복 제거
 
-        if (allData.homeLayout.mobile?.some(l => ['progress_ring', 'summary_bars', 'scan_banner'].includes(l.i)) || 
-            allData.homeLayout.desktop?.some(l => ['progress_ring', 'summary_bars', 'scan_banner'].includes(l.i))) {
+        if (allData.homeLayout.mobile?.some(l => ['progress_ring', 'summary_bars', 'scan_banner'].includes(l.i)) ||
+          allData.homeLayout.desktop?.some(l => ['progress_ring', 'summary_bars', 'scan_banner'].includes(l.i))) {
           const migrated = {
             mobile: migrate(allData.homeLayout.mobile || []),
             desktop: migrate(allData.homeLayout.desktop || []),
@@ -258,6 +278,7 @@ export default function App() {
         }
       }
       if (typeof allData.kidsMode === 'boolean') setKidsModeRaw(allData.kidsMode);
+      if (Array.isArray(allData.diaries)) setDiariesRaw(allData.diaries);
 
       // SOS 요청 초기 로드
       const sosData = await db.loadPendingSos(hid);
@@ -284,7 +305,7 @@ export default function App() {
       }
 
       setSyncStatus("ok");
-    } catch(e) {
+    } catch (e) {
       console.error("Supabase load error:", e);
       setSyncStatus("error");
     }
@@ -295,10 +316,10 @@ export default function App() {
     (async () => {
       try {
         lsMigrateLegacy();
-        const savedHid    = lsGet(LS_KEYS.HOUSEHOLD_ID);
-        const savedRole   = lsGet(LS_KEYS.MY_ROLE);
+        const savedHid = lsGet(LS_KEYS.HOUSEHOLD_ID);
+        const savedRole = lsGet(LS_KEYS.MY_ROLE);
         const savedSlider = lsGet(LS_KEYS.SLIDER_CFG);
-        const savedTheme  = lsGet(LS_KEYS.THEME);
+        const savedTheme = lsGet(LS_KEYS.THEME);
         const savedIsAdmin = lsGet(LS_KEYS.IS_ADMIN);
 
         if (savedSlider) {
@@ -311,6 +332,7 @@ export default function App() {
         if (savedHid) {
           setHouseholdId(savedHid);
           setMyRole(savedRole || "husband");
+          setCurrentUser(savedRole || "husband");
           await loadShared(savedHid);
           setSetupDone(true);
         }
@@ -332,15 +354,45 @@ export default function App() {
   useEffect(() => {
     if (!setupDone || !householdId) return;
 
+    /**
+     * IDB에 큐잉된 다이어리 항목들을 Supabase에 일괄 반영
+     * @param {string} hid
+     * @returns {Promise<number>}
+     */
+    const flushIdbDiaries = async (hid) => {
+      try {
+        const queued = await idbDequeueDiaries();
+        if (queued.length === 0) return 0;
+        const fresh = await db.loadAll(hid);
+        const existing = Array.isArray(fresh.diaries) ? fresh.diaries : [];
+        const merged = [...existing];
+        const knownIds = new Set(existing.map(d => d.id));
+        for (const item of queued) {
+          if (item.householdId !== hid) continue;
+          if (!item.payload || knownIds.has(item.payload.id)) continue;
+          merged.push(item.payload);
+          knownIds.add(item.payload.id);
+        }
+        await db.save(hid, 'diaries', merged);
+        const ids = queued.filter(q => typeof q.idbId === 'number').map(q => /** @type {number} */(q.idbId));
+        if (ids.length > 0) await idbRemove(ids);
+        return queued.length;
+      } catch (err) {
+        console.warn('[idb-diary] flush fail:', err);
+        return 0;
+      }
+    };
+
     const handleOnline = async () => {
       if (!hasQueued() && !hasTxQueued()) return;
       console.log('[offlineQueue] 온라인 복구 감지 — 큐 flush 시작');
       setSyncStatus("syncing");
-      const [kvCount, txCount] = await Promise.all([
+      const [kvCount, txCount, diaryCount] = await Promise.all([
         flushOfflineQueue(db, householdId),
         flushTxQueue(db, householdId),
+        flushIdbDiaries(householdId),
       ]);
-      const total = kvCount + txCount;
+      const total = kvCount + txCount + diaryCount;
       if (total > 0) {
         setSyncStatus("ok");
         addToast(`☁ 오프라인 내역 ${total}건 동기화 완료`, "success");
@@ -354,7 +406,7 @@ export default function App() {
     window.addEventListener('online', handleOnline);
     return () => { window.removeEventListener('online', handleOnline); };
   }, [setupDone, householdId, loadShared, addToast]);
-  
+
   // PWA Share Target 핸들러 (Task 2-3)
   useEffect(() => {
     /** @param {CustomEvent<{ type: string, buf?: ArrayBuffer, name?: string, text?: string }>} e */
@@ -368,7 +420,7 @@ export default function App() {
         // 여기서는 CardScanSheet가 열릴 때 이 파일을 감지하도록 유도하거나 
         // 간단하게 window 전역/ref에 보관 후 Sheet를 엽니다.
         // @ts-ignore
-        window.__sharedFile = file; 
+        window.__sharedFile = file;
         setShowCardScan(true);
         addToast("📸 이미지가 공유되었습니다. 스캔을 시작합니다.");
       } else if (text) {
@@ -404,7 +456,8 @@ export default function App() {
         addToast(`🆘 가불 요청이 도착했습니다 (${req.amount.toLocaleString()}원)`, 'warning');
       }
     });
-    // SOS 채널은 household 채널과 함께 unsubscribe
+    // P0-2: SOS 채널 cleanup 명시
+    return () => { db.unsubscribeSos(householdId); };
   }, [setupDone, householdId, myRole, addToast]);
 
   // B1/B2/B7: tx 디바운스 저장 effect
@@ -460,17 +513,19 @@ export default function App() {
   }, [tx, householdId, setupDone]);
 
   // 공유 데이터 저장 도우미 (Supabase 전송) — validate + 지수 백오프 재시도 포함
+  // P2-1: rawSetter 호출은 호출자가 functional update로 직접 처리하므로 보존하되 옵션화
   const setShared = useCallback(async (key, value, rawSetter) => {
     const newValue = value;
-    validate(key, newValue); // 스키마 불일치 경고 (Task 2-4)
-    rawSetter(newValue);     // 낙관적 UI 업데이트 (즉시 반영)
-    
+    // P2-2: cards는 strict 모드 (스키마 어긋나면 dev에서 throw)
+    validate(key, newValue, { strict: key === 'cards' });
+    if (typeof rawSetter === 'function') rawSetter(newValue); // 호환성 (구 호출자)
+
     // -- 입력 지연(Debounce) 대상 필드 처리 (Task 15-2) --
     const isDebounced = ["names", "budgets", "taxConfig"].includes(key);
-    
+
     if (isDebounced) {
       if (saveTimers.current[key]) clearTimeout(saveTimers.current[key]);
-      
+
       saveTimers.current[key] = setTimeout(async () => {
         setSyncStatus("syncing");
         try {
@@ -515,7 +570,7 @@ export default function App() {
 
   // B1 fix: setTx를 functional update로 변경 — 빠른 연속 호출 시 stale closure 방지
   // 저장 로직은 아래 txSave useEffect에서 처리 (B2 offline, B7 최적화 포함)
-  const setTx = useCallback(/** @param {((prev: TxItem[]) => TxItem[]) | TxItem[]} v */ (v) => {
+  const setTx = useCallback(/** @param {((prev: TxItem[]) => TxItem[]) | TxItem[]} v */(v) => {
     txDirty.current = true;
     setSyncStatus("syncing");
     setTxRaw(/** @param {TxItem[]} prev */ prev => {
@@ -548,15 +603,30 @@ export default function App() {
       loadedTxYears.current.delete(year); // 실패 시 재시도 허용
     }
   }, [householdId]);
-  const setFixed = useCallback(v => setShared("fixed", typeof v === 'function' ? v(fixed) : v, setFixedRaw), [fixed, setShared]);
-  const setInstall = useCallback(v => setShared("install", typeof v === 'function' ? v(install) : v, setInstallRaw), [install, setShared]);
-  const setCards = useCallback(v => setShared("cards", typeof v === 'function' ? v(cards) : v, setCardsRaw), [cards, setShared]);
-  const setSettlements = useCallback(v => setShared("settlements", typeof v === 'function' ? v(settlements) : v, setSettlementsRaw), [settlements, setShared]);
-  const setAssets = useCallback(v => setShared("assets", typeof v === 'function' ? v(assets) : v, setAssetsRaw), [assets, setShared]);
-  const setTaxConfig = useCallback(v => setShared("taxConfig", typeof v === 'function' ? v(taxConfig) : v, setTaxConfigRaw), [taxConfig, setShared]);
-  const setPlan = useCallback(v => setShared("plan", typeof v === 'function' ? v(plan) : v, setPlanRaw), [plan, setShared]);
-  const setBudgets = useCallback(v => setShared("budgets", typeof v === 'function' ? v(budgets) : v, setBudgetsRaw), [budgets, setShared]);
-  const setNames = useCallback(v => setShared("names", typeof v === 'function' ? v(names) : v, setNamesRaw), [names, setShared]);
+  // P2-1: functional update 패턴으로 deps 최소화 (setShared만 의존)
+  /**
+   * @param {string} key
+   * @param {(updater: (prev: any) => any) => void} rawSetter
+   */
+  const _makeSetter = (key, rawSetter) => (v) => {
+    let next;
+    rawSetter((prev) => {
+      next = typeof v === 'function' ? v(prev) : v;
+      return next;
+    });
+    queueMicrotask(() => { setShared(key, next, undefined); });
+  };
+
+  const setFixed = useCallback(_makeSetter("fixed", setFixedRaw), [setShared]);
+  const setInstall = useCallback(_makeSetter("install", setInstallRaw), [setShared]);
+  const setCards = useCallback(_makeSetter("cards", setCardsRaw), [setShared]);
+  const setSettlements = useCallback(_makeSetter("settlements", setSettlementsRaw), [setShared]);
+  const setAssets = useCallback(_makeSetter("assets", setAssetsRaw), [setShared]);
+  const setTaxConfig = useCallback(_makeSetter("taxConfig", setTaxConfigRaw), [setShared]);
+  const setPlan = useCallback(_makeSetter("plan", setPlanRaw), [setShared]);
+  const setBudgets = useCallback(_makeSetter("budgets", setBudgetsRaw), [setShared]);
+  const setNames = useCallback(_makeSetter("names", setNamesRaw), [setShared]);
+  const setDiaries = useCallback(_makeSetter("diaries", setDiariesRaw), [setShared]);
 
   const setSliderCfg = useCallback(v => { setSliderCfgRaw(v); savePrivate(LS_KEYS.SLIDER_CFG, v); }, [savePrivate]);
   const setTheme = useCallback(v => { setThemeRaw(v); savePrivate(LS_KEYS.THEME, v); }, [savePrivate]);
@@ -577,14 +647,14 @@ export default function App() {
 
   // IDB 큐에 항목 저장 후 Background Sync 등록 (SyncManager 미지원 시 handleOnline fallback)
   const enqueueWithSync = useCallback(
-    /** @param {import('./utils/offlineIDB.js').IDBQueueItem} item */
+    /** @param {{ type: 'kv', householdId: string, key: string, value: import('./constants/index.js').TxItem[] | object | boolean | string | number } | { type: 'tx', householdId: string, rows: object[] } | { type: 'diary', householdId: string, payload: import('./constants/index.js').DiaryItem }} item */
     async (item) => {
       await idbEnqueue(item);
       if ('serviceWorker' in navigator && 'SyncManager' in window) {
         try {
           const reg = /** @type {ServiceWorkerRegistration & { sync: { register: (tag: string) => Promise<void> } }} */ (await navigator.serviceWorker.ready);
           await reg.sync.register('offline-queue-flush');
-        } catch {}
+        } catch { }
       }
     },
     []
@@ -597,7 +667,7 @@ export default function App() {
       ...ts,
       { ...t, id: Date.now() * 1000 + (Math.random() * 1000 | 0) }
     ]),
-  [setTx]);
+    [setTx]);
 
   // B1: 벌크 저장용 — 한 번의 상태 업데이트로 여러 건 추가 (race condition 완전 방지)
   const addTxBatch = useCallback(/** @param {Omit<TxItem, 'id'>[]} items */ items =>
@@ -605,18 +675,158 @@ export default function App() {
       ...ts,
       ...items.map((t, i) => ({ ...t, id: Date.now() * 1000 + i })),
     ]),
-  [setTx]);
+    [setTx]);
 
   const deleteTx = useCallback(/** @param {number} id */ id =>
     setTx(/** @param {TxItem[]} ts */ ts => ts.filter(t => t.id !== id)),
-  [setTx]);
+    [setTx]);
 
-  const editTx = useCallback(/** @param {number} id @param {Partial<TxItem>} updates */ (id, updates) =>
+  const editTx = useCallback(/** @param {number} id @param {Partial<TxItem>} updates */(id, updates) =>
     setTx(/** @param {TxItem[]} ts */ ts => ts.map(t => t.id === id ? { ...t, ...updates } : t)),
-  [setTx]);
-  
+    [setTx]);
+
+  const addDiary = useCallback(/** @param {Omit<import('./constants/index.js').DiaryItem, 'id'>} d */ d =>
+    setDiaries(/** @param {import('./constants/index.js').DiaryItem[]} ds */ ds => [
+      ...ds,
+      { ...d, id: Date.now() * 1000 + (Math.random() * 1000 | 0), totalSpent: Math.max(0, d.totalSpent || 0) }
+    ]),
+    [setDiaries]);
+
+  const editDiary = useCallback(/** @param {import('./constants/index.js').DiaryItem} d */ d =>
+    setDiaries(/** @param {import('./constants/index.js').DiaryItem[]} ds */ ds => ds.map(x => x.id === d.id ? { ...x, ...d } : x)),
+    [setDiaries]);
+
+  const deleteDiary = useCallback(/** @param {number} id */ id =>
+    setDiaries(/** @param {import('./constants/index.js').DiaryItem[]} ds */ ds => ds.filter(x => x.id !== id)),
+    [setDiaries]);
+
+  /**
+   * P1-2: diary 편집 + 연결된 tx 동시 동기화 (롤백 가드 포함)
+   * @param {import('./constants/index.js').DiaryItem} updated
+   */
+  const editDiaryWithTx = useCallback((updated) => {
+    /** @type {import('./constants/index.js').DiaryItem | undefined} */
+    let prevDiary;
+    setDiaries(/** @param {import('./constants/index.js').DiaryItem[]} ds */ ds => {
+      prevDiary = ds.find(x => x.id === updated.id);
+      return ds.map(x => x.id === updated.id ? { ...x, ...updated } : x);
+    });
+    try {
+      if (updated.type === 'expense') {
+        setTx(/** @param {TxItem[]} ts */ ts => ts.map(t =>
+          t.source_id === updated.id
+            ? {
+                ...t,
+                amount: updated.totalSpent || t.amount,
+                memo: updated.content || t.memo,
+                date: updated.date || t.date,
+                cat: updated.cat || t.cat,
+                payMethod: updated.payMethod || t.payMethod,
+                cardId: updated.cardId !== undefined ? updated.cardId : t.cardId,
+              }
+            : t
+        ));
+      }
+    } catch (e) {
+      console.error('[editDiaryWithTx] tx sync fail, rollback diary:', e);
+      if (prevDiary) {
+        const restored = prevDiary;
+        setDiaries(/** @param {import('./constants/index.js').DiaryItem[]} ds */ ds =>
+          ds.map(x => x.id === restored.id ? restored : x)
+        );
+      }
+    }
+  }, [setDiaries, setTx]);
+
+  /**
+   * P1-2: diary 삭제 + 연결된 tx도 함께 삭제 (고아 tx 방지)
+   * @param {number} id
+   */
+  const deleteDiaryWithTx = useCallback((id) => {
+    setDiaries(/** @param {import('./constants/index.js').DiaryItem[]} ds */ ds => ds.filter(x => x.id !== id));
+    setTx(/** @param {TxItem[]} ts */ ts => ts.filter(t => t.source_id !== id));
+  }, [setDiaries, setTx]);
+
+  /**
+   * 다이어리 저장 + (지출 모드인 경우) tx 자동 동기화 (Antigravity-4)
+   * source_id로 양 데이터 연결, DashboardView/Report 통계에도 자동 반영.
+   * @param {Omit<import('./constants/index.js').DiaryItem, 'id'>} draft
+   */
+  const handleDiarySave = useCallback((draft) => {
+    const diaryId = Date.now() * 1000 + (Math.random() * 1000 | 0);
+    /** @type {import('./constants/index.js').DiaryItem} */
+    const diaryItem = {
+      id: diaryId,
+      type: draft.type,
+      date: draft.date,
+      who: draft.who,
+      emoji: draft.emoji,
+      content: draft.content,
+      totalSpent: Math.max(0, draft.totalSpent || 0),
+      shared: !!draft.shared,
+      time: draft.time,
+      photos: Array.isArray(draft.photos) ? draft.photos : [],
+      expenseItems: draft.expenseItems,
+      cat: draft.cat,
+      payMethod: draft.payMethod,
+      cardId: draft.cardId,
+      mask_details: draft.mask_details,
+    };
+    setDiaries(/** @param {import('./constants/index.js').DiaryItem[]} ds */ ds => [...ds, diaryItem]);
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine && Array.isArray(diaryItem.photos) && diaryItem.photos.length > 0) {
+      enqueueWithSync({ type: 'diary', householdId, payload: diaryItem }).catch(err => {
+        // P0-5: quota 초과 시 사용자 알림
+        if (err && err.message === 'STORAGE_QUOTA_EXCEEDED') {
+          addToast('저장 공간이 부족합니다. 온라인 상태에서 다시 시도해주세요.', 'error');
+        } else {
+          console.warn('[idb-diary] enqueue fail:', err);
+        }
+      });
+    }
+
+    if (draft.type !== 'expense') return;
+    const items = Array.isArray(draft.expenseItems) ? draft.expenseItems : [];
+    // P1-5: 부분 실패 보상 — addTxBatch/addTx 실패 시 diary 롤백
+    try {
+      if (items.length > 0) {
+        /** @type {Omit<import('./constants/index.js').TxItem, 'id'>[]} */
+        const txItems = items
+          .filter(it => (it.amount || 0) > 0)
+          .map(it => ({
+            date: draft.date,
+            amount: it.amount || 0,
+            cat: it.cat || draft.cat || 'etc',
+            memo: it.label || draft.content || '',
+            who: draft.who,
+            payMethod: it.payMethod || draft.payMethod || 'credit',
+            cardId: it.cardId || draft.cardId || '',
+            source_id: diaryId,
+            label: it.label || '',
+          }));
+        if (txItems.length > 0) addTxBatch(txItems);
+      } else if ((draft.totalSpent || 0) > 0) {
+        addTx({
+          date: draft.date,
+          amount: Math.max(0, draft.totalSpent || 0),
+          cat: draft.cat || 'etc',
+          memo: draft.content || '',
+          who: draft.who,
+          payMethod: draft.payMethod || 'credit',
+          cardId: draft.cardId || '',
+          source_id: diaryId,
+          label: '다이어리 지출',
+        });
+      }
+    } catch (e) {
+      console.error('[handleDiarySave] tx sync fail, rollback diary:', e);
+      setDiaries(/** @param {import('./constants/index.js').DiaryItem[]} ds */ ds => ds.filter(x => x.id !== diaryId));
+      addToast('지출 저장 실패 — 다이어리를 복원합니다', 'error');
+    }
+  }, [setDiaries, addTx, addTxBatch, addToast]);
+
   // -- 세분화된 초기화 함수들 (Task 12-1) --
-  
+
   /** 1. 지출 내역만 초기화 */
   const resetTx = useCallback(async () => {
     setSyncStatus("syncing");
@@ -669,6 +879,15 @@ export default function App() {
     addToast("사용자 설정이 초기화되었습니다.");
   }, [householdId, addToast]);
 
+  /** 5. 다이어리만 초기화 */
+  const resetDiaries = useCallback(async () => {
+    setSyncStatus("syncing");
+    await db.save(householdId, "diaries", EMPTY_DIARIES);
+    setDiariesRaw(EMPTY_DIARIES);
+    setSyncStatus("ok");
+    addToast("다이어리가 초기화되었습니다.");
+  }, [householdId, addToast]);
+
   /** 전체 초기화 */
   const resetAll = useCallback(async () => {
     setSyncStatus("syncing");
@@ -682,7 +901,8 @@ export default function App() {
       db.save(householdId, "assets", EMPTY_ASSETS),
       db.save(householdId, "plan", {}),
       db.save(householdId, "budgets", INIT_BUDGETS),
-      db.save(householdId, "taxConfig", DEFAULT_TAX_CONFIG)
+      db.save(householdId, "taxConfig", DEFAULT_TAX_CONFIG),
+      db.save(householdId, "diaries", EMPTY_DIARIES)
     ]);
     await loadShared(householdId);
     setSyncStatus("ok");
@@ -763,7 +983,7 @@ export default function App() {
         <div style={{ fontSize: 48 }}>⚠️</div>
         <div className="serif" style={{ fontSize: 20 }}>설정 오류</div>
         <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>
-          Supabase 환경 변수가 설정되지 않았습니다.<br/>
+          Supabase 환경 변수가 설정되지 않았습니다.<br />
           Vercel 대시보드에서 <b>VITE_SUPABASE_URL</b> 및 <b>VITE_SUPABASE_ANON_KEY</b>를 확인해 주세요.
         </div>
       </div>
@@ -801,11 +1021,11 @@ export default function App() {
       fontSize: 10, color: syncStatus === "error" ? "var(--danger)" : "var(--text-faint)",
       transition: "all .3s"
     }}>
-      <div 
+      <div
         onClick={() => window.location.reload()}
-        style={{ 
-          display: "flex", alignItems: "center", gap: 6, cursor: "pointer", 
-          padding: "2px 6px", borderRadius: 8, transition: "background .2s" 
+        style={{
+          display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+          padding: "2px 6px", borderRadius: 8, transition: "background .2s"
         }}
         onMouseOver={e => e.currentTarget.style.background = "var(--dim)"}
         onMouseOut={e => e.currentTarget.style.background = "transparent"}
@@ -839,6 +1059,7 @@ export default function App() {
     fixed, setFixed, install, setInstall, cards, setCards, settlements, setSettlements, assets, setAssets,
     syncStatus, householdId, myRole,
     kidsMode, setKidsMode,
+    diaries, setDiaries, addDiary, editDiary, editDiaryWithTx, deleteDiary, deleteDiaryWithTx, currentUser, setCurrentUser,
   };
 
   const lazyFallback = (
@@ -856,46 +1077,55 @@ export default function App() {
           <Suspense fallback={lazyFallback}>
             {(() => {
               console.log("[App Routing] view:", view, "kidsMode:", kidsMode);
-              
+
               // 1. 아이 관리 화면은 어떤 모드에서든 최우선으로 보여줌
               if (view === "kids-mgmt") return <ParentKidsMgmtView />;
-              
+
               // 2. 키즈 모드인 경우
               if (kidsMode) {
                 if (view === "settings") {
-                  return <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />;
+                  return <SettingsView names={names} setNames={setNames} budgets={budgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} resetDiaries={resetDiaries} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onNavigate={setView} />;
                 }
                 return <KidsView />;
               }
 
               // 3. 일반 모드인 경우
               switch (view) {
-                case "home":      return <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />;
-                case "entry":     return <EntryView names={names} plan={plan} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />;
-                case "budget":    return <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />;
-                case "report":    return <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />;
-                case "settlement":return <SettlementView onBack={() => setView("settings")} />;
-                case "settings":  return <SettingsView names={names} setNames={setNames} budgets={budgets} setBudgets={setBudgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} plan={plan} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onClose={() => setView("home")} onNavigate={setView} />;
-                case "admin":     return isAdmin ? <AdminView onClose={handleAdminLogout} addToast={addToast} /> : null;
-                case "dashboard": return <DashboardView plan={plan} setPlan={setPlan} budgets={budgets} tx={tx} fixed={fixed} install={install} cards={cards} names={names} myRole={myRole} mySosPending={mySosPending} sosRequests={sosRequests} onSosUpdate={handleSosUpdate} onSosCancel={handleSosCancel} widgetLayout={widgetLayout} setWidgetLayout={setWidgetLayout} onSettings={(viewName) => setView(typeof viewName === 'string' && viewName ? viewName : "settings")} />;
-                case "private":   return <PrivateWalletView plan={plan} tx={tx} myRole={myRole} names={names} householdId={householdId} onSosSubmit={handleSosSubmit} onAdd={() => setModal({ who: myRole, isPrivate: true })} onSettings={() => setView("settings")} onSosRequest={() => setShowSosRequest(true)} />;
-                case "asset":     return <AssetView assets={assets} setAssets={setAssets} />;
-                case "tax":       return <TaxOptimizerView tx={tx} names={names} taxConfig={taxConfig} setTaxConfig={setTaxConfig} />;
-                case "dataImport":return <DataImportView plan={plan} setPlan={setPlan} onGoToPlan={() => setView("budget")} />;
-                case "calendar":  return <CalendarView tx={tx} cards={cards} names={names} budgets={budgets} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} />;
-                default:          return <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />;
+                case "diary": return <DiaryView onOpenSheet={(who) => setDiarySheet(who || myRole)} />;
+                case "history": return <HistoryView />;
+                case "home": return <HomeView tx={tx} budgets={budgets} fixed={fixed} install={install} names={names} onAdd={setModal} sliderCfg={sliderCfg} onWidget={() => setShowWidget(true)} onScan={() => setShowCardScan(true)} plan={plan} setPlan={setPlan} cards={cards} onEdit={editTx} onDelete={deleteTx} onSettings={(v) => v === "budget" ? setView("budget") : setView("settings")} sosPending={sosPending} onSosResolve={handleSosResolve} homeLayout={homeLayout} setHomeLayout={setHomeLayout} />;
+                case "entry": return <EntryView names={names} plan={plan} onSave={addTx} onDelete={deleteTx} onEdit={editTx} tx={tx} cards={cards} />;
+                case "budget": return <BudgetView plan={plan} setPlan={setPlan} budgets={budgets} setBudgets={setBudgets} tx={tx} fixed={fixed} setFixed={setFixed} install={install} setInstall={setInstall} cards={cards} setCards={setCards} names={names} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} />;
+                case "report": return <ReportView tx={tx} budgets={budgets} setBudgets={setBudgets} fixed={fixed} install={install} names={names} cards={cards} plan={plan} setPlan={setPlan} taxConfig={taxConfig} setTaxConfig={setTaxConfig} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} assets={assets} setAssets={setAssets} onGoToBudget={() => setView("budget")} />;
+                case "settlement": return <SettlementView onBack={() => setView("settings")} />;
+                case "settings": return <SettingsView names={names} setNames={setNames} budgets={budgets} sliderCfg={sliderCfg} setSliderCfg={setSliderCfg} resetAll={resetAll} resetTx={resetTx} resetFixed={resetFixed} resetBudgets={resetBudgets} resetSetup={resetSetup} resetDiaries={resetDiaries} householdId={householdId} myRole={myRole} leaveHousehold={leaveHousehold} tx={tx} onBugReport={() => setShowBugReport(true)} onAdminTrigger={() => setShowAdminLogin(true)} isAdmin={isAdmin} onNavigate={setView} />;
+                case "admin": return isAdmin ? <AdminView onClose={handleAdminLogout} addToast={addToast} /> : null;
+                case "dashboard": return <DashboardView />;
+                case "private": return <PrivateWalletView plan={plan} tx={tx} myRole={myRole} names={names} householdId={householdId} onSosSubmit={handleSosSubmit} onAdd={() => setModal({ who: myRole, isPrivate: true })} onSettings={() => setView("settings")} onSosRequest={() => setShowSosRequest(true)} />;
+                case "asset": return <AssetView assets={assets} setAssets={setAssets} />;
+                case "tax": return <TaxOptimizerView tx={tx} names={names} taxConfig={taxConfig} setTaxConfig={setTaxConfig} />;
+                case "dataImport": return <DataImportView plan={plan} setPlan={setPlan} onGoToPlan={() => setView("budget")} />;
+                case "calendar": return <CalendarView tx={tx} cards={cards} names={names} budgets={budgets} onEdit={editTx} onDelete={deleteTx} loadTxYear={loadTxYear} />;
+                default: return <DiaryView onOpenSheet={(who) => setDiarySheet(who || myRole)} />;
               }
             })()}
           </Suspense>
         </div>
-        <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => v === "quickEntry" ? setShowQuickEntry(true) : setView(v)} syncStatus={syncStatus} kidsMode={kidsMode} />
+        <Nav view={showQuickEntry ? "quickEntry" : view} setView={v => { if (v === "quickEntry") { setShowQuickEntry(true); return; } if (v === "diary-input") { setDiarySheet(myRole); return; } setView(v); }} syncStatus={syncStatus} kidsMode={kidsMode} />
         {modal && (
-          <InputModal 
-            defaultWho={typeof modal === 'string' ? modal : modal.who} 
+          <InputModal
+            defaultWho={typeof modal === 'string' ? modal : modal.who}
             defaultIsPrivate={typeof modal === 'object' ? !!modal.isPrivate : false}
-            names={names} plan={plan} cards={cards} 
-            onClose={() => setModal(null)} onSave={addTx} 
+            names={names} plan={plan} cards={cards}
+            onClose={() => setModal(null)} onSave={addTx}
             onCardScan={() => { setModal(null); setShowCardScan(true); }}
+          />
+        )}
+        {diarySheet && (
+          <InputSheet
+            defaultWho={typeof diarySheet === 'string' ? diarySheet : diarySheet.who}
+            onClose={() => setDiarySheet(null)}
+            onSave={handleDiarySave}
           />
         )}
         {showWidget && <WidgetView tx={tx} budgets={budgets} names={names} onClose={() => setShowWidget(false)} />}
@@ -904,12 +1134,12 @@ export default function App() {
         {showBugReport && <BugReportModal householdId={householdId} onClose={() => setShowBugReport(false)} addToast={addToast} />}
         {showAdminLogin && <AdminLoginModal onLogin={handleAdminLogin} onClose={() => setShowAdminLogin(false)} addToast={addToast} />}
         {showSosRequest && (
-          <SosRequestSheet 
-            myRole={myRole} 
+          <SosRequestSheet
+            myRole={myRole}
             allowance={0} // PrivateWalletView 내부 계산 로직 유지 
-            spentPct={0} 
-            onSubmit={handleSosSubmit} 
-            onClose={() => setShowSosRequest(false)} 
+            spentPct={0}
+            onSubmit={handleSosSubmit}
+            onClose={() => setShowSosRequest(false)}
             names={names}
           />
         )}

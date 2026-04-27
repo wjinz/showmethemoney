@@ -29,8 +29,23 @@ function openDB() {
 /**
  * @typedef {{ type: 'kv', householdId: string, key: string, value: import('../constants/index.js').TxItem[] | object | boolean | string | number, ts: number, idbId?: number }} IDBQueueKvItem
  * @typedef {{ type: 'tx', householdId: string, rows: object[], ts: number, idbId?: number }} IDBQueueTxItem
- * @typedef {IDBQueueKvItem | IDBQueueTxItem} IDBQueueItem
+ * @typedef {{ type: 'diary', householdId: string, payload: import('../constants/index.js').DiaryItem, ts: number, idbId?: number }} IDBQueueDiaryItem
+ * @typedef {IDBQueueKvItem | IDBQueueTxItem | IDBQueueDiaryItem} IDBQueueItem
  */
+
+/**
+ * P0-5: storage quota 체크 — 85% 초과 시 거절
+ * @returns {Promise<void>}
+ */
+async function assertStorageQuota() {
+  if (typeof navigator === 'undefined') return;
+  const storage = navigator.storage;
+  if (!storage || typeof storage.estimate !== 'function') return;
+  const { usage = 0, quota = 1 } = await storage.estimate();
+  if (quota > 0 && usage / quota > 0.85) {
+    throw new Error('STORAGE_QUOTA_EXCEEDED');
+  }
+}
 
 /**
  * 큐에 항목 추가
@@ -38,6 +53,10 @@ function openDB() {
  * @returns {Promise<void>}
  */
 export async function idbEnqueue(item) {
+  // P0-5: diary 등 크기 큰 페이로드 큐잉 전 quota 가드
+  if (item.type === 'diary') {
+    await assertStorageQuota();
+  }
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
@@ -90,4 +109,13 @@ export async function idbHasQueued() {
     req.onsuccess = () => resolve(req.result > 0);
     req.onerror   = () => reject(req.error);
   });
+}
+
+/**
+ * IDB 큐의 diary 항목만 추출
+ * @returns {Promise<IDBQueueDiaryItem[]>}
+ */
+export async function idbDequeueDiaries() {
+  const all = await idbDequeueAll();
+  return /** @type {IDBQueueDiaryItem[]} */ (all.filter(it => it.type === 'diary'));
 }

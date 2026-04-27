@@ -1,303 +1,319 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
-import debounce from 'lodash.debounce';
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
-import { DEFAULT_WIDGET_LAYOUT } from '../constants/index.js';
-import { TodayStatusWidget } from './widgets/TodayStatusWidget.jsx';
-import { SpendingInsightWidget } from './widgets/SpendingInsightWidget.jsx';
-import { BudgetRingWidget } from './widgets/BudgetRingWidget.jsx';
-import { GoalWidget }        from './widgets/GoalWidget.jsx';
-import { TaxGuideWidget }    from './widgets/TaxGuideWidget.jsx';
-import { AiNudgeWidget }     from './widgets/AiNudgeWidget.jsx';
-import { SosStatusWidget }   from './widgets/SosStatusWidget.jsx';
-import { AllowanceInsightWidget } from './widgets/AllowanceInsightWidget.jsx';
-import { Edit2, Check, Sparkles } from 'lucide-react';
-import { IncomeSavingsWidget } from './widgets/IncomeSavingsWidget.jsx';
-import { FixedExpenseWidget } from './widgets/FixedExpenseWidget.jsx';
-import { PlanSummaryWidget } from './widgets/PlanSummaryWidget.jsx';
-import { CalendarWidget } from './widgets/CalendarWidget.jsx';
-import { SettlementSummaryWidget } from './widgets/SettlementSummaryWidget.jsx';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useBudget } from '../context/BudgetContext.jsx';
+import { DetailSheet } from '../components/DetailSheet.jsx';
+import { CATS } from '../constants/index.js';
+import { today_str } from '../utils/helpers.js';
 
-/**
- * @typedef {import('../constants/index.js').TxItem} TxItem
- * @typedef {import('../constants/index.js').FixedItem} FixedItem
- * @typedef {import('../constants/index.js').WidgetLayoutItem} WidgetLayoutItem
- * @typedef {import('../constants/index.js').Plan} Plan
- * @typedef {import('react-grid-layout').LayoutItem} RGLItem
- * @typedef {import('../constants/index.js').SosRequest} SosRequest
- * @typedef {import('../constants/index.js').InstallItem} InstallItem
- * @typedef {import('../constants/index.js').CardItem} CardItem
- */
+/** @param {number} v */
+const fmtMoney = v => new Intl.NumberFormat('ko-KR',{style:'currency',currency:'KRW'}).format(v||0);
 
-/**
- * @param {{
- *   plan: Plan,
- *   budgets: Record<string, number>,
- *   tx: TxItem[],
- *   fixed: FixedItem[],
- *   install?: InstallItem[],
- *   cards?: CardItem[],
- *   names: Record<string, string>,
- *   myRole: string,
- *   mySosPending?: SosRequest[],
- *   sosRequests?: SosRequest[],
- *   onSosUpdate?: (id: number, updates: Partial<SosRequest>) => void,
- *   onSosCancel?: (id: number) => void,
- *   widgetLayout: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] },
- *   setWidgetLayout: (v: { mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }) => void,
- *   onSettings?: () => void,
- *   setPlan: (v: Plan) => void
- * }} props
- */
-export function DashboardView({ plan, setPlan, budgets, tx, fixed, install = [], cards = [], names, myRole, mySosPending = [], sosRequests = [], onSosUpdate, onSosCancel, widgetLayout, setWidgetLayout, onSettings: _onSettings }) {
-  const [isEditMode, setIsEditMode] = useState(false);
-  const layouts = widgetLayout ?? DEFAULT_WIDGET_LAYOUT;
-  const { containerRef, width } = useContainerWidth();
-
-  const name = names?.[myRole] ?? myRole;
-
-  // 기존에 저장된 레이아웃이라도 현재의 최소 높이를 강제 적용
-  const rglLayouts = useMemo(() => {
-    const enforceMin = (layout, defaultLayout) => layout.map(l => {
-      const def = defaultLayout.find(d => d.i === l.i);
-      const minH = def?.minH || 1;
-      return { ...l, h: Math.max(l.h, minH), minH, static: !isEditMode };
-    });
-    return {
-      desktop: enforceMin(layouts.desktop, DEFAULT_WIDGET_LAYOUT.desktop),
-      mobile:  enforceMin(layouts.mobile, DEFAULT_WIDGET_LAYOUT.mobile),
-    };
-  }, [layouts, isEditMode]);
-
-  const saveLayout = useRef(
-    debounce((/** @type {{ mobile: WidgetLayoutItem[], desktop: WidgetLayoutItem[] }} */ next) => {
-      setWidgetLayout(next);
-    }, 1500)
-  ).current;
-
-  const onLayoutChange = useCallback(
-    /** @param {readonly RGLItem[]} _cur @param {Partial<Record<string, readonly RGLItem[]>>} allLayouts */
-    (_cur, allLayouts) => {
-      const next = {
-        mobile:  (allLayouts.mobile  ?? layouts.mobile).map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h, minW: l.minW, minH: l.minH })),
-        desktop: (allLayouts.desktop ?? layouts.desktop).map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h, minW: l.minW, minH: l.minH })),
-      };
-      saveLayout(next);
-    },
-    [saveLayout, layouts]
+// Simple SVG Budget Ring
+function BudgetRing({ spent, budget, size=100 }) {
+  const r = 40, c = 50;
+  const circ = 2 * Math.PI * r;
+  const pct = budget > 0 ? Math.min(spent/budget, 1) : 0;
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" style={{transform:'rotate(-90deg)'}}>
+      <circle cx={c} cy={c} r={r} fill="none" stroke="var(--cream3)" strokeWidth="12" />
+      <circle cx={c} cy={c} r={r} fill="none" stroke="var(--primary)" strokeWidth="12" strokeLinecap="round"
+        strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)}
+        style={{transition:'stroke-dashoffset 1s ease-out'}} />
+    </svg>
   );
+}
 
-  const handleDelete = (/** @type {string} */ key) => {
-    const next = {
-      mobile:  layouts.mobile.filter(l => l.i !== key),
-      desktop: layouts.desktop.filter(l => l.i !== key),
-    };
-    setWidgetLayout(next);
-  };
+export function DashboardView() {
+  const { diaries, tx, currentUser, setCurrentUser, budgets, editDiaryWithTx, deleteDiaryWithTx, names } = useBudget();
+  const [detailItem, setDetailItem] = useState(/** @type {import('../constants/index.js').DiaryItem | null} */ (null));
+  const [expandedId, setExpandedId] = useState(/** @type {number | null} */ (null));
+  const [todayTick, setTodayTick] = useState(0);
 
-  const handleAdd = (/** @type {string} */ key) => {
-    // 이미 존재하는지 확인
-    if (layouts.mobile.find(l => l.i === key)) return;
-    
-    // 기본 레이아웃에서 정보 찾기
-    const dMob = DEFAULT_WIDGET_LAYOUT.mobile.find(l => l.i === key) || { i: key, x: 0, y: 100, w: 1, h: 4 };
-    const dDsk = DEFAULT_WIDGET_LAYOUT.desktop.find(l => l.i === key) || { i: key, x: 0, y: 100, w: 1, h: 4 };
+  // 자정 갱신 (P1-3): visibilitychange로 today 재계산
+  useEffect(() => {
+    const onFocus = () => setTodayTick(t => t + 1);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => document.removeEventListener('visibilitychange', onFocus);
+  }, []);
 
-    const next = {
-      mobile:  [...layouts.mobile, { ...dMob, y: 100 }], // 맨 아래 배치
-      desktop: [...layouts.desktop, { ...dDsk, y: 100 }],
-    };
-    setWidgetLayout(next);
-  };
+  const todayStr = useMemo(() => today_str(), [todayTick]);
+  const currentMonth = todayStr.substring(0, 7);
+  const isH = currentUser === 'husband';
 
-  const resetLayout = () => {
-    if (confirm("대시보드 배치를 초기화하시겠습니까?")) {
-      setWidgetLayout(DEFAULT_WIDGET_LAYOUT);
-    }
-  };
+  // === P0-1: tx 단일소스 통계 (mergedTx 제거) ===
+  const monthTx = useMemo(
+    () => tx.filter(t => typeof t.date === 'string' && t.date.startsWith(currentMonth)),
+    [tx, currentMonth]
+  );
+  const hSpent = useMemo(
+    () => monthTx.filter(t => t.who === 'husband').reduce((s, t) => s + (t.amount || 0), 0),
+    [monthTx]
+  );
+  const wSpent = useMemo(
+    () => monthTx.filter(t => t.who === 'wife').reduce((s, t) => s + (t.amount || 0), 0),
+    [monthTx]
+  );
+  const totalSpent = hSpent + wSpent;
+  const totalBudget = Object.values(budgets).reduce((s, v) => s + (typeof v === 'number' ? v : 0), 0);
+  const remaining = totalBudget - totalSpent;
 
-  const ctx = useMemo(() => ({ plan, setPlan, budgets, tx, fixed, install, cards, names, myRole, mySosPending, sosRequests, onSosUpdate, onSosCancel }), [plan, setPlan, budgets, tx, fixed, install, cards, names, myRole, mySosPending, sosRequests, onSosUpdate, onSosCancel]);
+  const todayDate = new Date().getDate();
+  const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate();
+  const projected = todayDate > 0 ? Math.round(totalSpent / todayDate * daysInMonth) : 0;
+  const pacePct = Math.min(todayDate / daysInMonth, 1);
+  const budgetPct = totalBudget > 0 ? totalSpent / totalBudget : 0;
 
-  /** @type {Record<string, string>} */
-  const DISPLAY_NAMES = {
-    sos_status: 'SOS 진행 현황',
-    allowance_insight: '부부 용돈 현황',
-    today_status: '오늘의 요약',
-    spending_insight: '지출 분석',
-    budget_ring: '예산 현황',
-    goal: '저축 목표',
-    tax_guide: '세금 가이드',
-    ai_nudge: 'AI 추천',
-    income_savings: '수입 및 저축 목표',
-    fixed_list: '고정비 및 할부 요약',
-    plan_summary: '플랜 요약',
-    calendar_schedule: '일정 캘린더',
-    settlement_summary: '결제 정산기',
-  };
+  // 카테고리 통계도 tx 기반
+  const catStats = useMemo(() => monthTx.reduce((acc, t) => {
+    if (!t.cat) return acc;
+    acc[t.cat] = (acc[t.cat] || 0) + (t.amount || 0);
+    return acc;
+  }, /** @type {Record<string, number>} */ ({})), [monthTx]);
 
-  /** @type {Record<string, React.ComponentType<import('../context/BudgetContext.jsx').BudgetContextValue | Object>>} */
-  const WIDGET_MAP = useMemo(() => ({
-    sos_status:       SosStatusWidget,
-    allowance_insight: AllowanceInsightWidget,
-    today_status:     TodayStatusWidget,
-    spending_insight: SpendingInsightWidget,
-    budget_ring:      BudgetRingWidget,
-    goal:             GoalWidget,
-    tax_guide:        TaxGuideWidget,
-    ai_nudge:         AiNudgeWidget,
-    income_savings:   IncomeSavingsWidget,
-    fixed_list:       FixedExpenseWidget,
-    plan_summary:     PlanSummaryWidget,
-    calendar_schedule: CalendarWidget,
-    settlement_summary: SettlementSummaryWidget,
-  }), []);
+  const catArray = Object.entries(catStats)
+    .map(([id, amt]) => {
+      const catObj = CATS.find(c => c.id === id) || { label: '기타', icon: '🏷️' };
+      return { id, label: catObj.label, icon: catObj.icon, amt, color: 'var(--primary)' };
+    })
+    .sort((a, b) => b.amt - a.amt)
+    .slice(0, 5);
 
-  // 전체 가능한 위젯 리스트
-  const ALL_KEYS = Object.keys(WIDGET_MAP);
-  // 현재 레이아웃에 있는 위젯 키들
-  const currentKeys = useMemo(() => layouts.mobile.map(l => l.i), [layouts]);
-  // 제거된(추가 가능한) 위젯 키들
-  const hiddenKeys = useMemo(() => ALL_KEYS.filter(k => !currentKeys.includes(k)), [currentKeys]);
+  // === 리스트: diaries(expense) + tx(고아: source_id 없는 직접 기록) ===
+  const listItems = useMemo(() => {
+    /** @type {import('../constants/index.js').DiaryItem[]} */
+    const diaryExpenses = diaries
+      .filter(d => d.type === 'expense' && typeof d.date === 'string' && d.date.startsWith(currentMonth));
+    /** @type {import('../constants/index.js').DiaryItem[]} */
+    const orphanTx = tx
+      .filter(t => !t.source_id && typeof t.date === 'string' && t.date.startsWith(currentMonth))
+      .map(t => /** @type {import('../constants/index.js').DiaryItem} */ ({
+        id: t.id,
+        type: 'expense',
+        date: t.date,
+        who: t.who === 'wife' ? 'wife' : 'husband',
+        emoji: '',
+        time: '12:00',
+        content: t.memo || '지출 기록',
+        totalSpent: t.amount,
+        shared: !t.is_private,
+        photos: [],
+        cat: t.cat,
+        payMethod: t.payMethod,
+        cardId: t.cardId,
+        expenseItems: [{ label: t.memo || '항목', amount: t.amount }]
+      }));
+    return [...diaryExpenses, ...orphanTx];
+  }, [diaries, tx, currentMonth]);
 
-  // 실제 렌더링할 위젯 키들 (데이터 유무에 따라 필터링)
-  const visibleWidgetKeys = useMemo(() => {
-    return currentKeys.filter(key => {
-      if (!WIDGET_MAP[key]) return false; // 방어 로직
-      // sos_status는 이제 상시 노출 (사용자 요청 반영)
-      return true;
-    });
-  }, [currentKeys, WIDGET_MAP]);
+  const myRecords = listItems
+    .filter(d => d.who === currentUser)
+    .sort((a, b) => b.date > a.date ? 1 : b.date < a.date ? -1 : b.id - a.id);
+  const myTotal = isH ? hSpent : wSpent;
 
   return (
-    <div ref={containerRef} style={{ padding: '0 4px 120px', overflowY: 'auto', height: '100%', background: 'var(--bg)' }}>
-      {/* 웰컴 섹션 */}
-      <div style={{ padding: '24px 16px 12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-          <Sparkles size={16} color="var(--primary)" />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>AI REPORT</span>
-        </div>
-        <h2 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text)', margin: 0, letterSpacing: '-0.02em' }}>
-          안녕하세요, {name}님!
-        </h2>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>
-          오늘의 금융 리포트를 확인해보세요.
-        </p>
-      </div>
-
-      <div style={{ padding: '0 12px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-faint)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-          Widgets {isEditMode && <span style={{ color: 'var(--primary)' }}>• Edit Mode</span>}
-        </span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {isEditMode && (
-            <button
-              onClick={resetLayout}
-              style={{
-                background: 'rgba(255,100,100,0.1)',
-                border: '1px solid rgba(255,100,100,0.3)',
-                borderRadius: 12, padding: '6px 12px', cursor: 'pointer',
-                fontSize: 12, fontWeight: 700, color: 'var(--danger)',
-                transition: 'all 0.2s'
-              }}
-            >
-              초기화
-            </button>
-          )}
-          <button
-            onClick={() => setIsEditMode(!isEditMode)}
-            style={{
-              background: isEditMode ? 'rgba(28,43,74,.08)' : 'transparent',
-              border: `1px solid ${isEditMode ? 'var(--primary)' : 'var(--border)'}`,
-              borderRadius: 12, padding: '6px 12px', cursor: 'pointer',
-              fontSize: 12, fontWeight: 700, color: isEditMode ? 'var(--primary)' : 'var(--text-muted)',
-              display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s'
-            }}
-          >
-            {isEditMode ? <><Check size={14} /> 완료</> : <><Edit2 size={13} /> 편집</>}
-          </button>
+    <div className="view">
+      <div className="view-header">
+        <div><h1>대시보드</h1><div className="sub">{new Date().getMonth()+1}월 가계 현황</div></div>
+        <div style={{display:'flex',gap:4,background:'var(--cream2)',borderRadius:20,padding:'3px'}}>
+          <button onClick={()=>setCurrentUser('husband')} style={{
+            padding:'5px 12px',borderRadius:16,border:'none',cursor:'pointer',fontFamily:'inherit',
+            fontSize:12,fontWeight:600,transition:'all .15s',
+            background:!isH?'none':'white', color:!isH?'var(--ink3)':'var(--h-color)',
+            boxShadow:!isH?'none':'0 1px 4px rgba(28,23,20,.1)'
+          }}>👨 {names.husband}</button>
+          <button onClick={()=>setCurrentUser('wife')} style={{
+            padding:'5px 12px',borderRadius:16,border:'none',cursor:'pointer',fontFamily:'inherit',
+            fontSize:12,fontWeight:600,transition:'all .15s',
+            background:isH?'none':'white', color:isH?'var(--ink3)':'var(--w-color)',
+            boxShadow:isH?'none':'0 1px 4px rgba(28,23,20,.1)'
+          }}>👩 {names.wife}</button>
         </div>
       </div>
 
-      <ResponsiveGridLayout
-        width={width}
-        layouts={rglLayouts}
-        breakpoints={{ desktop: 480, mobile: 0 }}
-        cols={{ desktop: 2, mobile: 1 }}
-        rowHeight={70}
-        // @ts-ignore
-        isDraggable={isEditMode}
-        // @ts-ignore
-        isResizable={isEditMode}
-        draggableHandle=".widget-handle"
-        onLayoutChange={onLayoutChange}
-        margin={[12, 12]}
-      >
-        {visibleWidgetKeys.map((key) => {
-          const Widget = WIDGET_MAP[key];
-          return (
-            <div
-              key={key}
-              style={{
-                background: 'var(--surface)', borderRadius: 24,
-                border: `1px solid ${isEditMode ? 'var(--primary)' : 'var(--border)'}`,
-                overflowX: 'hidden', overflowY: 'auto', 
-                boxShadow: isEditMode ? '0 12px 32px rgba(0,0,0,0.4)' : 'none',
-                transition: 'border 0.2s, box-shadow 0.2s'
-              }}
-            >
-              {isEditMode && (
-                <div
-                  className="widget-handle"
-                  style={{ height: 32, cursor: 'grab', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--surface-alt)', position: 'relative' }}
-                >
-                  <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--primary)', opacity: 0.4 }} />
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(key); }}
-                    style={{ position: 'absolute', right: 8, top: 4, background: 'transparent', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', padding: 4 }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              )}
-              <div style={{ padding: '0', width: '100%', height: '100%' }}>
-                <Widget {...ctx} onNavigate={_onSettings} />
+      <div className="scroll-area">
+        {totalBudget > 0 && (
+          <div className="nudge-card">
+            <div className="nudge-label">✦ AI 분석</div>
+            <div className="nudge-text">
+              이번 달 이 페이스면 <strong>{fmtMoney(projected)} 예상</strong>.{' '}
+              {projected <= totalBudget ? '예산 내로 마무리할 수 있을 것 같아요 👍' : '예산을 초과할 위험이 있어요 ⚠️'}
+            </div>
+          </div>
+        )}
+
+        <div className="widget">
+          <div className="widget-title">예산 현황</div>
+          <div className="budget-ring-wrap">
+            <BudgetRing spent={totalSpent} budget={totalBudget} size={100}/>
+            <div className="budget-ring-meta">
+              <div className="budget-amount">{fmtMoney(totalSpent)}</div>
+              <div className="budget-label">이번 달 총 지출</div>
+              <div className="budget-remaining">
+                <div className="label">남은 예산</div>
+                <div className="amount" style={{color: remaining>=0?'var(--green)':'var(--danger)'}}>{fmtMoney(remaining)}</div>
               </div>
             </div>
-          );
-        })}
-      </ResponsiveGridLayout>
-
-      {/* 위젯 추가 섹션 (편집 모드에서만 노출) */}
-      {isEditMode && hiddenKeys.length > 0 && (
-        <div style={{ padding: '20px 16px', borderTop: '1px dashed var(--border)', marginTop: 20 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12 }}>
-            <Sparkles size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
-            추가 가능한 위젯
-          </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {hiddenKeys.map(key => (
-              <button
-                key={key}
-                onClick={() => handleAdd(key)}
-                style={{
-                  background: 'var(--surface-alt)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 16, padding: '8px 16px',
-                  fontSize: 12, fontWeight: 600, color: 'var(--text)',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-                  transition: 'transform 0.1s'
-                }}
-                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
-                onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                + {DISPLAY_NAMES[key] || key}
-              </button>
-            ))}
+          </div>
+          <div className="couple-split">
+            <div className="split-item h-split">
+              <div className="split-name">{names.husband}</div>
+              <div className="split-amt">{fmtMoney(hSpent)}</div>
+              <div className="split-pct">{totalSpent>0?Math.round(hSpent/totalSpent*100):0}%</div>
+            </div>
+            <div className="split-item w-split">
+              <div className="split-name">{names.wife}</div>
+              <div className="split-amt">{fmtMoney(wSpent)}</div>
+              <div className="split-pct">{totalSpent>0?Math.round(wSpent/totalSpent*100):0}%</div>
+            </div>
           </div>
         </div>
+
+        {totalBudget > 0 && (
+          <div className="widget">
+            <div className="widget-title">소비 페이스</div>
+            {[
+              {label:'예산 소진율',pct:budgetPct,color:'var(--accent)'},
+              {label:'월 진행률',pct:pacePct,color:'var(--h-mid)'},
+            ].map(row=>(
+              <div key={row.label} style={{marginBottom:14}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}>
+                  <span style={{fontSize:12,color:'var(--ink2)'}}>{row.label}</span>
+                  <span style={{fontSize:13,fontWeight:700,color:'var(--ink)'}}>{Math.round(row.pct*100)}%</span>
+                </div>
+                <div className="pace-bar">
+                  <div className="pace-bar-fill" style={{width:`${Math.min(row.pct*100, 100)}%`,background:row.color}}></div>
+                </div>
+              </div>
+            ))}
+            <div style={{padding:12,borderRadius:14,background:'var(--cream2)'}}>
+              <div style={{fontSize:11,color:'var(--ink3)',marginBottom:3}}>이번 달 예상 지출</div>
+              <div style={{fontSize:19,fontWeight:700,color:'var(--ink)',letterSpacing:'-1px'}}>{fmtMoney(projected)}</div>
+              <div style={{fontSize:11,color:'var(--ink3)',marginTop:2}}>
+                {projected>totalBudget
+                  ? <span style={{color:'var(--w-color)'}}>▲ {fmtMoney(projected-totalBudget)} 초과 예상</span>
+                  : <span style={{color:'var(--green)'}}>▼ {fmtMoney(totalBudget-projected)} 절약 예상</span>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="widget" style={{padding:0,overflow:'hidden'}}>
+          <div style={{padding:'16px 18px 14px',borderBottom:'1px solid var(--cream2)'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div className="widget-title" style={{marginBottom:0}}>
+                {isH?'👨':'👩'} 내 지출 내역
+              </div>
+              <div style={{
+                fontSize:13,fontWeight:700,letterSpacing:'-.5px',
+                color: isH?'var(--h-color)':'var(--w-color)'
+              }}>{fmtMoney(myTotal)}</div>
+            </div>
+            <div style={{fontSize:11,color:'var(--ink3)',marginTop:4}}>
+              {isH?names.husband:names.wife}의 지출 {myRecords.length}건 · 항목 합계 · 비공개 설정 반영
+            </div>
+          </div>
+
+          {myRecords.length === 0 && (
+            <div style={{padding:'28px 18px',textAlign:'center',color:'var(--ink3)',fontSize:13}}>
+              아직 지출 기록이 없어요
+            </div>
+          )}
+          {(() => {
+            const grouped = {};
+            myRecords.forEach(d => { if(!grouped[d.date]) grouped[d.date]=[]; grouped[d.date].push(d); });
+            const dates = Object.keys(grouped).sort((a,b)=>b>a?1:-1);
+            return dates.map(date => {
+              const dayItems = grouped[date];
+              const dayTotal = dayItems.reduce((s,d)=>s+(d.totalSpent||0),0);
+              const dd = new Date(date+'T00:00:00');
+              const wd = ['일','월','화','수','목','금','토'][dd.getDay()];
+              const dayLabel = `${dd.getMonth()+1}/${dd.getDate()} (${wd})`;
+              return (
+                <div key={date}>
+                  <div style={{
+                    display:'flex',justifyContent:'space-between',alignItems:'center',
+                    padding:'8px 18px',background:'var(--cream2)',
+                  }}>
+                    <span style={{fontSize:11,fontWeight:700,color:'var(--ink3)',letterSpacing:'.3px'}}>{dayLabel}</span>
+                    <span style={{fontSize:12,fontWeight:700,color:'var(--ink2)'}}>{fmtMoney(dayTotal)}</span>
+                  </div>
+                  {dayItems.map((d, idx) => {
+                    const isExpanded = expandedId === d.id;
+                    const hasItems = d.expenseItems && d.expenseItems.length > 0;
+                    const isLast = idx === dayItems.length-1;
+                    return (
+                      <div key={d.id} style={{borderBottom: !isLast?'1px solid var(--cream2)':'none'}}>
+                        <div
+                          style={{display:'flex',alignItems:'center',gap:12,padding:'11px 18px',cursor:'pointer'}}
+                          onClick={()=>setExpandedId(isExpanded?null:d.id)}
+                        >
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>
+                              {d.content || '지출 기록'}
+                            </div>
+                            <div style={{fontSize:11,color:'var(--ink3)',marginTop:2}}>
+                              {d.time} · {hasItems ? d.expenseItems.length+'개 항목' : '항목 없음'}
+                            </div>
+                          </div>
+                          <div style={{textAlign:'right',flexShrink:0,display:'flex',alignItems:'center',gap:6}}>
+                            <span style={{fontSize:14,fontWeight:700,color:'var(--ink)',letterSpacing:'-.5px'}}>{fmtMoney(d.totalSpent)}</span>
+                            {hasItems && <span style={{fontSize:11,color:'var(--ink3)'}}>{isExpanded?'▲':'▼'}</span>}
+                          </div>
+                        </div>
+                        {isExpanded && (
+                          <div style={{margin:'0 18px 10px',borderRadius:12,overflow:'hidden',border:'1px solid var(--cream2)'}}>
+                            {hasItems && d.expenseItems.map((ei,i)=>(
+                              <div key={i} style={{
+                                display:'flex',justifyContent:'space-between',alignItems:'center',
+                                padding:'9px 14px',borderBottom:i<d.expenseItems.length-1?'1px solid var(--cream2)':'none',
+                                fontSize:13
+                              }}>
+                                <span style={{color:'var(--ink2)'}}>{ei.label}</span>
+                                <span style={{fontWeight:600,color:'var(--ink)'}}>{fmtMoney(ei.amount)}</span>
+                              </div>
+                            ))}
+                            <div style={{padding:'8px 14px',background:'var(--cream2)',display:'flex',justifyContent:'flex-end'}}>
+                              <button onClick={()=>setDetailItem(d)} style={{
+                                fontSize:12,fontWeight:600,color:'var(--accent)',border:'none',
+                                background:'none',cursor:'pointer',fontFamily:'inherit'
+                              }}>✏️ 수정하기</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            });
+          })()}
+        </div>
+
+        {catArray.length > 0 && (
+          <div className="widget">
+            <div className="widget-title">카테고리별 지출 (Top 5)</div>
+            {catArray.map(c=>(
+              <div key={c.id} style={{marginBottom:11}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                  <span style={{fontSize:13,color:'var(--ink2)'}}>{c.icon} {c.label}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:'var(--ink)'}}>{fmtMoney(c.amt)}</span>
+                </div>
+                <div className="pace-bar" style={{height:6}}>
+                  <div style={{height:'100%',borderRadius:6,background:c.color,width:`${c.amt/totalSpent*100}%`,transition:'width .6s ease'}}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {detailItem && (
+        <DetailSheet
+          item={detailItem}
+          onClose={()=>setDetailItem(null)}
+          onSave={editDiaryWithTx}
+          onDelete={deleteDiaryWithTx}
+        />
       )}
     </div>
   );
 }
-

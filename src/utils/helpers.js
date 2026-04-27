@@ -34,6 +34,15 @@ export function toDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
+/**
+ * P1-1: yyyy-mm-dd 문자열을 로컬 자정 Date로 파싱 (UTC 변환 없음)
+ * @param {string} yyyymmdd
+ * @returns {Date}
+ */
+export function parseLocalDate(yyyymmdd) {
+  return new Date(yyyymmdd + 'T00:00:00');
+}
+
 /** @param {Date} d */
 export function fmtMonthDay(d) {
   return `${d.getMonth()+1}월 ${d.getDate()}일`;

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>showmethemoney</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F4F6F8;
+      --surface: #FFFFFF;
+      --primary: #1C2B4A;
+      --secondary: #7A9E87;
+      --text: #111827;
+      --muted: #6B7280;
+      --border: #E5E7EB;
+      --danger: #E8715A;
+      --warning: #F59E0B;
+      --radius-lg: 24px;
+      --radius-xl: 32px;
+      --shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.05);
+      --shadow-md: 0 4px 20px rgba(0,0,0,.10);
+    }
+    html, body, #root {
+      height: 100%; width: 100%;
+      font-family: 'Pretendard', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+    /* Mobile wrapper */
+    .phone-shell {
+      width: 390px;
+      height: 844px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 430px) {
+      .phone-shell { width: 100vw; height: 100dvh; }
+    }
+    @media (min-height: 845px) {
+      body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #e8eaed; }
+    }
+    /* Scrollable content area */
+    .view-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 100px;
+    }
+    .view-content::-webkit-scrollbar { display: none; }
+    /* Bottom Nav */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 84px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 8px 16px;
+      z-index: 100;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      flex: 1; cursor: pointer; padding: 8px 4px;
+      transition: opacity .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item:active { opacity: .6; }
+    .nav-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+    .nav-label { font-size: 10px; font-weight: 500; color: var(--muted); transition: color .15s; }
+    .nav-item.active .nav-label { color: var(--primary); }
+    .nav-item.active .nav-icon svg path,
+    .nav-item.active .nav-icon svg rect,
+    .nav-item.active .nav-icon svg circle { fill: var(--primary); }
+    /* FAB */
+    .nav-fab {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1C2B4A 0%, #2d4270 100%);
+      display: flex; align-items: center; justify-content: center;
+      margin-top: -28px;
+      box-shadow: 0 4px 16px rgba(28,43,74,.4);
+      cursor: pointer;
+      border: 4px solid var(--bg);
+      transition: transform .15s;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-fab:active { transform: scale(.93); }
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    /* Bottom Sheet Overlay */
+    .overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 200;
+      transition: opacity .25s;
+    }
+    .sheet {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: white;
+      border-radius: 28px 28px 0 0;
+      z-index: 201;
+      transition: transform .3s cubic-bezier(.32,0,.67,0);
+      max-height: 92%;
+      display: flex; flex-direction: column;
+    }
+    .sheet-handle {
+      width: 40px; height: 5px;
+      border-radius: 3px;
+      background: #D1D5DB;
+      margin: 12px auto 4px;
+      flex-shrink: 0;
+    }
+    /* Utility */
+    .fw-900 { font-weight: 900; }
+    .fw-700 { font-weight: 700; }
+    .fw-600 { font-weight: 600; }
+    .fw-500 { font-weight: 500; }
+    .text-muted { color: var(--muted); }
+    .text-primary { color: var(--primary); }
+    .text-secondary { color: var(--secondary); }
+    .text-danger { color: var(--danger); }
+    button { border: none; background: none; cursor: pointer; font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="components.jsx"></script>
+  <script type="text/babel" src="views.jsx"></script>
+  <script type="text/babel" src="app.jsx"></script>
+</body>
+</html>

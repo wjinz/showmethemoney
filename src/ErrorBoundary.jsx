@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { db } from "./utils/supabase.js";
 
 /**
  * @typedef {{ children: import('react').ReactNode }} ErrorBoundaryProps
@@ -12,6 +13,8 @@ export class ErrorBoundary extends Component {
     super(props);
     /** @type {ErrorBoundaryState} */
     this.state = { hasError: false, error: null };
+    /** @type {boolean} */
+    this._reported = false;
   }
 
   /** @param {Error} error */
@@ -22,6 +25,24 @@ export class ErrorBoundary extends Component {
   /** @param {Error} error @param {import('react').ErrorInfo} info */
   componentDidCatch(error, info) {
     console.error("[ErrorBoundary]", error, info.componentStack);
+    // P4-1: 1회만 자동 리포팅 (재진입 방지)
+    if (this._reported) return;
+    this._reported = true;
+    try {
+      const hid = (typeof localStorage !== 'undefined' && localStorage.getItem('smtm_household_id')) || 'unknown';
+      const data = {
+        type: 'runtime_error',
+        message: String(error?.message || error),
+        stack: String(error?.stack || ''),
+        componentStack: String(info?.componentStack || ''),
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        url: typeof window !== 'undefined' ? window.location.href : '',
+        timestamp: new Date().toISOString(),
+      };
+      db.reportBug(hid, data).catch(e => console.warn('[ErrorBoundary] reportBug fail:', e));
+    } catch (e) {
+      console.warn('[ErrorBoundary] reportBug throw:', e);
+    }
   }
 
   render() {

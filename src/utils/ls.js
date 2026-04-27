@@ -15,6 +15,7 @@ export const LS_KEYS = {
   KIDS_MODE:    `${PREFIX}kidsMode`,
   OFFLINE_QUEUE:    `${PREFIX}offline_queue`,
   OFFLINE_TX_QUEUE: `${PREFIX}offline_tx_queue`,
+  DIARIES:          `${PREFIX}diaries`,
 };
 
 /** @type {Record<string, string>} */

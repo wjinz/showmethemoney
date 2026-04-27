@@ -67,3 +67,28 @@ BEGIN
   UPDATE kids_profiles SET saved_amount = GREATEST(0, saved_amount + v_reward) WHERE id = v_kid_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- ============================================================
+-- P2-3: household_data RLS 정책 (claude 단계적 배포 가이드)
+-- ============================================================
+-- 1단계: set_household_id RPC 먼저 배포 (RLS는 아직 OFF)
+CREATE OR REPLACE FUNCTION set_household_id(hid text)
+RETURNS void AS $$
+  SELECT set_config('app.household_id', hid, true);
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- 2단계: 클라이언트가 db.subscribe/loadAll 직전마다 RPC를 호출하도록 검증
+--        (src/utils/supabase.js setHouseholdContext)
+-- 3단계: 충분히 검증 후 아래 정책을 활성화
+--        ALTER TABLE household_data ENABLE ROW LEVEL SECURITY;
+--
+-- CREATE POLICY "household_data_select" ON household_data
+--   FOR SELECT USING (
+--     id = current_setting('app.household_id', true)
+--     OR id = 'GLOBAL_SYSTEM'
+--   );
+--
+-- CREATE POLICY "household_data_write" ON household_data
+--   FOR ALL USING (id = current_setting('app.household_id', true))
+--   WITH CHECK (id = current_setting('app.household_id', true));

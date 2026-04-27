@@ -185,6 +185,44 @@ export const db = {
     if (ch) { supabase.removeChannel(ch); this._channels.delete(channelName); }
   },
 
+  /**
+   * P2-3: RLS 활성화 시 사용. 클라이언트 세션에 household_id를 set.
+   * RPC가 정의되어 있지 않으면 무시 (단계적 배포 호환).
+   * @param {string} hid
+   */
+  async setHouseholdContext(hid) {
+    try {
+      const { error } = await supabase.rpc('set_household_id', { hid });
+      if (error && error.code !== '42883' /* function does not exist */) {
+        console.warn('[RLS] set_household_id failed:', error.message);
+      }
+    } catch (e) {
+      console.warn('[RLS] set_household_id throw:', e);
+    }
+  },
+
+  /**
+   * SOS 채널만 해제 (P0-2)
+   * @param {string} hid
+   */
+  unsubscribeSos(hid) {
+    const channelName = `sos:${hid}`;
+    const ch = this._channels.get(channelName);
+    if (ch) { supabase.removeChannel(ch); this._channels.delete(channelName); }
+  },
+
+  /**
+   * 해당 household의 모든 활성 채널을 일제 정리 (P0-2 보강)
+   * @param {string} hid
+   */
+  unsubscribeAll(hid) {
+    const prefixes = [`realtime:household:${hid}`, `sos:${hid}`];
+    for (const name of prefixes) {
+      const ch = this._channels.get(name);
+      if (ch) { supabase.removeChannel(ch); this._channels.delete(name); }
+    }
+  },
+
   // ── transactions 테이블 CRUD ──────────────────────────────────────────
 
   /**

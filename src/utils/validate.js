@@ -44,17 +44,31 @@ const SCHEMAS = {
 };
 
 /**
- * 저장 전 값의 스키마 일치를 검증합니다.
+ * @typedef {{ strict?: boolean }} ValidateOpts
+ */
+
+/**
+ * 저장 전 값의 스키마 일치를 검증합니다 (P2-2).
+ * dev 환경에서는 throw, prod에서는 console.error만.
  * @param {string} key - Supabase key 컬럼 값
  * @param {*} value - 저장할 데이터
- * @returns {boolean} 유효하면 true, 불일치 시 경고 후 true (차단 안 함)
+ * @param {ValidateOpts=} opts
+ * @returns {boolean} 유효하면 true
  */
-export function validate(key, value) {
+export function validate(key, value, opts) {
   const checker = SCHEMAS[key];
-  if (!checker) return true; // 스키마 미정의 키는 통과
+  if (!checker) return true;
   const ok = checker(value);
-  if (!ok) {
-    console.warn(`[validate] '${key}' 스키마 불일치 감지 — 필수 필드 누락 가능성 있음`, value);
+  if (ok) return true;
+  const msg = `[validate] '${key}' 스키마 불일치 — 필수 필드 누락 가능성`;
+  // P2-2 [claude]: dev = throw, prod = console.error
+  /** @type {boolean} */
+  const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env && import.meta.env.DEV);
+  if (opts && opts.strict) {
+    if (isDev) throw new Error(msg);
+    console.error(msg, value);
+  } else {
+    console.warn(msg, value);
   }
-  return ok;
+  return false;
 }

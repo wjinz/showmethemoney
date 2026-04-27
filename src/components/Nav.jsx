@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Wallet, Menu, Plus } from "lucide-react";
+import { BookHeart, CalendarDays, LayoutDashboard, Menu, Plus } from "lucide-react";
 import { THEME_TOKENS as T } from "../styles/tokens.js";
 
 /**
@@ -7,14 +7,14 @@ import { THEME_TOKENS as T } from "../styles/tokens.js";
 
 /** @type {NavItem[]} */
 const LEFT_ITEMS = [
-  { id: "home",      Icon: Home,            label: "공동" },
-  { id: "dashboard", Icon: LayoutDashboard, label: "대시보드" },
+  { id: "diary",   Icon: BookHeart,     label: "다이어리" },
+  { id: "history", Icon: CalendarDays,  label: "내역" },
 ];
 
 /** @type {NavItem[]} */
 const RIGHT_ITEMS = [
-  { id: "private",  Icon: Wallet, label: "내 지갑" },
-  { id: "settings", Icon: Menu,   label: "메뉴" },
+  { id: "dashboard", Icon: LayoutDashboard, label: "대시보드" },
+  { id: "settings",  Icon: Menu,            label: "설정" },
 ];
 
 /**
@@ -30,7 +30,7 @@ export function Nav({ view, setView, syncStatus, kidsMode = false }) {
 
   /** @type {NavItem[]} */
   const leftItems = kidsMode
-    ? [{ id: "home", Icon: Home, label: "홈" }]
+    ? [{ id: "home", Icon: BookHeart, label: "홈" }]
     : LEFT_ITEMS;
   /** @type {NavItem[]} */
   const rightItems = kidsMode
@@ -55,8 +55,8 @@ export function Nav({ view, setView, syncStatus, kidsMode = false }) {
           background: "none",
           border: "none",
           cursor: "pointer",
-          color: isActive ? "var(--primary)" : "var(--text-faint)",
-          transform: isActive ? "scale(1.1)" : "scale(1)",
+          color: isActive ? "var(--ink)" : "var(--ink3)",
+          transform: isActive ? "scale(1.05)" : "scale(1)",
           transition: "color 0.2s, transform 0.2s",
           position: "relative",
         }}
@@ -114,7 +114,7 @@ export function Nav({ view, setView, syncStatus, kidsMode = false }) {
         }}
       >
         <button
-          onClick={() => setView("quickEntry")}
+          onClick={() => setView("diary-input")}
           style={{
             width: 60,
             height: 60,
@@ -133,10 +133,10 @@ export function Nav({ view, setView, syncStatus, kidsMode = false }) {
             justifyContent: "center",
             gap: 1,
             transition: "all 0.25s",
-            transform: isEntry ? "scale(1.08) translateY(-2px)" : "scale(1)",
+            transform: isEntry ? "scale(1.05) translateY(-2px)" : "scale(1)",
           }}
-          onMouseOver={e => { e.currentTarget.style.transform = isEntry ? "scale(1.12) translateY(-2px)" : "scale(1.05)"; }}
-          onMouseOut={e => { e.currentTarget.style.transform = isEntry ? "scale(1.08) translateY(-2px)" : "scale(1)"; }}
+          onMouseOver={e => { e.currentTarget.style.transform = isEntry ? "scale(1.08) translateY(-2px)" : "scale(1.05)"; }}
+          onMouseOut={e => { e.currentTarget.style.transform = isEntry ? "scale(1.05) translateY(-2px)" : "scale(1)"; }}
         >
           <Plus size={26} strokeWidth={2.5} color="#fff" />
           <span
