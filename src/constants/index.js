@@ -6,7 +6,8 @@
  * @typedef {{ id: number, household_id: string, requester: string, amount: number, reason: string, repay_plan: string, status: string, created_at: string, resolved_at?: string }} SosRequest
  * @typedef {{ label: string, target: number, saved: number }} GoalItem
  * @typedef {{ cardId: string, expectedAmount: number }} CardBill
- * @typedef {{ id: number, date: string, cardBills: CardBill[], fixedCash: number, currentCash: number, expectedShortage: number, salary?: number }} SettlementItem
+ * @typedef {{ id: number, label: string, amount: number, cat?: string }} ExtraExpense
+ * @typedef {{ id: number, date: string, cardBills: CardBill[], fixedCash: number, currentCash: number, expectedShortage: number, salary?: number, husbandCash?: number, wifeCash?: number, extraExpenses?: ExtraExpense[] }} SettlementItem
  * @typedef {{ salary: { husband: number, wife: number, savingsTarget: number }, utilizationTarget: number, events: object[], goals: GoalItem[], privateGoals: { husband: GoalItem[], wife: GoalItem[] }, personalAllowancePct: number, isSolo?: boolean, allowance?: { husband: number, wife: number } }} Plan
  * @typedef {'diary'|'expense'} DiaryType
  * @typedef {{ label: string, amount: number, cat?: string, payMethod?: string, cardId?: string }} ExpenseLine

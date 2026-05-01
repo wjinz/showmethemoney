@@ -282,4 +282,31 @@
     - [_history/handover/HANDOVER_V7_2026-04-25.md](_history/handover/HANDOVER_V7_2026-04-25.md)
 
 ---
+### 18단계: 다이어리 데이터 유실 핫픽스 (2026.04.30)
+**"사진 포함 다이어리 게시 시 전체 목록 유실 문제 — Realtime echo / payload truncation 차단"**
+- **문제**: 사진이 포함된 다이어리 게시 직후 전체 다이어리 목록이 사라지는 현상. 지출 내역(transactions 테이블)은 정상 유지되어 다이어리만 영향.
+- **근본 원인 분석 (Claude 검증)**:
+    - 1순위: Supabase Realtime broadcast의 payload truncation. 사진 포함 diaries 배열이 약 256KB 초과 시 `payload.new.value`가 null/잘린 형태로 도착.
+    - 2순위: `App.jsx:181`의 `Array.isArray(value) ? value : []` 가드가 즉시 빈 배열로 덮어씀.
+    - 3순위: `_makeSetter`의 `let next` closure race로 빠른 재호출 시 첫 번째 변경 손실.
+    - 4순위: `supabase.js:174`의 DELETE 핸들러가 모든 키를 빈 배열로 처리 → diaries row가 잠시라도 사라지면 즉시 클라이언트 비워짐.
+- **핵심 성과**:
+    - **Hotfix-1 (Realtime echo 가드)**: `case 'diaries'` 분기를 functional update + length 비교로 강화. 길이 감소 수신 시 즉시 `db.loadAll`로 재조회 후 머지. `intentionalDiaryReset` ref로 의도적 초기화는 우회.
+    - **Hotfix-2 (LKG 자동 복원)**: `offlineIDB.js`에 `idbSaveDiariesSnapshot`/`idbLoadDiariesSnapshot` 추가(IDB v2 마이그레이션). 모든 diaries 저장 직전 lastKnownGood snapshot을 IDB에 저장. 부팅 시 server 길이 < LKG 길이면 자동 복원 + 서버 재동기화.
+    - **DELETE 핸들러 보호**: `supabase.js`의 DELETE 이벤트 처리에서 `key === 'diaries'`이면 무시(다른 키는 기존 동작 유지).
+    - **closure race 제거**: `_makeSetter`의 `let next` 외부 변수를 `setterLatest` ref로 교체하여 동시 호출 시 마지막 값을 안전하게 캡처.
+    - **diaries debounce(300ms)**: `setShared`의 debounce 대상에 `diaries`를 포함하여 사진 첨부 후 빠른 재저장 시의 race를 방지.
+    - **사이즈 가드(220KB)**: `handleDiarySave`에서 photos[]+content 누적 크기를 추정하여 220KB 초과 시 toast로 거절. `diariesRef`로 최신 상태 안전 참조(useCallback deps 폭증 방지).
+    - **사진 압축 강화**: `InputSheet.jsx`에서 단일 사진 dataUrl이 220KB 초과 시 480px/0.5 품질로 재압축, 재시도도 실패하면 사용자에게 toast 알림.
+    - **Context 확장**: `BudgetContext`에 `addToast` typedef 추가 → InputSheet 등 sheet 컴포넌트에서 직접 알림 가능.
+- **품질 검증**:
+    - `tsc --noEmit` 0 errors (any/unknown 타입 사용 없음, JSDoc generic 활용).
+    - `vite build` 성공 — 3098 모듈, gzip 후 index.js 180KB.
+- **배포 상태**: 로컬 dist 폴더는 신규 빌드 산출물로 갱신 완료. Vercel CLI 자동 배포는 토큰 부재로 보류 — 사용자 환경에서 `npx vercel deploy --prebuilt --prod` 실행 필요.
+- **관련 문서**:
+    - [research_2026-04-30_0922.md](research_2026-04-30_0922.md) (심층 분석 + Claude 보강 주석 8건)
+    - [plan_2026-04-30_0930.md](plan_2026-04-30_0930.md) (계획 + Claude 보강 주석 11건 + 구현 완료 마킹)
+
+---
+
 *본 마스터 히스토리는 신규 기술적 성취가 있을 때마다 최신화됩니다.*

@@ -170,8 +170,18 @@ export const db = {
       .on(
         'postgres_changes',
         // B5: DELETE 이벤트 — key를 빈 배열로 처리해 UI 반영
+        // Hotfix-D1 (2026-04-30): diaries 키는 DELETE 이벤트로도 빈 배열을 강제하지 않음.
+        // Realtime payload truncation으로 row가 잠시 사라진 것처럼 보일 수 있어 데이터 유실 위험.
         { event: 'DELETE', schema: 'public', table: 'household_data', filter: `id=eq.${hid}` },
-        (payload) => { if (payload.old?.key) onUpdate(payload.old.key, [], true); }
+        (payload) => {
+          const k = payload.old?.key;
+          if (!k) return;
+          if (k === 'diaries') {
+            console.warn('[Sync] diaries DELETE event ignored to prevent data loss');
+            return;
+          }
+          onUpdate(k, [], true);
+        }
       )
       .subscribe();
     this._channels.set(channelName, ch);

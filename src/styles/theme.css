@@ -166,6 +166,7 @@
 .cal-dot.h { background: var(--h-mid); }
 .cal-dot.w { background: var(--w-mid); }
 .cal-dot.photo { background: var(--accent); }
+.cal-dot.event { background: var(--ink); border: 1px solid white; box-sizing: border-box; }
 
 /* ── Diary Cards ── */
 .day-group { margin-bottom: 24px; }

@@ -119,3 +119,78 @@ export async function idbDequeueDiaries() {
   const all = await idbDequeueAll();
   return /** @type {IDBQueueDiaryItem[]} */ (all.filter(it => it.type === 'diary'));
 }
+
+const SNAPSHOT_STORE = 'snapshots';
+const SNAP_DB_VERSION = 2;
+
+/**
+ * @returns {Promise<IDBDatabase>}
+ */
+function openSnapshotDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, SNAP_DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = /** @type {IDBOpenDBRequest} */ (e.target).result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { autoIncrement: true, keyPath: 'idbId' });
+      }
+      if (!db.objectStoreNames.contains(SNAPSHOT_STORE)) {
+        db.createObjectStore(SNAPSHOT_STORE, { keyPath: 'snapshotKey' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/**
+ * @typedef {Object} DiarySnapshot
+ * @property {string} snapshotKey
+ * @property {string} householdId
+ * @property {import('../constants/index.js').DiaryItem[]} payload
+ * @property {number} ts
+ */
+
+/**
+ * lastKnownGood snapshot 저장 (Hotfix-2)
+ * @param {string} householdId
+ * @param {import('../constants/index.js').DiaryItem[]} payload
+ * @returns {Promise<void>}
+ */
+export async function idbSaveDiariesSnapshot(householdId, payload) {
+  if (!householdId || !Array.isArray(payload)) return;
+  const db = await openSnapshotDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(SNAPSHOT_STORE, 'readwrite');
+    const store = tx.objectStore(SNAPSHOT_STORE);
+    /** @type {DiarySnapshot} */
+    const snap = {
+      snapshotKey: `diaries_lkg_${householdId}`,
+      householdId,
+      payload,
+      ts: Date.now(),
+    };
+    store.put(snap);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+/**
+ * lastKnownGood snapshot 로드 (Hotfix-2)
+ * @param {string} householdId
+ * @returns {Promise<DiarySnapshot|null>}
+ */
+export async function idbLoadDiariesSnapshot(householdId) {
+  if (!householdId) return null;
+  const db = await openSnapshotDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(SNAPSHOT_STORE, 'readonly');
+    const req = /** @type {IDBRequest<DiarySnapshot|null>} */ (
+      tx.objectStore(SNAPSHOT_STORE).get(`diaries_lkg_${householdId}`)
+    );
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+

@@ -69,6 +69,7 @@ import { createContext, useContext } from "react";
  * @property {(id: number) => void} deleteDiaryWithTx
  * @property {'husband'|'wife'} currentUser
  * @property {(v: 'husband'|'wife') => void} setCurrentUser
+ * @property {(msg: string, kind?: 'success'|'error'|'warning') => void} [addToast]
  */
 
 /** @type {import('react').Context<BudgetContextValue | null>} */

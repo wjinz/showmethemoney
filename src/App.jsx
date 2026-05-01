@@ -12,7 +12,7 @@ import { G } from "./styles/globalStyles.js";
 import "./styles/theme.css";
 import { validate } from "./utils/validate.js";
 import { flush as flushOfflineQueue, enqueue as enqueueOffline, hasQueued, flushTxQueue, hasTxQueued } from "./utils/offlineQueue.js";
-import { idbEnqueue, idbDequeueDiaries, idbRemove } from "./utils/offlineIDB.js";
+import { idbEnqueue, idbDequeueDiaries, idbRemove, idbSaveDiariesSnapshot, idbLoadDiariesSnapshot } from "./utils/offlineIDB.js";
 import { LS_KEYS, lsGet, lsSet, lsRemove, lsMigrateLegacy } from "./utils/ls.js";
 import { useKidsStore } from "./stores/kidsStore.js";
 import {
@@ -100,6 +100,9 @@ export default function App() {
   const [names, setNamesRaw] = useState({ husband: "남편", wife: "와이프" });
   const [taxConfig, setTaxConfigRaw] = useState(DEFAULT_TAX_CONFIG);
   const [diaries, setDiariesRaw] = useState(EMPTY_DIARIES);
+  // Hotfix (2026-04-30): handleDiarySave 사이즈 가드용 latest diaries ref
+  const diariesRef = useRef(diaries);
+  useEffect(() => { diariesRef.current = diaries; }, [diaries]);
   const [currentUser, setCurrentUser] = useState(/** @type {'husband'|'wife'} */('husband'));
 
   // -- 입력 지연(Debounce) 타이머 관리 (Task 15-1) --
@@ -147,7 +150,10 @@ export default function App() {
   const txSaveTimerRef = useRef(/** @type {ReturnType<typeof setTimeout>|null} */(null));
 
   // 공유 데이터 상태 업데이트 핸들러 (실시간 반영용)
-  const updateSharedState = useCallback((key, value) => {
+  // Hotfix-1: 의도적 다이어리 초기화 플래그 (resetDiaries / resetAll 사용)
+  const intentionalDiaryReset = useRef(false);
+
+  const updateSharedState = useCallback(/** @param {string} key @param {any} value */ (key, value) => {
     // tx_YYYY 패턴 처리 (Task 4-2: 연도별 tx 분리)
     if (key.startsWith('tx_')) {
       const year = Number(key.slice(3));
@@ -178,11 +184,36 @@ export default function App() {
       case 'widgetLayout': setWidgetLayoutRaw(value); break;
       case 'homeLayout': setHomeLayoutRaw(value || DEFAULT_HOME_LAYOUT); break;
       case 'kidsMode': setKidsModeRaw(value); break;
-      case 'diaries': setDiariesRaw(Array.isArray(value) ? value : []); break;
+      case 'diaries': {
+        // Hotfix-1 (2026-04-30): Realtime echo / payload truncation 방어
+        // - 비배열 수신 시 무시 (truncation)
+        // - 길이 감소 + 의도적 reset 아닌 경우 무시 후 server 재조회
+        if (!Array.isArray(value)) {
+          console.warn('[Sync] diaries non-array received, ignored:', typeof value);
+          break;
+        }
+        setDiariesRaw(/** @type {(prev: import('./constants/index.js').DiaryItem[]) => import('./constants/index.js').DiaryItem[]} */(prev => {
+          if (intentionalDiaryReset.current) {
+            intentionalDiaryReset.current = false;
+            return value;
+          }
+          if (value.length < prev.length) {
+            console.warn('[Sync] diaries echo shorter than local — refetch', { incoming: value.length, local: prev.length });
+            db.loadAll(householdId).then(d => {
+              if (Array.isArray(d.diaries) && d.diaries.length >= prev.length) {
+                setDiariesRaw(d.diaries);
+              }
+            }).catch(err => console.error('[Sync] diaries refetch fail:', err));
+            return prev;
+          }
+          return value;
+        }));
+        break;
+      }
       default: break;
     }
     setLastSync(new Date());
-  }, []);
+  }, [householdId]);
 
   // Supabase 데이터 로드
   const loadShared = useCallback(async (hid) => {
@@ -278,7 +309,20 @@ export default function App() {
         }
       }
       if (typeof allData.kidsMode === 'boolean') setKidsModeRaw(allData.kidsMode);
-      if (Array.isArray(allData.diaries)) setDiariesRaw(allData.diaries);
+      // Hotfix-2 (2026-04-30): server vs LKG 비교 — 길이가 더 긴 쪽을 신뢰
+      let serverDiaries = Array.isArray(allData.diaries) ? allData.diaries : [];
+      try {
+        const lkg = await idbLoadDiariesSnapshot(hid);
+        if (lkg && Array.isArray(lkg.payload) && lkg.payload.length > serverDiaries.length) {
+          console.warn('[Recovery] LKG > server, restoring', { lkg: lkg.payload.length, server: serverDiaries.length });
+          serverDiaries = lkg.payload;
+          // 서버에 다시 동기화 (전체 데이터 손실 복구)
+          await db.save(hid, 'diaries', serverDiaries).catch(err => console.error('[Recovery] resync fail:', err));
+        }
+      } catch (err) {
+        console.warn('[Recovery] LKG load fail:', err);
+      }
+      setDiariesRaw(serverDiaries);
 
       // SOS 요청 초기 로드
       const sosData = await db.loadPendingSos(hid);
@@ -521,14 +565,22 @@ export default function App() {
     if (typeof rawSetter === 'function') rawSetter(newValue); // 호환성 (구 호출자)
 
     // -- 입력 지연(Debounce) 대상 필드 처리 (Task 15-2) --
-    const isDebounced = ["names", "budgets", "taxConfig"].includes(key);
+    // Hotfix (2026-04-30): diaries도 debounce 대상에 포함 (사진 첨부 후 race 방지)
+    /** @type {Record<string, number>} */
+    const debounceMap = { names: 800, budgets: 800, taxConfig: 800, diaries: 300 };
+    const debounceMs = debounceMap[key];
 
-    if (isDebounced) {
+    if (typeof debounceMs === 'number') {
       if (saveTimers.current[key]) clearTimeout(saveTimers.current[key]);
 
       saveTimers.current[key] = setTimeout(async () => {
         setSyncStatus("syncing");
         try {
+          // Hotfix-2: diaries 저장 직전 LKG snapshot 저장
+          if (key === 'diaries' && Array.isArray(newValue)) {
+            await idbSaveDiariesSnapshot(householdId, /** @type {import('./constants/index.js').DiaryItem[]} */(newValue))
+              .catch(err => console.warn('[LKG] snapshot save fail:', err));
+          }
           await db.save(householdId, key, newValue);
           setSyncStatus("ok");
         } catch (e) {
@@ -536,7 +588,7 @@ export default function App() {
           setSyncStatus("error");
           addToast(`${key} 저장 중 오류가 발생했습니다.`);
         }
-      }, 800); // 800ms 지연 후 저장
+      }, debounceMs);
       return;
     }
 
@@ -604,17 +656,25 @@ export default function App() {
     }
   }, [householdId]);
   // P2-1: functional update 패턴으로 deps 최소화 (setShared만 의존)
+  // Hotfix (2026-04-30): closure race 제거 — useRef로 latest를 안전하게 캡처
+  /** @type {React.MutableRefObject<Record<string, unknown>>} */
+  const setterLatest = useRef({});
   /**
+   * @template T
    * @param {string} key
-   * @param {(updater: (prev: any) => any) => void} rawSetter
+   * @param {(updater: (prev: T) => T) => void} rawSetter
+   * @returns {(v: T | ((prev: T) => T)) => void}
    */
   const _makeSetter = (key, rawSetter) => (v) => {
-    let next;
-    rawSetter((prev) => {
-      next = typeof v === 'function' ? v(prev) : v;
+    rawSetter(/** @param {T} prev */(prev) => {
+      const next = typeof v === 'function' ? /** @type {(p: T) => T} */(v)(prev) : v;
+      setterLatest.current[key] = next;
       return next;
     });
-    queueMicrotask(() => { setShared(key, next, undefined); });
+    queueMicrotask(() => {
+      const latest = setterLatest.current[key];
+      setShared(key, latest, undefined);
+    });
   };
 
   const setFixed = useCallback(_makeSetter("fixed", setFixedRaw), [setShared]);
@@ -718,7 +778,7 @@ export default function App() {
             ? {
                 ...t,
                 amount: updated.totalSpent || t.amount,
-                memo: updated.content || t.memo,
+                memo: (typeof updated.content === 'string' && updated.content.trim().length > 0) ? updated.content : t.memo,
                 date: updated.date || t.date,
                 cat: updated.cat || t.cat,
                 payMethod: updated.payMethod || t.payMethod,
@@ -751,8 +811,31 @@ export default function App() {
    * 다이어리 저장 + (지출 모드인 경우) tx 자동 동기화 (Antigravity-4)
    * source_id로 양 데이터 연결, DashboardView/Report 통계에도 자동 반영.
    * @param {Omit<import('./constants/index.js').DiaryItem, 'id'>} draft
+   * @returns {boolean} 저장 성공 시 true, 사이즈 가드로 차단되면 false
    */
   const handleDiarySave = useCallback((draft) => {
+    // Realtime broadcast(약 256KB)와 Postgres row 한계 고려. 380KB까지 허용하고 80% 초과 시 사전 경고.
+    const LIMIT_KB = 380;
+    const photos = Array.isArray(draft.photos) ? draft.photos : [];
+    const newItemBytes = photos.reduce((s, p) => s + (typeof p === 'string' ? p.length : 0), 0)
+      + (draft.content || '').length + 256;
+    const existingBytes = diariesRef.current.reduce((s, d) => {
+      const ps = Array.isArray(d.photos) ? d.photos : [];
+      const photoBytes = ps.reduce((ss, p) => ss + (typeof p === 'string' ? p.length : 0), 0);
+      const contentBytes = typeof d.content === 'string' ? d.content.length : 0;
+      return s + photoBytes + contentBytes;
+    }, 0);
+    const estimatedKB = Math.round((existingBytes + newItemBytes) / 1024);
+    if (estimatedKB > LIMIT_KB) {
+      addToast(
+        `저장 공간 한도 초과(${estimatedKB}KB / ${LIMIT_KB}KB). 사진을 줄이거나 오래된 다이어리를 정리한 후 다시 저장해주세요. 입력 내용은 유지됩니다.`,
+        'error'
+      );
+      return false;
+    }
+    if (estimatedKB > Math.round(LIMIT_KB * 0.8)) {
+      addToast(`다이어리 사용량 ${estimatedKB}KB / ${LIMIT_KB}KB — 곧 한도에 도달합니다.`, 'warning');
+    }
     const diaryId = Date.now() * 1000 + (Math.random() * 1000 | 0);
     /** @type {import('./constants/index.js').DiaryItem} */
     const diaryItem = {
@@ -785,7 +868,7 @@ export default function App() {
       });
     }
 
-    if (draft.type !== 'expense') return;
+    if (draft.type !== 'expense') return true;
     const items = Array.isArray(draft.expenseItems) ? draft.expenseItems : [];
     // P1-5: 부분 실패 보상 — addTxBatch/addTx 실패 시 diary 롤백
     try {
@@ -822,7 +905,9 @@ export default function App() {
       console.error('[handleDiarySave] tx sync fail, rollback diary:', e);
       setDiaries(/** @param {import('./constants/index.js').DiaryItem[]} ds */ ds => ds.filter(x => x.id !== diaryId));
       addToast('지출 저장 실패 — 다이어리를 복원합니다', 'error');
+      return false;
     }
+    return true;
   }, [setDiaries, addTx, addTxBatch, addToast]);
 
   // -- 세분화된 초기화 함수들 (Task 12-1) --
@@ -882,7 +967,9 @@ export default function App() {
   /** 5. 다이어리만 초기화 */
   const resetDiaries = useCallback(async () => {
     setSyncStatus("syncing");
+    intentionalDiaryReset.current = true;
     await db.save(householdId, "diaries", EMPTY_DIARIES);
+    await idbSaveDiariesSnapshot(householdId, EMPTY_DIARIES).catch(() => {});
     setDiariesRaw(EMPTY_DIARIES);
     setSyncStatus("ok");
     addToast("다이어리가 초기화되었습니다.");
@@ -904,6 +991,8 @@ export default function App() {
       db.save(householdId, "taxConfig", DEFAULT_TAX_CONFIG),
       db.save(householdId, "diaries", EMPTY_DIARIES)
     ]);
+    intentionalDiaryReset.current = true;
+    await idbSaveDiariesSnapshot(householdId, EMPTY_DIARIES).catch(() => {});
     await loadShared(householdId);
     setSyncStatus("ok");
     addToast("전체 데이터가 초기화되었습니다.");
@@ -1060,6 +1149,7 @@ export default function App() {
     syncStatus, householdId, myRole,
     kidsMode, setKidsMode,
     diaries, setDiaries, addDiary, editDiary, editDiaryWithTx, deleteDiary, deleteDiaryWithTx, currentUser, setCurrentUser,
+    addToast,
   };
 
   const lazyFallback = (

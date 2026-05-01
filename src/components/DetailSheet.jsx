@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { CATS, PAY_METHODS } from '../constants/index.js';
 import { useBudget } from '../context/BudgetContext.jsx';
+import { compressImage } from '../utils/image.js';
 
 const EMOJIS = ['🥺','😂','🥰','😡','😭','😴','🥳','🤔'];
 const fmtMoney = v => new Intl.NumberFormat('ko-KR',{style:'currency',currency:'KRW'}).format(v||0);
@@ -38,32 +39,26 @@ export function DetailSheet({ item, onClose, onSave, onDelete }) {
   function removeItem(id) { setItems(prev => prev.length > 1 ? prev.filter(it => it.id !== id) : prev); }
   function addItem() { setItems(prev => [...prev, { id: Date.now(), label: '', amount: '' }]); }
 
-  function handleFiles(e) {
-    if (!e.target.files) return;
-    Array.from(e.target.files).forEach(file => {
-      const r = new FileReader();
-      r.onload = ev => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const MAX = 800;
-          if (width > height && width > MAX) {
-            height *= MAX / width; width = MAX;
-          } else if (height > MAX) {
-            width *= MAX / height; height = MAX;
-          }
-          canvas.width = width; canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          setPhotos(p => [...p, canvas.toDataURL('image/webp', 0.6)]);
-        };
-        img.src = String(ev.target.result);
-      };
-      r.readAsDataURL(file);
-    });
-    e.target.value = '';
+  /** @param {React.ChangeEvent<HTMLInputElement>} e */
+  async function handleFiles(e) {
+    const target = e.target;
+    if (!target.files) return;
+    const list = Array.from(target.files);
+    target.value = '';
+    for (const file of list) {
+      try {
+        const dataUrl = await compressImage(file);
+        if (dataUrl.length > 200 * 1024) {
+          const retry = await compressImage(file, { maxWidth: 360, quality: 0.55 });
+          if (retry.length > 200 * 1024) continue;
+          setPhotos(p => [...p, retry].slice(0, 2));
+          continue;
+        }
+        setPhotos(p => [...p, dataUrl].slice(0, 2));
+      } catch (err) {
+        console.warn('[DetailSheet] compress fail:', err);
+      }
+    }
   }
 
   function handleSave() {

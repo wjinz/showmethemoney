@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useBudget } from "../context/BudgetContext.jsx";
-import { SettlementSheet } from "../components/SettlementSheet.jsx";
 import { exportTransactions } from "../utils/export";
 
 const fmtMoney = v => new Intl.NumberFormat('ko-KR',{style:'currency',currency:'KRW'}).format(v||0);
@@ -12,8 +11,7 @@ export function SettingsView({
   leaveHousehold, tx, onBugReport, onAdminTrigger, isAdmin, onNavigate
 }) {
   const [clickCount, setClickCount] = useState(0);
-  const { diaries, kidsMode, setKidsMode } = useBudget();
-  const [showSettlement, setShowSettlement] = useState(false);
+  const { kidsMode, setKidsMode } = useBudget();
   const [editNames, setEditNames] = useState(false);
   const [draftH, setDraftH] = useState(names.husband);
   const [draftW, setDraftW] = useState(names.wife);
@@ -66,11 +64,11 @@ export function SettingsView({
           borderRadius:20,background:'var(--ink)',color:'white',
           padding:'16px 18px',marginBottom:16,cursor:'pointer',
           display:'flex',alignItems:'center',justifyContent:'space-between'
-        }} onClick={()=>setShowSettlement(true)}>
+        }} onClick={()=>onNavigate && onNavigate("settlement")}>
           <div>
             <div style={{fontSize:11,opacity:.5,letterSpacing:'.4px',marginBottom:4}}>이번 달</div>
-            <div style={{fontSize:16,fontWeight:700}}>💰 월간 정산하기</div>
-            <div style={{fontSize:12,opacity:.6,marginTop:3}}>부부 지출 차액 계산 및 정산</div>
+            <div style={{fontSize:16,fontWeight:700}}>💰 월간 정산하기 (수기 계산기)</div>
+            <div style={{fontSize:12,opacity:.6,marginTop:3}}>카드 확정금액 · 부부 현금 · 기타 비용 → 잔액/부족액</div>
           </div>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
@@ -204,7 +202,6 @@ export function SettingsView({
         </div>
       </div>
 
-      {showSettlement && <SettlementSheet diaries={diaries} onClose={()=>setShowSettlement(false)}/>}
     </div>
   );
 }
