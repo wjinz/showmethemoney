@@ -8,7 +8,7 @@ import { THEME_TOKENS as T } from "../styles/tokens.js";
 /** @type {NavItem[]} */
 const LEFT_ITEMS = [
   { id: "diary",   Icon: BookHeart,     label: "다이어리" },
-  { id: "history", Icon: CalendarDays,  label: "내역" },
+  { id: "history", Icon: CalendarDays,  label: "캘린더" },
 ];
 
 /** @type {NavItem[]} */
